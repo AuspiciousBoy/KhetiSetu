@@ -35,15 +35,21 @@ const KhetiAIPage = () => {
     setLoading(true);
 
     try {
-      const res = await apiClient.post('/ai/chat', {
+      const payload = {
         message: userText,
-        conversationId,
-      });
+        ...(conversationId ? { conversationId } : {}),
+      };
+
+      const res = await apiClient.post('/ai/chat', payload);
 
       setConversationId(res.data.data.conversationId);
       setMessages((prev) => [
         ...prev,
-        { role: 'model', content: res.data.data.reply },
+        {
+          role: 'model',
+          content: res.data.data.reply,
+          source: res.data.data.source,
+        },
       ]);
     } catch (err) {
       setMessages((prev) => [

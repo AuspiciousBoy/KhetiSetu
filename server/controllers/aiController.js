@@ -2,6 +2,7 @@ const { consultKhetiAI, assessProduceQuality } = require('../services/geminiServ
 const AIConversation = require('../models/AIConversation');
 const FarmerProfile = require('../models/FarmerProfile');
 const { success, error } = require('../utils/response');
+const mongoose = require('mongoose');
 
 const chat = async (req, res, next) => {
   try {
@@ -12,7 +13,7 @@ const chat = async (req, res, next) => {
     const farmerProfile = await FarmerProfile.findOne({ userId });
 
     let conversation;
-    if (conversationId) {
+    if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
       conversation = await AIConversation.findOne({ _id: conversationId, userId });
     }
 

@@ -69,6 +69,7 @@ const BatchesPage = () => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
+      setAssessmentResult(null);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -444,6 +445,22 @@ const BatchesPage = () => {
                   ⚠️ AI Visual Analysis Notice:
                 </span>
                 This assessment is an AI-assisted visual estimate based on surface morphology. It is NOT laboratory food-safety certification or chemical residue testing.
+              </div>
+
+              {/* Action to upload new photo and re-run */}
+              <div className="flex justify-end pt-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setAssessmentResult(null);
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
+                >
+                  <span className="material-symbols-outlined text-[16px]">add_a_photo</span>
+                  Upload New Photo & Re-Assess
+                </Button>
               </div>
             </div>
           )}
