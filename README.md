@@ -149,8 +149,8 @@ Review `server/.env` and optionally provide your Google Gemini API key:
 NODE_ENV=development
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/khetisetu
-JWT_ACCESS_SECRET=khetisetu_dev_access_secret_super_secure_key_change_in_production_min64_chars!
-JWT_REFRESH_SECRET=khetisetu_dev_refresh_secret_super_secure_key_change_in_production_min64_chars!
+JWT_ACCESS_SECRET=your_jwt_access_secret_min_64_chars
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_min_64_chars
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 *(Note: If `GEMINI_API_KEY` is omitted, KhetiSetu runs in calibrated heuristic fallback mode, ensuring 100% offline functionality without crashes).*

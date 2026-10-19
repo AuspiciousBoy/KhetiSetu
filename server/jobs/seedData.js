@@ -32,7 +32,8 @@ const seed = async () => {
   ]);
 
   logger.info('Seeding Demo Users with Argon2id password hashes...');
-  const defaultPasswordHash = await hashPassword('KhetiSetu@2026!');
+  const seedPassword = process.env.SEED_DEFAULT_PASSWORD || process.env.DEMO_USER_PASSWORD || 'KhetiSetu@2026!';
+  const defaultPasswordHash = await hashPassword(seedPassword);
 
   const [farmerUser, consumerUser, businessUser, adminUser] = await Promise.all([
     User.create({

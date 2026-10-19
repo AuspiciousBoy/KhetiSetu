@@ -8,8 +8,13 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = parseInt(process.env.PORT || '5000', 10);
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/khetisetu';
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'khetisetu_dev_access_secret_super_secure_key_change_in_production_min64_chars!';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'khetisetu_dev_refresh_secret_super_secure_key_change_in_production_min64_chars!';
+const crypto = require('crypto');
+
+// Generate ephemeral random key in development if not provided in environment
+const generateDevSecret = () => crypto.randomBytes(32).toString('hex');
+
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || (NODE_ENV !== 'production' ? generateDevSecret() : '');
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || (NODE_ENV !== 'production' ? generateDevSecret() : '');
 const JWT_ACCESS_EXPIRY = process.env.JWT_ACCESS_EXPIRY || '15m';
 const JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '7d';
 
@@ -22,8 +27,8 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://
 
 const UPLOAD_DIR = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
 const LOG_LEVEL = process.env.LOG_LEVEL || (NODE_ENV === 'production' ? 'info' : 'debug');
-const PAYMENT_SECRET = process.env.PAYMENT_SECRET || 'dev_payment_secret';
-const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'dev_payment_webhook_secret';
+const PAYMENT_SECRET = process.env.PAYMENT_SECRET || '';
+const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
 
 // Fail fast in production if security secrets are missing or default
 if (NODE_ENV === 'production') {

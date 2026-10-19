@@ -26,8 +26,8 @@ services:
       NODE_ENV: production
       PORT: 5000
       MONGO_URI: mongodb://mongo:27017/khetisetu
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-khetisetu_prod_access_secret_super_secure_key_min64_chars!}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-khetisetu_prod_refresh_secret_super_secure_key_min64_chars!}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       FRONTEND_URL: http://localhost:80
       CORS_ORIGINS: http://localhost:80,http://localhost:5173

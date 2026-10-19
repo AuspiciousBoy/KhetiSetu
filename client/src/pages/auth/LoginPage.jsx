@@ -134,7 +134,8 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('farmer@khetisetu.demo');
-                setPassword('KhetiSetu@2026!');
+                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
+                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
@@ -144,7 +145,8 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('consumer@khetisetu.demo');
-                setPassword('KhetiSetu@2026!');
+                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
+                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
@@ -154,7 +156,8 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('business@khetisetu.demo');
-                setPassword('KhetiSetu@2026!');
+                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
+                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
@@ -164,7 +167,8 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('admin@khetisetu.demo');
-                setPassword('KhetiSetu@2026!');
+                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
+                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
