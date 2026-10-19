@@ -1,0 +1,24 @@
+{
+  "name": "khetisetu-ecosystem",
+  "version": "1.0.0",
+  "description": "KhetiSetu – An AI-Assisted Digital Agricultural Ecosystem for Farm-to-Market Connectivity",
+  "private": true,
+  "scripts": {
+    "client": "npm --prefix client run dev",
+    "client:build": "npm --prefix client run build",
+    "server": "node server/server.js",
+    "seed": "node server/jobs/seedData.js",
+    "test": "node tests/runTests.js"
+  },
+  "keywords": [
+    "agriculture",
+    "agritech",
+    "khetisetu",
+    "marketplace",
+    "ai",
+    "gemini",
+    "farm-to-market"
+  ],
+  "author": "KhetiSetu Engineering Team",
+  "license": "ISC"
+}

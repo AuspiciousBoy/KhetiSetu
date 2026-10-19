@@ -1,0 +1,68 @@
+name: KhetiSetu CI Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  security-and-quality:
+    name: DevSecOps Audit, Tests & Build
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Audit & Validate Server Dependencies
+        run: |
+          cd server
+          npm ci
+          npm audit --audit-level=high
+
+      - name: Run Backend Seed Database
+        env:
+          MONGO_URI: mongodb://localhost:27017/khetisetu
+          JWT_ACCESS_SECRET: ci_test_access_secret_super_secure_key_min64_chars!
+          JWT_REFRESH_SECRET: ci_test_refresh_secret_super_secure_key_min64_chars!
+        run: |
+          node server/jobs/seedData.js
+
+      - name: Run Automated Security Test Suite
+        env:
+          MONGO_URI: mongodb://localhost:27017/khetisetu
+          JWT_ACCESS_SECRET: ci_test_access_secret_super_secure_key_min64_chars!
+          JWT_REFRESH_SECRET: ci_test_refresh_secret_super_secure_key_min64_chars!
+        run: |
+          node tests/runTests.js
+
+      - name: Install & Audit Client Dependencies
+        run: |
+          cd client
+          npm ci --legacy-peer-deps
+
+      - name: Build Production Frontend Client
+        run: |
+          cd client
+          npm run build
+
+      - name: Verify No Secrets Leaked in Frontend Artifacts
+        run: |
+          if grep -rn "AIza" client/dist/; then
+            echo "CRITICAL SECURITY LEAK: Gemini API key detected in client build!"
+            exit 1
+          fi
+          echo "Client bundle secret scan passed."
