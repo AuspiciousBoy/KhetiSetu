@@ -9,6 +9,7 @@ const testFiles = [
   path.resolve(__dirname, 'security/authAndRoleSecurity.test.js'),
   path.resolve(__dirname, 'security/noSqlAndInputSecurity.test.js'),
   path.resolve(__dirname, 'security/orderAndInventorySecurity.test.js'),
+  path.resolve(__dirname, 'emailTemplates.test.js'),
 ];
 
 const child = spawn(process.execPath, ['--test', ...testFiles], {

@@ -67,6 +67,12 @@ const UserSchema = new mongoose.Schema(
       default: true,
       index: true,
     },
+    emailPreferences: {
+      transactional: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: true },
+      priceAlerts: { type: Boolean, default: true },
+      weeklyReport: { type: Boolean, default: true },
+    },
   },
   {
     timestamps: true,
@@ -88,6 +94,7 @@ UserSchema.methods.toPublicJSON = function () {
     role: this.role,
     isEmailVerified: this.isEmailVerified,
     isActive: this.isActive,
+    emailPreferences: this.emailPreferences,
     createdAt: this.createdAt,
   };
 };

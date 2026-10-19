@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Order Confirmed ✓ — {{orderId}} — KhetiSetu</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      {{> header}}
+
+      {{!-- Status Banner --}}
+      <tr><td style="background-color:#e8f5e9;padding:20px 32px;border-bottom:3px solid #2e7d32;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="vertical-align:middle;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#2e7d32;letter-spacing:1px;text-transform:uppercase;margin:0 0 4px 0;">✓ Order Placed Successfully</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:18px;font-weight:700;color:#08241a;margin:0;">{{orderId}}</p>
+            </td>
+            <td style="text-align:right;vertical-align:middle;">
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;">{{dateTimeFormat orderDate}}</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:4px 0 0 0;">Est. Delivery: <strong>{{dateFormat estimatedDelivery}}</strong></p>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <tr><td style="padding:28px 32px;">
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          Hello {{buyerName}}, your order has been placed and the farmer has been notified. Here's your order summary:
+        </p>
+
+        {{!-- Order Items --}}
+        {{> order-items-table}}
+
+        {{!-- Totals --}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+          <tr>
+            <td style="width:60%;"></td>
+            <td style="width:40%;background-color:#f7f3ea;border-radius:6px;padding:16px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;padding:3px 0;">Subtotal</td>
+                  <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;text-align:right;padding:3px 0;">{{inr subtotal}}</td>
+                </tr>
+                <tr>
+                  <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;padding:3px 0;">Delivery</td>
+                  <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;text-align:right;padding:3px 0;">{{inr deliveryFee}}</td>
+                </tr>
+                <tr>
+                  <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;padding:3px 0;">Tax (5%)</td>
+                  <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;text-align:right;padding:3px 0;">{{inr tax}}</td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding:4px 0;"><hr style="border:none;border-top:1px solid #e8e4da;margin:4px 0;"/></td>
+                </tr>
+                <tr>
+                  <td style="font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:700;color:#08241a;padding:3px 0;">Grand Total</td>
+                  <td style="font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:700;color:#08241a;text-align:right;padding:3px 0;">{{inr grandTotal}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        {{!-- Delivery & Payment Info --}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+          <tr>
+            <td width="48%" style="vertical-align:top;background-color:#f7f3ea;border-radius:6px;padding:16px;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#5a5a5a;margin:0 0 8px 0;text-transform:uppercase;letter-spacing:0.5px;">Delivery Address</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;line-height:1.5;">{{deliveryAddress.line1}}<br>{{deliveryAddress.city}}, {{deliveryAddress.state}} {{deliveryAddress.pincode}}</p>
+            </td>
+            <td width="4%"></td>
+            <td width="48%" style="vertical-align:top;background-color:#f7f3ea;border-radius:6px;padding:16px;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#5a5a5a;margin:0 0 8px 0;text-transform:uppercase;letter-spacing:0.5px;">Payment</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;line-height:1.5;">{{paymentMethod}}<br><span style="color:#2e7d32;font-weight:600;">✓ Payment Received</span></p>
+            </td>
+          </tr>
+        </table>
+
+        {{!-- Traceability --}}
+        {{#if batchTraceability}}
+        <div style="background-color:#f7f3ea;border-radius:6px;padding:16px;margin-bottom:20px;border-left:3px solid #785838;">
+          <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#785838;margin:0 0 6px 0;text-transform:uppercase;letter-spacing:0.5px;">🌿 Batch Traceability</p>
+          <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;line-height:1.5;">Batch ID: <strong>{{batchTraceability.batchId}}</strong> · Farm: <strong>{{batchTraceability.farmName}}</strong></p>
+        </div>
+        {{/if}}
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 24px 0;">
+            <a href="{{trackingUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;">Track My Order 📦</a>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

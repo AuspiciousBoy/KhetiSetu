@@ -1,8 +1,11 @@
 const Delivery = require('../models/Delivery');
 const Order = require('../models/Order');
 const Vehicle = require('../models/Vehicle');
+const User = require('../models/User');
 const { logAuditEvent } = require('../middleware/auditLogger');
 const mongoose = require('mongoose');
+const { queueEmail } = require('../integrations/emailService');
+const emailConfig = require('../config/emailConfig');
 
 /**
  * Validate and transition delivery status according to the finite state machine
@@ -73,6 +76,84 @@ const updateDeliveryStatus = async ({
     resourceId: delivery._id,
     result: 'SUCCESS',
     metadata: { previousStatus: delivery.status, newStatus, deliveryId: delivery.deliveryId },
+  });
+
+  // Asynchronously dispatch delivery stage emails
+  setImmediate(async () => {
+    try {
+      if (!order) return;
+      const [buyer, farmer, vehicle] = await Promise.all([
+        User.findById(order.buyerId).select('email fullName emailPreferences'),
+        User.findById(order.farmerId).select('email fullName'),
+        delivery.vehicleId ? Vehicle.findById(delivery.vehicleId).select('registrationNumber operatorName') : null,
+      ]);
+
+      if (!buyer || !buyer.email) return;
+
+      const farmName = farmer?.fullName ? `${farmer.fullName}'s Farm` : 'Farm Partner';
+      const trackingUrl = `${emailConfig.appUrl}/track/${order.orderId}`;
+
+      if (newStatus === 'PACKED') {
+        queueEmail({
+          to: buyer.email,
+          template: 'order-packed',
+          subject: `Your Order is Packed 📦 — ${order.orderId} — KhetiSetu`,
+          context: {
+            buyerName: buyer.fullName || 'Customer',
+            orderId: order.orderId,
+            farmName,
+            estimatedDelivery: delivery.estimatedDeliveryDate,
+            trackingUrl,
+          },
+          user: buyer,
+        });
+      } else if (newStatus === 'OUT_FOR_DELIVERY') {
+        queueEmail({
+          to: buyer.email,
+          template: 'order-dispatched',
+          subject: `Your KhetiSetu order is on its way 🚚 — ${order.orderId}`,
+          context: {
+            buyerName: buyer.fullName || 'Customer',
+            orderId: order.orderId,
+            farmName,
+            driverName: vehicle?.operatorName || 'Assigned Logistics Driver',
+            vehicleNumber: vehicle?.registrationNumber || 'Dispatch Fleet',
+            trackingUrl,
+          },
+          user: buyer,
+        });
+      } else if (newStatus === 'DELIVERED') {
+        queueEmail({
+          to: buyer.email,
+          template: 'order-delivered-buyer',
+          subject: `Delivered! ✓ Your KhetiSetu order ${order.orderId}`,
+          context: {
+            buyerName: buyer.fullName || 'Customer',
+            orderId: order.orderId,
+            farmName,
+            items: order.items,
+            deliveredAt: delivery.actualDeliveryDate || new Date(),
+            reviewUrl: `${emailConfig.appUrl}/consumer/orders`,
+          },
+          user: buyer,
+        });
+      } else if (newStatus === 'CANCELLED') {
+        queueEmail({
+          to: buyer.email,
+          template: 'order-cancelled',
+          subject: `Order Cancelled — ${order.orderId} — KhetiSetu`,
+          context: {
+            buyerName: buyer.fullName || 'Customer',
+            orderId: order.orderId,
+            reason: note || 'Order was cancelled',
+            marketplaceUrl: `${emailConfig.appUrl}/marketplace`,
+          },
+          user: buyer,
+        });
+      }
+    } catch (err) {
+      // Async failure is non-fatal
+    }
   });
 
   return delivery;

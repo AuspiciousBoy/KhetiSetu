@@ -23,4 +23,8 @@ router.use('/logistics', logisticsRoutes);
 router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
 
+if (process.env.NODE_ENV !== 'production') {
+  router.use('/dev/email-preview', require('./devRoutes'));
+}
+
 module.exports = router;

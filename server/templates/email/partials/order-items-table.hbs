@@ -1,0 +1,22 @@
+{{!-- Order Items Table Partial --}}
+{{!-- context.items = [{ title, quantity, unit, unitPrice, lineTotal }] --}}
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:16px 0;">
+  <thead>
+    <tr style="background-color:#08241a;">
+      <th style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#ffffff;text-align:left;padding:10px 12px;text-transform:uppercase;letter-spacing:0.5px;">Produce</th>
+      <th style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#ffffff;text-align:center;padding:10px 12px;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
+      <th style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#ffffff;text-align:right;padding:10px 12px;text-transform:uppercase;letter-spacing:0.5px;">Unit Price</th>
+      <th style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#ffffff;text-align:right;padding:10px 12px;text-transform:uppercase;letter-spacing:0.5px;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each items}}
+    <tr style="background-color:{{#if @odd}}#f7f3ea{{else}}#fdf9f0{{/if}};">
+      <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#1c1c1c;padding:10px 12px;border-bottom:1px solid #e8e4da;">{{title}}</td>
+      <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#1c1c1c;padding:10px 12px;text-align:center;border-bottom:1px solid #e8e4da;">{{quantity}} {{unit}}</td>
+      <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;padding:10px 12px;text-align:right;border-bottom:1px solid #e8e4da;">{{inr unitPrice}}/{{unit}}</td>
+      <td style="font-family:'Inter',Arial,sans-serif;font-size:13px;font-weight:600;color:#08241a;padding:10px 12px;text-align:right;border-bottom:1px solid #e8e4da;">{{inr lineTotal}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>

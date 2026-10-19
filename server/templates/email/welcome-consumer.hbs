@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Welcome to KhetiSetu!</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+      {{> header}}
+
+      <tr><td style="background-color:#f0ebe0;padding:28px 32px 24px;border-bottom:3px solid #e78353;">
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:26px;font-weight:700;color:#08241a;margin:0 0 10px 0;line-height:1.3;">Welcome, {{name}}! 🥦</h1>
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:15px;color:#3a3a3a;margin:0;line-height:1.6;">Fresh, farm-to-door produce is now just a few clicks away.</p>
+      </td></tr>
+
+      <tr><td style="padding:28px 32px;">
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          Your KhetiSetu consumer account is ready. Explore fresh produce sourced directly from verified Indian farmers:
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+          <tr>
+            <td style="vertical-align:top;padding:0 8px 0 0;width:33%;">
+              <div style="background-color:#f7f3ea;border-radius:6px;padding:16px;text-align:center;">
+                <p style="font-size:24px;margin:0 0 8px 0;">🌿</p>
+                <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#08241a;margin:0 0 4px 0;">100% Farm Direct</p>
+                <p style="font-family:'Inter',Arial,sans-serif;font-size:11px;color:#5a5a5a;margin:0;">No middlemen. Better prices for you.</p>
+              </div>
+            </td>
+            <td style="vertical-align:top;padding:0 4px;width:33%;">
+              <div style="background-color:#f7f3ea;border-radius:6px;padding:16px;text-align:center;">
+                <p style="font-size:24px;margin:0 0 8px 0;">🔍</p>
+                <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#08241a;margin:0 0 4px 0;">Batch Traceability</p>
+                <p style="font-family:'Inter',Arial,sans-serif;font-size:11px;color:#5a5a5a;margin:0;">Know exactly which farm your produce came from.</p>
+              </div>
+            </td>
+            <td style="vertical-align:top;padding:0 0 0 8px;width:33%;">
+              <div style="background-color:#f7f3ea;border-radius:6px;padding:16px;text-align:center;">
+                <p style="font-size:24px;margin:0 0 8px 0;">📦</p>
+                <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#08241a;margin:0 0 4px 0;">Real-Time Tracking</p>
+                <p style="font-family:'Inter',Arial,sans-serif;font-size:11px;color:#5a5a5a;margin:0;">Track your order from farm gate to your door.</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 24px 0;">
+            <a href="{{marketplaceUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;">Browse Fresh Produce →</a>
+          </td></tr>
+        </table>
+
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#8a8a8a;margin:0;line-height:1.6;border-top:1px solid #e8e4da;padding-top:16px;">
+          Need help? Write to <a href="mailto:{{supportEmail}}" style="color:#08241a;">{{supportEmail}}</a>
+        </p>
+      </td></tr>
+
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

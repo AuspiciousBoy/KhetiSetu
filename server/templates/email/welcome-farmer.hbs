@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Welcome to KhetiSetu, {{farmerName}}!</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+      {{> header}}
+
+      {{!-- Hero --}}
+      <tr><td style="background-color:#f0ebe0;padding:28px 32px 24px;border-bottom:3px solid #e78353;">
+        <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#e78353;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px 0;">🌾 खेतीसेतु में आपका स्वागत है</p>
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:26px;font-weight:700;color:#08241a;margin:0 0 10px 0;line-height:1.3;">नमस्ते, {{farmerName}}!</h1>
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:15px;color:#3a3a3a;margin:0;line-height:1.6;">Welcome to KhetiSetu — your digital gateway from farm to market. We're glad to have <strong>{{farmName}}</strong> on the platform.</p>
+      </td></tr>
+
+      {{!-- Content --}}
+      <tr><td style="padding:28px 32px;">
+
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          Your farmer account is now ready. Here's what you can do on KhetiSetu:
+        </p>
+
+        {{!-- Feature Cards --}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+          <tr>
+            <td width="48%" style="vertical-align:top;background-color:#f7f3ea;border-radius:6px;padding:16px;border-left:3px solid #08241a;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:13px;font-weight:700;color:#08241a;margin:0 0 6px 0;">📦 Batch Registration</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;line-height:1.5;">Register your harvest batches with full traceability from farm gate.</p>
+            </td>
+            <td width="4%"></td>
+            <td width="48%" style="vertical-align:top;background-color:#f7f3ea;border-radius:6px;padding:16px;border-left:3px solid #e78353;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:13px;font-weight:700;color:#08241a;margin:0 0 6px 0;">🤖 AI Quality Doctor</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;line-height:1.5;">Get AI-powered quality assessment to grade your produce instantly.</p>
+            </td>
+          </tr>
+          <tr><td colspan="3" style="padding:8px 0;"></td></tr>
+          <tr>
+            <td width="48%" style="vertical-align:top;background-color:#f7f3ea;border-radius:6px;padding:16px;border-left:3px solid #785838;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:13px;font-weight:700;color:#08241a;margin:0 0 6px 0;">📊 Market Intelligence</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;line-height:1.5;">Track live APMC prices and AI price predictions across mandis.</p>
+            </td>
+            <td width="4%"></td>
+            <td width="48%" style="vertical-align:top;background-color:#f7f3ea;border-radius:6px;padding:16px;border-left:3px solid #2e7d32;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:13px;font-weight:700;color:#08241a;margin:0 0 6px 0;">🛒 Direct Marketplace</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;line-height:1.5;">List your produce for consumers and businesses — no middlemen.</p>
+            </td>
+          </tr>
+        </table>
+
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;margin:0 0 24px 0;line-height:1.6;">
+          Your farm location has been set to <strong>{{location.district}}, {{location.state}}</strong>. You can update your profile anytime from your dashboard.
+        </p>
+
+        {{!-- CTA Button --}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 24px 0;">
+            <a href="{{dashboardUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;letter-spacing:0.3px;">Register Your First Harvest Batch →</a>
+          </td></tr>
+        </table>
+
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#8a8a8a;margin:0;line-height:1.6;border-top:1px solid #e8e4da;padding-top:16px;">
+          Questions? Our support team is here for you at <a href="mailto:{{supportEmail}}" style="color:#08241a;">{{supportEmail}}</a>
+        </p>
+
+      </td></tr>
+
+      {{> footer}}
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

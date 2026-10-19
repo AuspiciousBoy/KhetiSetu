@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Harvest Batch Registered — {{batchId}}</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      {{> header}}
+      <tr><td style="background-color:#f0ebe0;padding:24px 32px;border-bottom:3px solid #785838;">
+        <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#785838;letter-spacing:1px;text-transform:uppercase;margin:0 0 4px 0;">🌾 Harvest Traceability Registered</p>
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:22px;font-weight:700;color:#08241a;margin:0;">Batch: {{batchId}}</h1>
+      </td></tr>
+      <tr><td style="padding:28px 32px;">
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          नमस्ते {{farmerName}}, your crop batch has been entered into the KhetiSetu traceability registry.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f7f3ea;border-radius:6px;margin-bottom:20px;">
+          <tr>
+            <td style="padding:16px;width:33%;text-align:center;border-right:1px solid #e8e4da;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 4px 0;text-transform:uppercase;">Crop</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:18px;font-weight:700;color:#08241a;margin:0;">{{cropName}}</p>
+            </td>
+            <td style="padding:16px;width:33%;text-align:center;border-right:1px solid #e8e4da;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 4px 0;text-transform:uppercase;">Quantity</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:18px;font-weight:700;color:#08241a;margin:0;">{{quantity}} {{unit}}</p>
+            </td>
+            <td style="padding:16px;width:33%;text-align:center;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 4px 0;text-transform:uppercase;">Harvest Date</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:700;color:#785838;margin:0;">{{dateFormat harvestDate}}</p>
+            </td>
+          </tr>
+        </table>
+        <div style="background-color:#fff3e0;border:1px solid #e78353;border-radius:6px;padding:16px;margin-bottom:20px;">
+          <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#e65100;margin:0 0 6px 0;">⚡ Next Recommended Step: AI Quality Assessment</p>
+          <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;line-height:1.5;">
+            Upload photo of this harvest to run our AI produce doctor. Graded batches sell up to 25% faster on the marketplace!
+          </p>
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 16px 0;">
+            <a href="{{assessUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;">Run AI Quality Assessment →</a>
+          </td></tr>
+        </table>
+      </td></tr>
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

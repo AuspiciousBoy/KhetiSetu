@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Delivered! ✓ Your KhetiSetu order {{orderId}}</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      {{> header}}
+
+      <tr><td style="background-color:#e8f5e9;padding:24px 32px;border-bottom:3px solid #2e7d32;text-align:center;">
+        <p style="font-size:40px;margin:0 0 8px 0;">🎉</p>
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:22px;font-weight:700;color:#08241a;margin:0 0 6px 0;">Your Order is Delivered!</h1>
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0;">{{orderId}} · Delivered on {{dateFormat deliveredAt}}</p>
+      </td></tr>
+
+      <tr><td style="padding:28px 32px;">
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          Hello {{buyerName}}, your fresh produce from <strong>{{farmName}}</strong> has been delivered. We hope you enjoy it!
+        </p>
+
+        {{!-- Items Summary --}}
+        {{> order-items-table}}
+
+        {{!-- Review Prompt --}}
+        <div style="background-color:#f7f3ea;border-radius:6px;padding:20px;margin-bottom:20px;text-align:center;border:1px dashed #785838;">
+          <p style="font-family:'Sora',Arial,sans-serif;font-size:15px;font-weight:700;color:#08241a;margin:0 0 8px 0;">How was your experience? ⭐</p>
+          <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;margin:0 0 16px 0;line-height:1.5;">Help other buyers by reviewing the produce quality and service from {{farmName}}.</p>
+          <a href="{{reviewUrl}}" style="display:inline-block;background-color:#e78353;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:13px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:6px;">Write a Review</a>
+        </div>
+
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#8a8a8a;margin:0;line-height:1.6;border-top:1px solid #e8e4da;padding-top:16px;">
+          Issue with your order? Contact us at <a href="mailto:{{supportEmail}}" style="color:#08241a;">{{supportEmail}}</a>
+        </p>
+      </td></tr>
+
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

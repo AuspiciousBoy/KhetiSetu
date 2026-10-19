@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>AI Quality Report Ready — Batch {{batchId}}</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      {{> header}}
+
+      <tr><td style="background-color:#f0ebe0;padding:24px 32px;border-bottom:3px solid {{gradeColor classification}};">
+        <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#785838;letter-spacing:1px;text-transform:uppercase;margin:0 0 4px 0;">🤖 AI Quality Assessment Report</p>
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:22px;font-weight:700;color:#08241a;margin:0 0 6px 0;">{{cropName}} — Batch {{batchId}}</h1>
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#5a5a5a;margin:0;">Assessed by KhetiSetu AI Quality Doctor</p>
+      </td></tr>
+
+      <tr><td style="padding:28px 32px;">
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          Hello {{farmerName}}, the AI quality assessment for your batch is complete. Here are the results:
+        </p>
+
+        {{!-- Grade Card --}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f7f3ea;border-radius:6px;margin-bottom:20px;border:2px solid {{gradeColor classification}};">
+          <tr>
+            <td style="padding:20px;text-align:center;width:40%;border-right:1px solid #e8e4da;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 8px 0;text-transform:uppercase;letter-spacing:0.5px;">Quality Grade</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:16px;font-weight:700;color:{{gradeColor classification}};margin:0;line-height:1.3;">{{classification}}</p>
+            </td>
+            <td style="padding:20px;text-align:center;width:30%;border-right:1px solid #e8e4da;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 8px 0;text-transform:uppercase;letter-spacing:0.5px;">Confidence</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:26px;font-weight:700;color:#08241a;margin:0;">{{confidence}}%</p>
+            </td>
+            <td style="padding:20px;text-align:center;width:30%;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 8px 0;text-transform:uppercase;letter-spacing:0.5px;">Shelf Life</p>
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:700;color:#08241a;margin:0;">{{estimatedShelfLife}}</p>
+            </td>
+          </tr>
+        </table>
+
+        {{!-- Observations --}}
+        {{#if observations}}
+        <div style="background-color:#f7f3ea;border-radius:6px;padding:16px;margin-bottom:16px;">
+          <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#5a5a5a;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:0.5px;">AI Observations</p>
+          <ul style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;padding-left:18px;line-height:1.8;">
+            {{#each observations}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+        </div>
+        {{/if}}
+
+        {{!-- Recommended Action --}}
+        <div style="background-color:#e8f5e9;border:1px solid #2e7d32;border-radius:6px;padding:16px;margin-bottom:20px;">
+          <p style="font-family:'Sora',Arial,sans-serif;font-size:12px;font-weight:700;color:#2e7d32;margin:0 0 6px 0;">💡 Recommended Action</p>
+          <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;line-height:1.5;">{{recommendedAction}}</p>
+        </div>
+
+        <div style="background-color:#f7f3ea;border-radius:6px;padding:12px;margin-bottom:20px;">
+          <p style="font-family:'Inter',Arial,sans-serif;font-size:11px;color:#8a8a8a;margin:0;line-height:1.5;">⚠️ {{disclaimer}}</p>
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 16px 0;">
+            <a href="{{listingUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;">Create Marketplace Listing →</a>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

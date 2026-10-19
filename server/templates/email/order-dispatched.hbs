@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Your KhetiSetu order is on its way 🚚</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      {{> header}}
+
+      <tr><td style="background-color:#e3f2fd;padding:20px 32px;border-bottom:3px solid #1565c0;">
+        <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#1565c0;letter-spacing:1px;text-transform:uppercase;margin:0 0 4px 0;">🚚 Out For Delivery</p>
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:20px;font-weight:700;color:#08241a;margin:0;">{{orderId}} is on its way!</h1>
+      </td></tr>
+
+      <tr><td style="padding:28px 32px;">
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 20px 0;line-height:1.7;">
+          Hello {{buyerName}}, your fresh produce from <strong>{{farmName}}</strong> is out for delivery today!
+        </p>
+
+        {{!-- Delivery Progress --}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f7f3ea;border-radius:6px;margin-bottom:20px;padding:16px;">
+          <tr>
+            <td style="text-align:center;width:25%;">
+              <div style="width:28px;height:28px;background-color:#2e7d32;border-radius:50%;margin:0 auto 6px;line-height:28px;color:#fff;font-size:14px;">✓</div>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:10px;color:#2e7d32;margin:0;font-weight:600;">Placed</p>
+            </td>
+            <td style="width:8%;height:2px;background-color:#2e7d32;vertical-align:middle;"><hr style="border:none;border-top:2px solid #2e7d32;margin:0;"/></td>
+            <td style="text-align:center;width:25%;">
+              <div style="width:28px;height:28px;background-color:#2e7d32;border-radius:50%;margin:0 auto 6px;line-height:28px;color:#fff;font-size:14px;">✓</div>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:10px;color:#2e7d32;margin:0;font-weight:600;">Packed</p>
+            </td>
+            <td style="width:8%;height:2px;background-color:#1565c0;vertical-align:middle;"><hr style="border:none;border-top:2px solid #1565c0;margin:0;"/></td>
+            <td style="text-align:center;width:25%;">
+              <div style="width:28px;height:28px;background-color:#1565c0;border-radius:50%;margin:0 auto 6px;line-height:28px;color:#fff;font-size:14px;">🚚</div>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:10px;color:#1565c0;margin:0;font-weight:600;">On the way</p>
+            </td>
+            <td style="width:8%;height:2px;background-color:#e8e4da;vertical-align:middle;"><hr style="border:none;border-top:2px solid #e8e4da;margin:0;"/></td>
+            <td style="text-align:center;width:25%;">
+              <div style="width:28px;height:28px;background-color:#e8e4da;border-radius:50%;margin:0 auto 6px;line-height:28px;color:#9a9a9a;font-size:14px;">🏠</div>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:10px;color:#9a9a9a;margin:0;font-weight:600;">Delivered</p>
+            </td>
+          </tr>
+        </table>
+
+        {{#if driverName}}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f7f3ea;border-radius:6px;margin-bottom:20px;">
+          <tr>
+            <td style="padding:16px;width:50%;vertical-align:top;border-right:1px solid #e8e4da;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 4px 0;text-transform:uppercase;letter-spacing:0.5px;">Driver</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;font-weight:600;">{{driverName}}</p>
+            </td>
+            <td style="padding:16px;width:50%;vertical-align:top;">
+              <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#5a5a5a;margin:0 0 4px 0;text-transform:uppercase;letter-spacing:0.5px;">Vehicle</p>
+              <p style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0;font-weight:600;">{{vehicleNumber}}</p>
+            </td>
+          </tr>
+        </table>
+        {{/if}}
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 24px 0;">
+            <a href="{{trackingUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;">Track Live Location →</a>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>KhetiSetu Admin Account</title></head>
+<body style="margin:0;padding:0;background-color:#ece8df;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ece8df;padding:24px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#fdf9f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+      {{> header}}
+
+      <tr><td style="background-color:#f0ebe0;padding:28px 32px 24px;border-bottom:3px solid #e78353;">
+        <p style="font-family:'Sora',Arial,sans-serif;font-size:11px;font-weight:600;color:#e78353;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px 0;">⚙️ Platform Administration</p>
+        <h1 style="font-family:'Sora',Arial,sans-serif;font-size:24px;font-weight:700;color:#08241a;margin:0 0 10px 0;">Admin Account Provisioned</h1>
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0;">Hello {{name}}, your administrative access to the KhetiSetu platform has been activated.</p>
+      </td></tr>
+
+      <tr><td style="padding:28px 32px;">
+        <div style="background-color:#fff3e0;border:1px solid #e78353;border-radius:6px;padding:16px;margin-bottom:20px;">
+          <p style="font-family:'Sora',Arial,sans-serif;font-size:13px;font-weight:700;color:#e65100;margin:0 0 6px 0;">⚠️ Security Notice</p>
+          <p style="font-family:'Inter',Arial,sans-serif;font-size:12px;color:#5a5a5a;margin:0;line-height:1.5;">This is an admin-level account with elevated privileges. Keep your credentials strictly confidential. Enable 2FA if available. Never share your session.</p>
+        </div>
+
+        <p style="font-family:'Inter',Arial,sans-serif;font-size:14px;color:#3a3a3a;margin:0 0 16px 0;line-height:1.7;">Your admin account grants access to:</p>
+
+        <ul style="font-family:'Inter',Arial,sans-serif;font-size:13px;color:#3a3a3a;margin:0 0 20px 0;padding-left:20px;line-height:1.8;">
+          <li>User management — FARMER, CONSUMER, BUSINESS accounts</li>
+          <li>Order oversight and dispute resolution</li>
+          <li>Quality assessment review and flagging</li>
+          <li>Logistics and delivery management</li>
+          <li>Platform analytics and monthly reports</li>
+          <li>Audit log access and security monitoring</li>
+        </ul>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td align="center" style="padding:8px 0 24px 0;">
+            <a href="{{adminUrl}}" style="display:inline-block;background-color:#08241a;color:#ffffff;font-family:'Sora',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:6px;">Open Admin Dashboard →</a>
+          </td></tr>
+        </table>
+      </td></tr>
+
+      {{> footer}}
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

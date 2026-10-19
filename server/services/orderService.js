@@ -3,10 +3,13 @@ const Product = require('../models/Product');
 const ProduceBatch = require('../models/ProduceBatch');
 const Delivery = require('../models/Delivery');
 const Cart = require('../models/Cart');
+const User = require('../models/User');
 const { logAuditEvent } = require('../middleware/auditLogger');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { ApiError } = require('../utils/response');
+const { queueEmail } = require('../integrations/emailService');
+const emailConfig = require('../config/emailConfig');
 
 // Standard delivery fee calculation in INR
 const calculateDeliveryFee = (distanceKm = 20, isB2B = false) => {
@@ -180,6 +183,66 @@ const createOrder = async ({
     resourceId: order._id,
     result: 'SUCCESS',
     metadata: { orderId, total: grandTotal, itemsCount: items.length },
+  });
+
+  // Asynchronously dispatch buyer order receipt & farmer dispatch alert
+  setImmediate(async () => {
+    try {
+      const [buyer, farmer, firstBatch] = await Promise.all([
+        User.findById(buyerId).select('email fullName emailPreferences'),
+        User.findById(primaryFarmerId).select('email fullName emailPreferences'),
+        verifiedOrderItems[0]?.batchId ? ProduceBatch.findById(verifiedOrderItems[0].batchId).select('batchId originLocation') : null,
+      ]);
+
+      if (buyer && buyer.email) {
+        queueEmail({
+          to: buyer.email,
+          template: 'order-placed-buyer',
+          subject: `Order Confirmed ✓ — ${orderId} — KhetiSetu`,
+          context: {
+            buyerName: buyer.fullName || 'Customer',
+            orderId,
+            orderDate: order.createdAt,
+            items: verifiedOrderItems,
+            subtotal: serverSubtotal,
+            deliveryFee,
+            tax,
+            grandTotal,
+            paymentMethod,
+            deliveryAddress,
+            estimatedDelivery: delivery.estimatedDeliveryDate,
+            trackingUrl: `${emailConfig.appUrl}/track/${orderId}`,
+            batchTraceability: firstBatch
+              ? {
+                  batchId: firstBatch.batchId,
+                  farmName: farmer?.fullName ? `${farmer.fullName}'s Farm` : 'Verified Farm',
+                }
+              : null,
+          },
+          user: buyer,
+        });
+      }
+
+      if (farmer && farmer.email) {
+        queueEmail({
+          to: farmer.email,
+          template: 'order-placed-farmer',
+          subject: `🛒 नया ऑर्डर मिला! — ${orderId} — KhetiSetu`,
+          context: {
+            farmerName: farmer.fullName || 'Farmer Partner',
+            orderId,
+            items: verifiedOrderItems,
+            orderTotal: grandTotal,
+            buyerDistrict: deliveryAddress?.city || deliveryAddress?.district || 'Buyer Location',
+            dispatchBy: delivery.estimatedDeliveryDate,
+            orderUrl: `${emailConfig.appUrl}/farmer/orders`,
+          },
+          user: farmer,
+        });
+      }
+    } catch (emailErr) {
+      // Async failure is non-fatal
+    }
   });
 
   return { order, delivery, isExisting: false };

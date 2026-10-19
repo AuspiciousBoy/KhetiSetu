@@ -14,6 +14,8 @@ const {
 } = require('../utils/tokens');
 const { logAuditEvent } = require('../middleware/auditLogger');
 const logger = require('../utils/logger');
+const { queueEmail } = require('../integrations/emailService');
+const emailConfig = require('../config/emailConfig');
 
 // Progressive delay configuration: max 5 failed attempts before lockout
 const MAX_FAILED_ATTEMPTS = 5;
@@ -110,6 +112,94 @@ const register = async ({ email, password, fullName, phone, role, profileData, r
     userAgent: req?.headers ? req.headers['user-agent'] : undefined,
   });
 
+  // Transactional Email Lifecycle: Welcome Email according to Role
+  if (userRole === 'FARMER') {
+    queueEmail({
+      to: user.email,
+      template: 'welcome-farmer',
+      subject: `🌾 खेतीसेतु में आपका स्वागत है, ${fullName}! — KhetiSetu`,
+      context: {
+        farmerName: fullName,
+        farmName: profileData?.farmName || `${fullName}'s Farm`,
+        location: {
+          district: profileData?.district || 'Pune',
+          state: profileData?.state || 'Maharashtra',
+        },
+        dashboardUrl: `${emailConfig.appUrl}/farmer/batches`,
+      },
+      user,
+    });
+  } else if (userRole === 'BUSINESS') {
+    queueEmail({
+      to: user.email,
+      template: 'welcome-business',
+      subject: `Your KhetiSetu Business Account is Ready — Direct Farm Sourcing Awaits`,
+      context: {
+        contactName: fullName,
+        businessName: profileData?.businessName || `${fullName} Agro Enterprises`,
+        b2bUrl: `${emailConfig.appUrl}/marketplace?mode=b2b`,
+      },
+      user,
+    });
+  } else if (userRole === 'ADMIN') {
+    queueEmail({
+      to: user.email,
+      template: 'welcome-admin',
+      subject: `KhetiSetu Admin Account Provisioned`,
+      context: {
+        name: fullName,
+        adminUrl: `${emailConfig.appUrl}/admin`,
+      },
+      user,
+    });
+  } else {
+    // CONSUMER
+    queueEmail({
+      to: user.email,
+      template: 'welcome-consumer',
+      subject: `Welcome to KhetiSetu, ${fullName}! Fresh from farm to your door 🥦`,
+      context: {
+        name: fullName,
+        marketplaceUrl: `${emailConfig.appUrl}/marketplace`,
+      },
+      user,
+    });
+  }
+
+  // Account Verification Email
+  const verifyUrl = `${emailConfig.appUrl}/verify-email?token=${verificationToken}`;
+  queueEmail({
+    to: user.email,
+    template: 'verify-email',
+    subject: `[Action Required] Verify your KhetiSetu email address`,
+    context: {
+      name: fullName,
+      verifyUrl,
+    },
+    user,
+  });
+
+  // Admin Notification for sensitive roles (FARMER / BUSINESS)
+  if (['FARMER', 'BUSINESS'].includes(userRole)) {
+    queueEmail({
+      to: emailConfig.adminEmail,
+      template: 'admin-alert',
+      subject: `[Admin Notice] New ${userRole} Registered: ${fullName}`,
+      context: {
+        alertTitle: `New ${userRole} Registered`,
+        alertMessage: `A new ${userRole.toLowerCase()} account has joined the platform and is ready for onboarding.`,
+        details: {
+          Role: userRole,
+          Name: fullName,
+          Email: user.email,
+          Phone: phone || 'N/A',
+          RegisteredAt: new Date().toISOString(),
+        },
+        adminUrl: `${emailConfig.appUrl}/admin`,
+      },
+    });
+  }
+
   return {
     user: user.toPublicJSON(),
     accessToken,
@@ -170,6 +260,38 @@ const login = async ({ email, password, req }) => {
         resourceId: user._id,
         result: 'WARNING',
       });
+
+      // Email notification to user & admin regarding security event
+      const resetUrl = `${emailConfig.appUrl}/forgot-password`;
+      queueEmail({
+        to: user.email,
+        template: 'account-locked',
+        subject: `⚠️ KhetiSetu: Your account has been temporarily secured`,
+        context: {
+          name: user.fullName || 'User',
+          failedAttempts: MAX_FAILED_ATTEMPTS,
+          resetUrl,
+        },
+        user,
+      });
+
+      queueEmail({
+        to: emailConfig.adminEmail,
+        template: 'admin-alert',
+        subject: `[Security Alert] Account Locked: ${user.email}`,
+        context: {
+          alertTitle: 'Account Lockout Triggered',
+          alertMessage: `User ${user.email} was locked out following ${MAX_FAILED_ATTEMPTS} failed login attempts.`,
+          details: {
+            Email: user.email,
+            IP: req?.ip || 'Unknown',
+            UserAgent: req?.headers ? req.headers['user-agent'] : 'Unknown',
+            LockUntil: new Date(Date.now() + LOCKOUT_DURATION_MS).toISOString(),
+          },
+          adminUrl: `${emailConfig.appUrl}/admin`,
+        },
+      });
+
       throw new Error('Maximum login attempts exceeded. Account is locked for 15 minutes.');
     }
     await user.save();
@@ -364,6 +486,18 @@ const verifyEmail = async ({ token, req }) => {
     result: 'SUCCESS',
   });
 
+  // Email verification success confirmation
+  queueEmail({
+    to: user.email,
+    template: 'email-verified',
+    subject: `Email Verified ✓ — Welcome to KhetiSetu`,
+    context: {
+      name: user.fullName || 'User',
+      loginUrl: `${emailConfig.appUrl}/login`,
+    },
+    user,
+  });
+
   return { message: 'Email address successfully verified.' };
 };
 
@@ -387,6 +521,19 @@ const forgotPassword = async ({ email, req }) => {
       resource: 'User',
       resourceId: user._id,
       result: 'SUCCESS',
+    });
+
+    // Dispatch secure single-use password reset link
+    const resetUrl = `${emailConfig.appUrl}/reset-password?token=${resetToken}`;
+    queueEmail({
+      to: user.email,
+      template: 'password-reset',
+      subject: `KhetiSetu Password Reset — Link expires in 1 hour`,
+      context: {
+        name: user.fullName || 'User',
+        resetUrl,
+      },
+      user,
     });
 
     return {
@@ -432,6 +579,19 @@ const resetPassword = async ({ token, newPassword, req }) => {
     resource: 'User',
     resourceId: user._id,
     result: 'SUCCESS',
+  });
+
+  // Security notification confirming password modification
+  queueEmail({
+    to: user.email,
+    template: 'password-changed',
+    subject: `Security Alert: Your KhetiSetu Password Was Changed`,
+    context: {
+      name: user.fullName || 'User',
+      changedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      loginUrl: `${emailConfig.appUrl}/login`,
+    },
+    user,
   });
 
   return { message: 'Password has been successfully updated. Please log in with your new password.' };

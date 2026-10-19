@@ -4,9 +4,12 @@ const QualityAssessment = require('../models/QualityAssessment');
 const FarmerProfile = require('../models/FarmerProfile');
 const Order = require('../models/Order');
 const Crop = require('../models/Crop');
+const User = require('../models/User');
 const { assessProduceQuality } = require('./geminiService');
 const { logAuditEvent } = require('../middleware/auditLogger');
 const crypto = require('crypto');
+const { queueEmail } = require('../integrations/emailService');
+const emailConfig = require('../config/emailConfig');
 
 /**
  * Get or create farmer profile
@@ -97,6 +100,30 @@ const createBatch = async (farmerId, batchData, req) => {
     metadata: { batchId, cropName: batch.cropName, quantity: batch.quantity },
   });
 
+  // Asynchronously dispatch harvest batch registration confirmation
+  setImmediate(async () => {
+    try {
+      const user = await User.findById(farmerId).select('email fullName emailPreferences');
+      if (user && user.email) {
+        queueEmail({
+          to: user.email,
+          template: 'batch-registered',
+          subject: `Harvest Batch Registered — ${batch.batchId} — KhetiSetu`,
+          context: {
+            farmerName: user.fullName || 'Farmer Partner',
+            batchId: batch.batchId,
+            cropName: batch.cropName,
+            quantity: batch.quantity,
+            unit: batch.unit,
+            harvestDate: batch.harvestDate,
+            assessUrl: `${emailConfig.appUrl}/farmer/batches`,
+          },
+          user,
+        });
+      }
+    } catch (err) {}
+  });
+
   return batch;
 };
 
@@ -175,6 +202,54 @@ const assessBatchQuality = async ({ batchId, farmerId, imageBase64, mimeType, im
     metadata: { batchId: batch.batchId, classification: assessment.classification },
   });
 
+  // Asynchronously dispatch AI quality assessment results to farmer
+  setImmediate(async () => {
+    try {
+      const user = await User.findById(farmerId).select('email fullName emailPreferences');
+      if (user && user.email) {
+        queueEmail({
+          to: user.email,
+          template: 'quality-assessment',
+          subject: `AI Quality Report Ready — Batch ${batch.batchId} — KhetiSetu`,
+          context: {
+            farmerName: user.fullName || 'Farmer Partner',
+            batchId: batch.batchId,
+            cropName: batch.cropName,
+            classification: assessment.classification,
+            confidence: assessment.confidence,
+            observations: assessment.observations,
+            estimatedShelfLife: assessment.estimatedShelfLife,
+            recommendedAction: assessment.recommendedAction,
+            disclaimer: 'AI visual analysis only — not certified laboratory testing.',
+            listingUrl: `${emailConfig.appUrl}/farmer/listings?batchId=${batch._id}`,
+          },
+          user,
+        });
+      }
+
+      // If produce does not meet quality criteria, alert platform administrators
+      if (assessment.classification === 'QUALITY_CRITERIA_NOT_MET') {
+        queueEmail({
+          to: emailConfig.adminEmail,
+          template: 'admin-alert',
+          subject: `[Quality Flag] Batch ${batch.batchId} Failed Quality Assessment`,
+          context: {
+            alertTitle: 'Sub-Standard Quality Produce Flagged',
+            alertMessage: `Batch ${batch.batchId} failed standard quality criteria during AI analysis and may require manual inspection.`,
+            details: {
+              BatchID: batch.batchId,
+              Crop: batch.cropName,
+              Farmer: user?.fullName || 'Farmer Partner',
+              Confidence: `${assessment.confidence}%`,
+              Reason: assessment.recommendedAction,
+            },
+            adminUrl: `${emailConfig.appUrl}/admin`,
+          },
+        });
+      }
+    } catch (err) {}
+  });
+
   return { batch, assessment: record };
 };
 
@@ -228,6 +303,30 @@ const createListing = async (farmerId, listingData, req) => {
     resourceId: product._id,
     result: 'SUCCESS',
     metadata: { title: product.title, pricePerUnit: product.pricePerUnit },
+  });
+
+  // Asynchronously dispatch listing published email to farmer
+  setImmediate(async () => {
+    try {
+      const user = await User.findById(farmerId).select('email fullName emailPreferences');
+      if (user && user.email) {
+        queueEmail({
+          to: user.email,
+          template: 'listing-published',
+          subject: `Your listing is live on KhetiSetu 🌿 — ${product.title}`,
+          context: {
+            farmerName: user.fullName || 'Farmer Partner',
+            listingTitle: product.title,
+            pricePerUnit: product.pricePerUnit,
+            unit: product.unit,
+            availableQuantity: product.availableQuantity,
+            qualityGrade: product.qualityGrade,
+            listingUrl: `${emailConfig.appUrl}/marketplace/${product._id}`,
+          },
+          user,
+        });
+      }
+    } catch (err) {}
   });
 
   return product;
