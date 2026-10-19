@@ -168,18 +168,17 @@ test('Template Engine — account-locked and password-reset render urgency state
   assert.ok(resetResult.html.includes('1 hour only'));
 });
 
-test('Nodemailer + Gmail OAuth2 Configuration — Default provider is gmail_oauth2', () => {
+test('Nodemailer SMTP Configuration — Host and Port initialized for testing', () => {
   const emailConfig = require('../server/config/emailConfig');
-  assert.equal(emailConfig.provider, 'gmail_oauth2');
-  assert.ok(typeof emailConfig.gmail === 'object');
-  assert.ok('clientId' in emailConfig.gmail);
-  assert.ok('clientSecret' in emailConfig.gmail);
-  assert.ok('refreshToken' in emailConfig.gmail);
+  assert.equal(emailConfig.host, 'smtp.gmail.com');
+  assert.equal(emailConfig.port, 587);
+  assert.equal(typeof emailConfig.user, 'string');
+  assert.equal(typeof emailConfig.pass, 'string');
 });
 
-test('Nodemailer + Gmail OAuth2 Service — verifyEmailConnection returns safe disabled status when EMAIL_ENABLED=false', async () => {
-  const { verifyEmailConnection } = require('../server/integrations/emailService');
-  const status = await verifyEmailConnection();
-  assert.equal(status.ok, true);
-  assert.equal(status.status, 'DISABLED');
+test('Nodemailer SMTP Transporter — Instantiates Nodemailer transporter cleanly', () => {
+  const { getTransporter } = require('../server/integrations/emailService');
+  const transporter = getTransporter();
+  assert.ok(transporter);
+  assert.equal(typeof transporter.sendMail, 'function');
 });

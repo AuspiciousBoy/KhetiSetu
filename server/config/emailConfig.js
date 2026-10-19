@@ -1,69 +1,32 @@
 /**
- * KhetiSetu Email Configuration
- * ──────────────────────────────
- * Centralizes all SMTP / transactional email settings.
- * Primary Provider: Nodemailer + Gmail OAuth2
- * All secrets are read from environment — NEVER hardcode credentials here.
+ * KhetiSetu Email Configuration (Testing & Local SMTP)
+ * ───────────────────────────────────────────────────
+ * Simplified SMTP configuration for testing.
+ * Uses only standard SMTP parameters: HOST, PORT, USER, PASS.
  */
 
 'use strict';
 
 const emailConfig = {
-  /** Whether to dispatch any emails at all */
-  enabled: process.env.EMAIL_ENABLED !== 'false',
+  /** Master toggle for sending emails (true = active, false = silent) */
+  enabled: process.env.EMAIL_ENABLED === 'true',
 
-  /**
-   * Primary Provider:
-   * 'gmail_oauth2' (default) | 'smtp' | 'resend'
-   */
-  provider: process.env.SMTP_PROVIDER || 'gmail_oauth2',
+  /** Standard SMTP server host (e.g. smtp.gmail.com, localhost, or Mailtrap) */
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
 
-  /**
-   * Nodemailer + Gmail OAuth2 Configuration
-   * Obtains auto-refreshing access tokens via Google Cloud OAuth2 client.
-   */
-  gmail: {
-    user: process.env.GMAIL_USER || process.env.EMAIL_FROM_ADDRESS || '',
-    clientId: process.env.GMAIL_CLIENT_ID || '',
-    clientSecret: process.env.GMAIL_CLIENT_SECRET || '',
-    refreshToken: process.env.GMAIL_REFRESH_TOKEN || '',
-    accessToken: process.env.GMAIL_ACCESS_TOKEN || '',
-  },
+  /** Standard SMTP server port (587 for TLS, 465 for SSL) */
+  port: parseInt(process.env.SMTP_PORT, 10) || 587,
 
-  /** Standard SMTP / App Password fallback (when OAuth2 tokens not yet generated) */
-  smtp: {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT, 10) || 587,
-    secure: process.env.SMTP_SECURE === 'true' || false,
-    auth: {
-      user: process.env.SMTP_USER || process.env.GMAIL_USER || '',
-      pass: process.env.SMTP_PASS || '',
-    },
-  },
+  /** SMTP username / email address */
+  user: process.env.SMTP_USER || '',
 
-  /** Resend API key (optional secondary provider) */
-  resendApiKey: process.env.RESEND_API_KEY || '',
+  /** SMTP password or 16-character Gmail App Password */
+  pass: process.env.SMTP_PASS || '',
 
-  /** Sender identity */
-  from: {
-    address: process.env.GMAIL_USER || process.env.EMAIL_FROM_ADDRESS || 'noreply@khetisetu.in',
-    name: process.env.EMAIL_FROM_NAME || 'KhetiSetu',
-  },
+  /** Destination for admin alerts during testing (defaults to tester's SMTP_USER) */
+  adminEmail: process.env.SMTP_USER || 'admin@khetisetu.internal',
 
-  /** Reply-to address for support inquiries */
-  replyTo: process.env.EMAIL_REPLY_TO || 'support@khetisetu.in',
-
-  /**
-   * Debug override: when set, ALL emails route to this address regardless of recipient.
-   * Must never be set in production (enforced below).
-   */
-  debugOverride:
-    process.env.NODE_ENV !== 'production' ? process.env.EMAIL_DEBUG_OVERRIDE || null : null,
-
-  /** Admin email — receives platform alerts and operational emails */
-  adminEmail: process.env.ADMIN_EMAIL || 'admin@khetisetu.in',
-
-  /** App base URL used in email CTAs / links */
+  /** Web app base URL for links in email templates */
   appUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 };
 
