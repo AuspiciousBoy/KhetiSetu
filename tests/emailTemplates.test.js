@@ -167,3 +167,19 @@ test('Template Engine — account-locked and password-reset render urgency state
   assert.ok(resetResult.html.includes('Reset Your Password'));
   assert.ok(resetResult.html.includes('1 hour only'));
 });
+
+test('Nodemailer + Gmail OAuth2 Configuration — Default provider is gmail_oauth2', () => {
+  const emailConfig = require('../server/config/emailConfig');
+  assert.equal(emailConfig.provider, 'gmail_oauth2');
+  assert.ok(typeof emailConfig.gmail === 'object');
+  assert.ok('clientId' in emailConfig.gmail);
+  assert.ok('clientSecret' in emailConfig.gmail);
+  assert.ok('refreshToken' in emailConfig.gmail);
+});
+
+test('Nodemailer + Gmail OAuth2 Service — verifyEmailConnection returns safe disabled status when EMAIL_ENABLED=false', async () => {
+  const { verifyEmailConnection } = require('../server/integrations/emailService');
+  const status = await verifyEmailConnection();
+  assert.equal(status.ok, true);
+  assert.equal(status.status, 'DISABLED');
+});
