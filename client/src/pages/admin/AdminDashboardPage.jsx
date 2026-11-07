@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -166,7 +167,7 @@ const AdminDashboardPage = () => {
           <Card className="p-6 bg-surface-container flex flex-col sm:flex-row items-center justify-between gap-4 border border-outline-variant/30">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
-                <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                <CheckCircle2 className="w-5 h-5 text-emerald-300" />
               </div>
               <div>
                 <h4 className="font-display font-semibold text-primary text-sm">

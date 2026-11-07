@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sun, CloudRain, CloudSun } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -71,10 +72,8 @@ const WeatherIntelligencePage = () => {
           <div className="bg-primary text-on-primary rounded-[24px] p-8 sm:p-10 grain-overlay soil-shadow flex flex-col md:flex-row justify-between gap-8 items-start md:items-center">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <span className="material-symbols-outlined text-secondary-fixed text-[32px]">
-                  {weatherData?.current?.icon || 'sunny'}
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-on-primary-container">
+                <Sun className="w-8 h-8 text-secondary-fixed shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider text-on-primary-container font-mono">
                   Live Agricultural Conditions
                 </span>
               </div>
@@ -186,9 +185,13 @@ const WeatherIntelligencePage = () => {
                       day: 'numeric',
                     })}
                   </span>
-                  <span className="material-symbols-outlined text-[28px] text-secondary my-1">
-                    {day.precipitationProbabilityPercent > 40 ? 'rainy' : 'sunny'}
-                  </span>
+                  <div className="my-1.5 flex items-center justify-center">
+                    {day.precipitationProbabilityPercent > 40 ? (
+                      <CloudRain className="w-6 h-6 text-sky-600" />
+                    ) : (
+                      <Sun className="w-6 h-6 text-amber-500" />
+                    )}
+                  </div>
                   <span className="text-xs font-medium text-primary mt-1">{day.condition}</span>
                   <div className="flex items-baseline gap-1 mt-2 text-xs">
                     <span className="font-bold text-primary">{day.tempMaxC}°</span>

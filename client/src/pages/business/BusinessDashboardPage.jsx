@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Package } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -42,9 +43,9 @@ const BusinessDashboardPage = () => {
         </div>
 
         <Link to="/marketplace?type=b2b">
-          <Button variant="primary" size="md">
-            <span className="material-symbols-outlined text-[18px]">pallet</span>
-            Browse Bulk Listings
+          <Button variant="primary" size="md" className="flex items-center gap-1.5">
+            <Package className="w-4 h-4" />
+            <span>Browse Bulk Listings</span>
           </Button>
         </Link>
       </div>

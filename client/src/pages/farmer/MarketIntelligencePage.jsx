@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sparkles } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -135,9 +136,7 @@ const MarketIntelligencePage = () => {
             <Card className="md:col-span-8 bg-surface-container-low p-6 flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-secondary text-[20px]">
-                    auto_awesome
-                  </span>
+                  <Sparkles className="w-5 h-5 text-secondary" />
                   <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
                     Market Intelligence Summary
                   </span>

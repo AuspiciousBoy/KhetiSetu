@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Truck } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -118,9 +119,9 @@ const ConsumerDashboardPage = () => {
 
                 {order.deliveryId && (
                   <Link to={`/consumer/orders/${order._id}`}>
-                    <Button variant="secondary" size="sm">
-                      <span className="material-symbols-outlined text-[16px]">local_shipping</span>
-                      Track Delivery Milestones
+                    <Button variant="secondary" size="sm" className="flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5" />
+                      <span>Track Delivery Milestones</span>
                     </Button>
                   </Link>
                 )}

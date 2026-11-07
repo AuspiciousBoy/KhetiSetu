@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  PlusCircle,
+  Sparkles,
+  IndianRupee,
+  Boxes,
+  Store,
+  Truck,
+  Sun,
+  Camera,
+  ArrowRight,
+} from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -64,15 +75,15 @@ const FarmerDashboardPage = () => {
 
         <div className="flex items-center gap-3">
           <Link to="/farmer/batches">
-            <Button variant="primary" size="md">
-              <span className="material-symbols-outlined text-[18px]">add_box</span>
-              New Harvest Batch
+            <Button variant="primary" size="md" className="flex items-center gap-1.5">
+              <PlusCircle className="w-4 h-4" />
+              <span>New Harvest Batch</span>
             </Button>
           </Link>
           <Link to="/farmer/ai">
-            <Button variant="secondary" size="md">
-              <span className="material-symbols-outlined text-[18px]">psychiatry</span>
-              Kheti AI Doctor
+            <Button variant="secondary" size="md" className="flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-secondary" />
+              <span>Kheti AI Doctor</span>
             </Button>
           </Link>
         </div>
@@ -86,11 +97,11 @@ const FarmerDashboardPage = () => {
               Gross Realized Revenue
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-primary">
-              <span className="material-symbols-outlined text-[18px]">currency_rupee</span>
+              <IndianRupee className="w-4 h-4 text-primary" />
             </div>
           </div>
           <div>
-            <div className="font-display font-bold text-3xl text-primary">
+            <div className="font-display font-bold text-3xl text-primary font-mono">
               ₹{(analytics?.totalRevenue || 0).toLocaleString('en-IN')}
             </div>
             <p className="text-[11px] text-secondary mt-1">Directly credited to verified account</p>
@@ -103,11 +114,11 @@ const FarmerDashboardPage = () => {
               Active Produce Batches
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-secondary">
-              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+              <Boxes className="w-4 h-4 text-secondary" />
             </div>
           </div>
           <div>
-            <div className="font-display font-bold text-3xl text-primary">
+            <div className="font-display font-bold text-3xl text-primary font-mono">
               {analytics?.batchesCount || 0}
             </div>
             <p className="text-[11px] text-on-surface-variant mt-1">Traceable farm-gate batches</p>
@@ -120,11 +131,11 @@ const FarmerDashboardPage = () => {
               Marketplace Listings
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-primary">
-              <span className="material-symbols-outlined text-[18px]">storefront</span>
+              <Store className="w-4 h-4 text-primary" />
             </div>
           </div>
           <div>
-            <div className="font-display font-bold text-3xl text-primary">
+            <div className="font-display font-bold text-3xl text-primary font-mono">
               {analytics?.activeListingsCount || 0}
             </div>
             <p className="text-[11px] text-on-surface-variant mt-1">Live B2C and B2B produce lots</p>
@@ -137,11 +148,11 @@ const FarmerDashboardPage = () => {
               Fulfillment Orders
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-secondary">
-              <span className="material-symbols-outlined text-[18px]">local_shipping</span>
+              <Truck className="w-4 h-4 text-secondary" />
             </div>
           </div>
           <div>
-            <div className="font-display font-bold text-3xl text-primary">
+            <div className="font-display font-bold text-3xl text-primary font-mono">
               {analytics?.totalOrdersCount || 0}
             </div>
             <p className="text-[11px] text-on-surface-variant mt-1">
@@ -151,20 +162,20 @@ const FarmerDashboardPage = () => {
         </Card>
       </div>
 
-      {/* Middle Row: Weather Advisory Card (bg-primary with grain) + AI Quality Promotion */}
+      {/* Middle Row: Weather Advisory Card + AI Quality Promotion */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Weather Tile matching code.html */}
+        {/* Weather Tile */}
         <div className="lg:col-span-5 bg-primary text-on-primary rounded-[24px] p-8 flex flex-col justify-between grain-overlay soil-shadow">
           <div>
             <div className="flex justify-between items-start mb-6">
               <div className="w-12 h-12 rounded-full bg-surface/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-primary text-[24px]">sunny</span>
+                <Sun className="w-6 h-6 text-amber-300" />
               </div>
-              <span className="bg-surface-tint/40 px-3 py-1 rounded-[6px] text-xs font-bold text-on-primary">
+              <span className="bg-surface-tint/40 px-3 py-1 rounded-[6px] text-xs font-bold text-on-primary font-mono">
                 {weather?.location?.district || 'Pune'} District
               </span>
             </div>
-            <span className="font-display font-bold text-5xl text-secondary-fixed block mb-1">
+            <span className="font-display font-bold text-5xl text-secondary-fixed block mb-1 font-mono">
               {weather?.current?.temperatureC || 28}°C
             </span>
             <p className="text-sm text-on-primary/80 font-medium">
@@ -187,7 +198,7 @@ const FarmerDashboardPage = () => {
         <div className="lg:col-span-7 bg-surface-container-low rounded-[24px] border border-surface-variant p-8 flex flex-col justify-between soil-shadow">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="material-symbols-outlined text-secondary text-[22px]">psychiatry</span>
+              <Sparkles className="w-5 h-5 text-secondary" />
               <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
                 Post-Harvest Quality Assessment
               </span>
@@ -202,9 +213,9 @@ const FarmerDashboardPage = () => {
 
           <div className="flex items-center gap-4">
             <Link to="/farmer/batches">
-              <Button variant="primary" size="md">
-                <span className="material-symbols-outlined text-[18px]">photo_camera</span>
-                Upload Harvest Image
+              <Button variant="primary" size="md" className="flex items-center gap-1.5">
+                <Camera className="w-4 h-4" />
+                <span>Upload Harvest Image</span>
               </Button>
             </Link>
             <Link to="/farmer/market">

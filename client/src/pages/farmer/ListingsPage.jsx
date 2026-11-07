@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PlusCircle, Store } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -94,9 +95,10 @@ const ListingsPage = () => {
           size="md"
           onClick={() => setIsModalOpen(true)}
           disabled={batches.length === 0}
+          className="flex items-center gap-1.5"
         >
-          <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-          Publish Listing from Batch
+          <PlusCircle className="w-4 h-4" />
+          <span>Publish Listing from Batch</span>
         </Button>
       </div>
 
@@ -106,7 +108,7 @@ const ListingsPage = () => {
         </div>
       ) : listings.length === 0 ? (
         <EmptyState
-          icon="storefront"
+          icon={<Store className="w-8 h-8 text-secondary" />}
           title="No active marketplace listings"
           description="Select an available produce harvest batch to list on KhetiSetu's consumer and B2B marketplace."
           action={

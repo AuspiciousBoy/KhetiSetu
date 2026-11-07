@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Calculator, TrendingDown, TrendingUp, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
@@ -71,14 +72,14 @@ const FarmProfitCalculator = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-surface-variant/70">
         <div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-secondary font-mono flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px]">calculate</span>
+            <Calculator className="w-4 h-4 text-secondary" />
             Farm Gate Value Realization
           </span>
           <h3 className="font-display font-bold text-2xl text-primary mt-1">
-            Calculate Your Net Income: Traditional Mandi vs KhetiSetu Direct
+            Compare Your Net Realization: Traditional Mandi vs KhetiSetu Direct
           </h3>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
-            See how much middleman commission, transit spoilage, and unnecessary freight cuts into your hard-earned harvest.
+            See how much middleman commission, transit spoilage, and multi-hop freight cuts into your harvest profits.
           </p>
         </div>
 
@@ -91,7 +92,7 @@ const FarmProfitCalculator = () => {
               Avg. Farmer Gain
             </span>
             <p className="font-display font-bold text-lg text-primary leading-tight">
-              +28% to +35% Net
+              +{calculations.percentageIncrease}% Net In Hand
             </p>
           </div>
         </div>
@@ -188,11 +189,9 @@ const FarmProfitCalculator = () => {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-rose-800 font-mono">
-                    Traditional Route
+                    Traditional Mandi
                   </span>
-                  <span className="material-symbols-outlined text-rose-600 text-[18px]">
-                    trending_down
-                  </span>
+                  <TrendingDown className="w-4 h-4 text-rose-600" />
                 </div>
 
                 <div className="flex flex-col gap-2 text-xs mb-4">
@@ -225,7 +224,7 @@ const FarmProfitCalculator = () => {
                   {formatINR(calculations.traditional.net)}
                 </span>
                 <span className="text-[10px] text-rose-700 block mt-0.5">
-                  Only 70% of gross crop value realized
+                  Only ~70% of gross crop value realized
                 </span>
               </div>
             </div>
@@ -234,7 +233,7 @@ const FarmProfitCalculator = () => {
             <div className="rounded-[18px] p-4 bg-[#08241a] text-[#fdf9f0] border border-[#1b4334] flex flex-col justify-between shadow-md">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 font-mono flex items-center gap-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 font-mono flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     KhetiSetu Direct
                   </span>
@@ -283,7 +282,7 @@ const FarmProfitCalculator = () => {
           <div className="bg-surface-container rounded-[16px] p-4 border border-surface-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="text-xs font-bold text-primary block">
-                Additional Profit In Your Pocket:
+                Additional Net Profit In Your Pocket:
               </span>
               <span className="font-display font-bold text-2xl text-primary font-mono">
                 +{formatINR(calculations.extraEarnings)}
@@ -294,9 +293,9 @@ const FarmProfitCalculator = () => {
             </div>
 
             <Link to="/farmer/listings">
-              <Button variant="primary" size="md" className="shrink-0 w-full sm:w-auto">
-                Sell Harvest Now
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              <Button variant="primary" size="md" className="shrink-0 w-full sm:w-auto flex items-center gap-1.5">
+                <span>Sell Harvest Now</span>
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>

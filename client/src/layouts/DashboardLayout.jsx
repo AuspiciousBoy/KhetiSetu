@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { Store } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import Badge from '../components/ui/Badge';
@@ -31,8 +32,8 @@ const DashboardLayout = () => {
               to="/marketplace"
               className="text-xs font-medium text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5"
             >
-              <span className="material-symbols-outlined text-[16px]">storefront</span>
-              View Marketplace
+              <Store className="w-4 h-4 text-secondary" />
+              <span>View Marketplace</span>
             </Link>
 
             <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold text-xs border border-outline-variant/30">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Radio, ArrowRight } from 'lucide-react';
 
 const MANDI_ITEMS = [
   { crop: 'Nashik Red Onion', price: '₹2,450/qtl', change: '+3.2%', isUp: true, mandi: 'Lasalgaon' },
@@ -14,14 +15,14 @@ const MANDI_ITEMS = [
 
 const MandiTicker = () => {
   return (
-    <div className="bg-[#04140e] text-[#fdf9f0] border-b border-[#0f3d2e] py-1.5 px-3 text-xs overflow-hidden select-none">
+    <div className="bg-[#051c14] text-[#fdf9f0] border-b border-[#0f3d2e] py-1.5 px-3 text-xs overflow-hidden select-none">
       <div className="max-w-container-max mx-auto flex items-center justify-between gap-4">
         {/* Mandi Live Label */}
         <div className="flex items-center gap-2 shrink-0 pr-3 border-r border-[#1e4d3c]">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span className="font-mono font-bold text-[11px] tracking-wider uppercase text-emerald-300 flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">sensors</span>
-            APMC Mandi Ticker
+          <span className="font-mono font-bold text-[11px] tracking-wider uppercase text-emerald-300 flex items-center gap-1.5">
+            <Radio className="w-3.5 h-3.5 text-emerald-400" />
+            Live Mandi Ticker
           </span>
         </div>
 
@@ -49,7 +50,7 @@ const MandiTicker = () => {
           className="shrink-0 pl-3 border-l border-[#1e4d3c] text-[11px] font-semibold text-emerald-300 hover:text-white flex items-center gap-1 transition-colors hidden sm:flex"
         >
           <span>All Mandis</span>
-          <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+          <ArrowRight className="w-3 h-3 text-emerald-400" />
         </Link>
       </div>
     </div>

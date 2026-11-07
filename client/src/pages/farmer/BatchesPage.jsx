@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, Sparkles, Camera, Check, Upload, CheckCircle2 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -124,9 +125,10 @@ const BatchesPage = () => {
           variant="primary"
           size="md"
           onClick={() => setIsNewBatchOpen(true)}
+          className="flex items-center gap-1.5"
         >
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Register New Batch
+          <Plus className="w-4 h-4" />
+          <span>Register New Batch</span>
         </Button>
       </div>
 
@@ -211,10 +213,10 @@ const BatchesPage = () => {
                     setImagePreview(null);
                     setAssessmentResult(batch.qualityAssessmentId || null);
                   }}
-                  className="w-full"
+                  className="w-full flex items-center justify-center gap-1.5"
                 >
-                  <span className="material-symbols-outlined text-[16px]">psychiatry</span>
-                  {batch.qualityGrade === 'PENDING_ASSESSMENT' ? 'Assess Quality' : 'View Assessment'}
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{batch.qualityGrade === 'PENDING_ASSESSMENT' ? 'Assess Quality' : 'View Assessment'}</span>
                 </Button>
               </div>
             </Card>
@@ -325,9 +327,10 @@ const BatchesPage = () => {
                       size="md"
                       loading={assessing}
                       onClick={handleRunAssessment}
+                      className="flex items-center gap-1.5"
                     >
-                      <span className="material-symbols-outlined text-[18px]">psychiatry</span>
-                      Run Gemini Quality Assessment
+                      <Sparkles className="w-4 h-4" />
+                      <span>Run Gemini Quality Assessment</span>
                     </Button>
                     <Button
                       variant="ghost"
@@ -344,7 +347,7 @@ const BatchesPage = () => {
               ) : (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[32px]">add_a_photo</span>
+                    <Camera className="w-7 h-7 text-primary" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-primary">
@@ -410,9 +413,7 @@ const BatchesPage = () => {
                 <ul className="flex flex-col gap-2">
                   {assessmentResult.observations?.map((obs, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-xs text-on-surface leading-relaxed">
-                      <span className="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">
-                        check
-                      </span>
+                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                       <span>{obs}</span>
                     </li>
                   ))}
@@ -457,9 +458,10 @@ const BatchesPage = () => {
                     setImageFile(null);
                     setImagePreview(null);
                   }}
+                  className="flex items-center gap-1.5"
                 >
-                  <span className="material-symbols-outlined text-[16px]">add_a_photo</span>
-                  Upload New Photo & Re-Assess
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Upload New Photo & Re-Assess</span>
                 </Button>
               </div>
             </div>

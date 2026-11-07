@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Check, ShoppingBag, ShieldCheck } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -139,7 +140,7 @@ const ProductDetailPage = () => {
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-on-surface">
                   {product.qualityAssessment.observations?.map((obs, i) => (
                     <li key={i} className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[14px] text-primary">check</span>
+                      <Check className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span>{obs}</span>
                     </li>
                   ))}
@@ -245,7 +246,7 @@ const ProductDetailPage = () => {
                 onClick={handleInstantCheckout}
                 className="w-full mt-2"
               >
-                <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
+                <ShoppingBag className="w-5 h-5 shrink-0" />
                 {isAuthenticated ? 'Direct Checkout & Dispatch' : 'Sign in to Place Order'}
               </Button>
             </div>

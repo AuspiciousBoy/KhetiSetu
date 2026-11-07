@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Sun, Sprout } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -72,9 +73,7 @@ const Footer = () => {
               Local Conditions
             </p>
             <div className="bg-surface-container-high rounded-[16px] p-3.5 flex items-center gap-3 border border-outline-variant/30">
-              <span className="material-symbols-outlined text-secondary text-[28px]">
-                sunny
-              </span>
+              <Sun className="w-7 h-7 text-amber-600 shrink-0" />
               <div>
                 <span className="font-display font-bold text-xl text-primary block leading-none mb-1">
                   28°C

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 const Button = ({
   children,
@@ -48,9 +49,7 @@ const Button = ({
       {...props}
     >
       {loading && (
-        <span className="material-symbols-outlined animate-spin text-[18px]">
-          progress_activity
-        </span>
+        <Loader2 className="w-4 h-4 animate-spin text-current shrink-0" />
       )}
       {children}
     </button>

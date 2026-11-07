@@ -1,4 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  Bot,
+  Sparkles,
+  RotateCcw,
+  Send,
+  Copy,
+  Check,
+  Leaf,
+  Bug,
+  FlaskConical,
+  CloudRain,
+  TrendingUp,
+  User,
+  X,
+  ExternalLink,
+  ShieldCheck,
+  Loader2,
+  Lightbulb,
+} from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -7,31 +26,31 @@ import Badge from '../../components/ui/Badge';
 const PRESET_TOPICS = [
   {
     category: 'Diseases',
-    icon: 'coronavirus',
+    Icon: Leaf,
     label: 'पत्ती झुलसा / Leaf Spot',
     prompt: 'टमाटर की फसल में पत्ती धब्बा और अगेती झुलसा (Early Blight) के लक्षण और उपचार बताएं।',
   },
   {
     category: 'Pests',
-    icon: 'pest_control',
+    Icon: Bug,
     label: 'सफेद मक्खी / Whitefly & Thrips',
     prompt: 'फसल में रस चूसक कीट (सफेद मक्खी और थ्रिप्स) के जैविक एवं CIBRC अनुमोदित रासायनिक उपाय बताएं।',
   },
   {
     category: 'Nutrition',
-    icon: 'science',
+    Icon: FlaskConical,
     label: 'संतुलित खाद / Fertilizer Schedule',
     prompt: 'गेहूं और आलू की फसल के लिए वैज्ञानिक NPK और जिंक खाद तालिका बताएं।',
   },
   {
     category: 'Weather',
-    icon: 'rainy',
+    Icon: CloudRain,
     label: 'बारिश बाद स्प्रे / Spray Advisory',
     prompt: 'भारी बारिश के बाद खेत में फफूंद रोगों से बचाव हेतु कीटनाशक/फफूंदनाशक छिड़काव कब और कैसे करें?',
   },
   {
     category: 'Mandi',
-    icon: 'trending_up',
+    Icon: TrendingUp,
     label: 'शुद्ध मुनाफा / Mandi Strategy',
     prompt: 'स्थानीय मंडी बनाम दूर की थोक मंडी: परिवहन खर्च और कमीशन काटकर शुद्ध मुनाफा कैसे निकालें?',
   },
@@ -165,7 +184,7 @@ const KhetiAIPage = () => {
       <div className="bg-surface rounded-[20px] p-4 border border-surface-variant soil-shadow flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm">
-            <span className="material-symbols-outlined text-[24px]">psychiatry</span>
+            <Bot className="w-6 h-6 text-emerald-300" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -173,12 +192,12 @@ const KhetiAIPage = () => {
                 खेती AI • Agricultural Intelligence Center
               </h1>
               {aiStatus.isGeminiConfigured ? (
-                <Badge variant="success" className="flex items-center gap-1">
+                <Badge variant="success" className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
                   Google Gemini Live
                 </Badge>
               ) : (
-                <Badge variant="warning" className="flex items-center gap-1">
+                <Badge variant="warning" className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-600"></span>
                   Agronomy Engine Active
                 </Badge>
@@ -205,8 +224,8 @@ const KhetiAIPage = () => {
             className="px-3 py-1.5 rounded-[10px] bg-surface-container hover:bg-surface-variant text-on-surface text-xs font-semibold border border-surface-variant flex items-center gap-1.5 transition-colors"
             title="Start new conversation"
           >
-            <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-            New Session
+            <RotateCcw className="w-3.5 h-3.5 text-secondary" />
+            <span>New Session</span>
           </button>
         </div>
       </div>
@@ -215,9 +234,9 @@ const KhetiAIPage = () => {
       {!aiStatus.isGeminiConfigured && (
         <div className="bg-amber-50 border border-amber-200/80 rounded-[14px] px-4 py-2.5 flex items-center justify-between text-xs text-amber-900 gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-amber-600 text-[20px]">lightbulb</span>
+            <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Gemini API Setup:</strong> Running on KhetiSetu's calibrated agronomy knowledge base.
+              <strong>Gemini AI Setup:</strong> Running on KhetiSetu's calibrated agronomy knowledge base.
               To activate live Google Gemini cloud AI, add your free key to <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-[11px]">server/.env</code> as <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-[11px]">GEMINI_API_KEY=AIzaSy...</code>
             </span>
           </div>
@@ -227,8 +246,8 @@ const KhetiAIPage = () => {
             rel="noreferrer"
             className="shrink-0 text-amber-800 font-bold hover:underline inline-flex items-center gap-1"
           >
-            Get Free Key
-            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+            <span>Get Free Key</span>
+            <ExternalLink className="w-3 h-3 text-amber-800" />
           </a>
         </div>
       )}
@@ -236,24 +255,25 @@ const KhetiAIPage = () => {
       {/* Preset Crop Advisory Shortcuts */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider shrink-0 flex items-center gap-1">
-          <span className="material-symbols-outlined text-[14px]">tune</span>
+          <Sparkles className="w-3.5 h-3.5 text-secondary" />
           Quick Inquiries:
         </span>
-        {PRESET_TOPICS.map((topic, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => {
-              setInputMessage(topic.prompt);
-            }}
-            className="px-3 py-1.5 rounded-full bg-surface hover:bg-surface-container text-on-surface text-xs font-medium shrink-0 border border-surface-variant transition-all hover:border-primary/40 flex items-center gap-1.5 soil-shadow"
-          >
-            <span className="material-symbols-outlined text-[15px] text-secondary">
-              {topic.icon}
-            </span>
-            {topic.label}
-          </button>
-        ))}
+        {PRESET_TOPICS.map((topic, idx) => {
+          const Icon = topic.Icon;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                setInputMessage(topic.prompt);
+              }}
+              className="px-3 py-1.5 rounded-full bg-surface hover:bg-surface-container text-on-surface text-xs font-medium shrink-0 border border-surface-variant transition-all hover:border-primary/40 flex items-center gap-1.5 soil-shadow"
+            >
+              <Icon className="w-3.5 h-3.5 text-secondary shrink-0" />
+              <span>{topic.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Conversation Stream */}
@@ -274,9 +294,9 @@ const KhetiAIPage = () => {
                 }`}
               >
                 {isUser ? (
-                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  <User className="w-4 h-4 text-white" />
                 ) : (
-                  <span className="material-symbols-outlined text-[16px]">psychiatry</span>
+                  <Bot className="w-4 h-4 text-emerald-300" />
                 )}
               </div>
 
@@ -300,7 +320,7 @@ const KhetiAIPage = () => {
                 >
                   <span className="flex items-center gap-1 font-mono">
                     {!isUser && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                         {msg.source?.includes('gemini')
                           ? `Google ${msg.source}`
@@ -316,10 +336,17 @@ const KhetiAIPage = () => {
                       onClick={() => handleCopy(msg.content, index)}
                       className="hover:text-primary transition-colors flex items-center gap-1 font-semibold"
                     >
-                      <span className="material-symbols-outlined text-[13px]">
-                        {copiedIndex === index ? 'check' : 'content_copy'}
-                      </span>
-                      {copiedIndex === index ? 'Copied' : 'Copy'}
+                      {copiedIndex === index ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy</span>
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
@@ -329,11 +356,9 @@ const KhetiAIPage = () => {
         })}
 
         {loading && (
-          <div className="flex items-center gap-3 p-3 bg-surface rounded-[14px] border border-surface-variant max-w-sm text-xs text-primary font-medium animate-pulse">
-            <span className="material-symbols-outlined animate-spin text-[18px]">
-              progress_activity
-            </span>
-            <span>Analyzing agronomic query & consulting database...</span>
+          <div className="flex items-center gap-3 p-3 bg-surface rounded-[14px] border border-surface-variant max-w-sm text-xs text-primary font-medium">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            <span>Analyzing agronomic query & synthesizing response...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -357,7 +382,7 @@ const KhetiAIPage = () => {
                 onClick={() => setInputMessage('')}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-xs"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -371,13 +396,13 @@ const KhetiAIPage = () => {
             className="rounded-[14px] px-5 py-3.5 flex items-center gap-1.5 shadow-sm"
           >
             <span className="hidden sm:inline">Ask AI</span>
-            <span className="material-symbols-outlined text-[18px]">send</span>
+            <Send className="w-4 h-4" />
           </Button>
         </form>
 
         {/* Agricultural Safety Disclaimer */}
         <p className="text-[11px] text-on-surface-variant/75 text-center flex items-center justify-center gap-1.5">
-          <span className="material-symbols-outlined text-[14px] text-secondary">verified_user</span>
+          <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
           <span>
             Advice adheres to CIBRC agrochemical safety guidelines. Always consult your local Krishi Vigyan Kendra (KVK) officer before applying concentrated sprays.
           </span>

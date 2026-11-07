@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Sprout, AlertCircle, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -62,9 +63,9 @@ const LoginPage = () => {
       <Card className="w-full max-w-md p-8 sm:p-10 border border-surface-variant bg-surface soil-shadow">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-primary text-[32px]">
-              psychiatry
-            </span>
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
+              <Sprout className="w-6 h-6 text-emerald-300" />
+            </div>
             <span className="font-display font-bold text-2xl uppercase tracking-tighter text-primary">
               KHETISETU
             </span>
@@ -79,9 +80,7 @@ const LoginPage = () => {
 
         {errorMessage && (
           <div className="mb-6 p-4 rounded-[12px] bg-error-container/40 border border-error/30 text-error flex items-start gap-3 text-xs leading-relaxed">
-            <span className="material-symbols-outlined text-[18px] shrink-0 mt-0.5">
-              error
-            </span>
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -91,7 +90,7 @@ const LoginPage = () => {
             label="Email Address"
             type="email"
             required
-            icon="mail"
+            icon={<Mail className="w-4 h-4" />}
             placeholder="farmer@khetisetu.demo"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -112,30 +111,29 @@ const LoginPage = () => {
             <Input
               type="password"
               required
-              icon="lock"
+              icon={<Lock className="w-4 h-4" />}
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-2">
-            Sign In
+          <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-2 flex items-center justify-center gap-2">
+            <span>Sign In</span>
+            <ArrowRight className="w-4 h-4" />
           </Button>
         </form>
 
-        {/* Demo Credentials Quick-Fill helper for convenience */}
+        {/* Demo Credentials Quick-Fill helper */}
         <div className="mt-8 pt-6 border-t border-surface-variant/70">
           <p className="text-[11px] font-bold text-secondary uppercase tracking-wider text-center mb-3">
-            One-Click Demo Credentials
+            One-Click Demo Roles
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <button
               type="button"
               onClick={() => {
                 setEmail('farmer@khetisetu.demo');
-                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
-                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
@@ -145,8 +143,6 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('consumer@khetisetu.demo');
-                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
-                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
@@ -156,8 +152,6 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('business@khetisetu.demo');
-                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
-                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
@@ -167,8 +161,6 @@ const LoginPage = () => {
               type="button"
               onClick={() => {
                 setEmail('admin@khetisetu.demo');
-                const envPass = import.meta.env.VITE_DEMO_PASSWORD;
-                if (envPass) setPassword(envPass);
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >

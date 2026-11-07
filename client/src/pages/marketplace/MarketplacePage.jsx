@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Search, ArrowRight } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -123,9 +124,7 @@ const MarketplacePage = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-surface-container text-on-surface placeholder:text-on-surface-variant/70 rounded-[12px] py-2 pl-9 pr-3 text-xs border border-transparent focus:border-primary focus:outline-none"
           />
-          <span className="material-symbols-outlined absolute left-2.5 top-2 text-[18px] text-on-surface-variant">
-            search
-          </span>
+          <Search className="w-4 h-4 text-on-surface-variant absolute left-2.5 top-2.5" />
         </div>
       </div>
 
@@ -202,9 +201,9 @@ const MarketplacePage = () => {
                 </span>
 
                 <Link to={`/marketplace/${item.id}`}>
-                  <Button variant="primary" size="sm">
-                    View Produce & Buy
-                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  <Button variant="primary" size="sm" className="flex items-center gap-1.5">
+                    <span>View Produce & Buy</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </Link>
               </div>

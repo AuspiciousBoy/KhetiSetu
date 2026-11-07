@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 const Input = forwardRef(
   (
@@ -28,9 +29,13 @@ const Input = forwardRef(
         )}
         <div className="relative flex items-center">
           {icon && (
-            <span className="material-symbols-outlined absolute left-3.5 text-[20px] text-on-surface-variant/70 pointer-events-none">
-              {icon}
-            </span>
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-on-surface-variant/70">
+              {typeof icon === 'string' ? (
+                <span className="material-symbols-outlined text-[20px]">{icon}</span>
+              ) : (
+                icon
+              )}
+            </div>
           )}
           <input
             id={inputId}
@@ -43,9 +48,9 @@ const Input = forwardRef(
           />
         </div>
         {error && (
-          <p className="text-xs text-error font-medium flex items-center gap-1 mt-0.5">
-            <span className="material-symbols-outlined text-[14px]">error</span>
-            {error}
+          <p className="text-xs text-error font-medium flex items-center gap-1.5 mt-0.5">
+            <AlertCircle className="w-3.5 h-3.5 text-error shrink-0" />
+            <span>{error}</span>
           </p>
         )}
         {helperText && !error && (

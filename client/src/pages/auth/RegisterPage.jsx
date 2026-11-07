@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  Sprout,
+  Tractor,
+  ShoppingBag,
+  Building2,
+  User,
+  Mail,
+  Phone,
+  Lock,
+  AlertCircle,
+  ArrowRight,
+  ShieldCheck,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -85,9 +98,9 @@ const RegisterPage = () => {
       <Card className="w-full max-w-xl p-8 sm:p-10 border border-surface-variant bg-surface soil-shadow my-8">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-primary text-[32px]">
-              psychiatry
-            </span>
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
+              <Sprout className="w-6 h-6 text-emerald-300" />
+            </div>
             <span className="font-display font-bold text-2xl uppercase tracking-tighter text-primary">
               KHETISETU
             </span>
@@ -105,15 +118,13 @@ const RegisterPage = () => {
           <button
             type="button"
             onClick={() => setRole('FARMER')}
-            className={`p-3.5 rounded-[16px] text-center border transition-all ${
+            className={`p-3.5 rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
               role === 'FARMER'
                 ? 'bg-primary text-on-primary border-primary shadow-sm'
                 : 'bg-surface-container border-surface-variant text-on-surface hover:bg-surface-variant'
             }`}
           >
-            <span className="material-symbols-outlined text-[24px] block mb-1">
-              agriculture
-            </span>
+            <Tractor className="w-6 h-6 mb-1.5" />
             <span className="text-xs font-bold block">Farmer</span>
             <span className="text-[10px] opacity-80 block">Sell & Assess</span>
           </button>
@@ -121,15 +132,13 @@ const RegisterPage = () => {
           <button
             type="button"
             onClick={() => setRole('CONSUMER')}
-            className={`p-3.5 rounded-[16px] text-center border transition-all ${
+            className={`p-3.5 rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
               role === 'CONSUMER'
                 ? 'bg-primary text-on-primary border-primary shadow-sm'
                 : 'bg-surface-container border-surface-variant text-on-surface hover:bg-surface-variant'
             }`}
           >
-            <span className="material-symbols-outlined text-[24px] block mb-1">
-              shopping_basket
-            </span>
+            <ShoppingBag className="w-6 h-6 mb-1.5" />
             <span className="text-xs font-bold block">Consumer</span>
             <span className="text-[10px] opacity-80 block">Fresh Harvest</span>
           </button>
@@ -137,15 +146,13 @@ const RegisterPage = () => {
           <button
             type="button"
             onClick={() => setRole('BUSINESS')}
-            className={`p-3.5 rounded-[16px] text-center border transition-all ${
+            className={`p-3.5 rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
               role === 'BUSINESS'
                 ? 'bg-primary text-on-primary border-primary shadow-sm'
                 : 'bg-surface-container border-surface-variant text-on-surface hover:bg-surface-variant'
             }`}
           >
-            <span className="material-symbols-outlined text-[24px] block mb-1">
-              store
-            </span>
+            <Building2 className="w-6 h-6 mb-1.5" />
             <span className="text-xs font-bold block">Business</span>
             <span className="text-[10px] opacity-80 block">Bulk Mandi</span>
           </button>
@@ -153,9 +160,7 @@ const RegisterPage = () => {
 
         {errorMessage && (
           <div className="mb-6 p-4 rounded-[12px] bg-error-container/40 border border-error/30 text-error flex items-start gap-3 text-xs">
-            <span className="material-symbols-outlined text-[18px] shrink-0 mt-0.5">
-              error
-            </span>
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -164,7 +169,7 @@ const RegisterPage = () => {
           <Input
             label="Full Name"
             required
-            icon="person"
+            icon={<User className="w-4 h-4" />}
             placeholder="e.g. Rameshwar Patil"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -175,7 +180,7 @@ const RegisterPage = () => {
               label="Email Address"
               type="email"
               required
-              icon="mail"
+              icon={<Mail className="w-4 h-4" />}
               placeholder="farmer@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -184,7 +189,7 @@ const RegisterPage = () => {
               label="Phone Number"
               type="tel"
               required
-              icon="call"
+              icon={<Phone className="w-4 h-4" />}
               placeholder="+91 98765 43210"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -193,8 +198,9 @@ const RegisterPage = () => {
 
           {/* Conditional Role-Specific Fields */}
           {role === 'FARMER' && (
-            <div className="p-4 rounded-[16px] bg-surface-container-low border border-surface-variant flex flex-col gap-3">
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">
+            <div className="p-4 rounded-[16px] bg-surface-container border border-surface-variant flex flex-col gap-3">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                <Tractor className="w-3.5 h-3.5 text-secondary" />
                 Farm Information
               </span>
               <Input
@@ -221,8 +227,9 @@ const RegisterPage = () => {
           )}
 
           {role === 'BUSINESS' && (
-            <div className="p-4 rounded-[16px] bg-surface-container-low border border-surface-variant flex flex-col gap-3">
-              <span className="text-xs font-bold text-primary uppercase tracking-wider">
+            <div className="p-4 rounded-[16px] bg-surface-container border border-surface-variant flex flex-col gap-3">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                <Building2 className="w-3.5 h-3.5 text-secondary" />
                 Enterprise Information
               </span>
               <Input
@@ -245,7 +252,7 @@ const RegisterPage = () => {
               label="Password"
               type="password"
               required
-              icon="lock"
+              icon={<Lock className="w-4 h-4" />}
               placeholder="Min 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -254,15 +261,16 @@ const RegisterPage = () => {
               label="Confirm Password"
               type="password"
               required
-              icon="lock_reset"
+              icon={<Lock className="w-4 h-4" />}
               placeholder="Re-enter password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 
-          <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-4">
-            Create {role.toLowerCase()} Account
+          <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-4 flex items-center justify-center gap-2">
+            <span>Create {role.toLowerCase()} Account</span>
+            <ArrowRight className="w-4 h-4" />
           </Button>
         </form>
 

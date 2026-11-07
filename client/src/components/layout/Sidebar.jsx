@@ -1,47 +1,66 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import {
+  Sprout,
+  LayoutDashboard,
+  Boxes,
+  Store,
+  Receipt,
+  TrendingUp,
+  CloudSun,
+  Sparkles,
+  Package,
+  ShoppingBag,
+  Users,
+  CheckCircle2,
+  Truck,
+  ShieldCheck,
+  ShoppingCart,
+  QrCode,
+  LogOut,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const role = user?.role || 'FARMER';
 
-  // Role-specific Navigation Items
+  // Role-specific Navigation Items using direct Lucide SVG components
   const getNavItems = () => {
     switch (role) {
       case 'FARMER':
         return [
-          { name: 'Dashboard', path: '/farmer/dashboard', icon: 'grid_view' },
-          { name: 'Produce Batches', path: '/farmer/batches', icon: 'inventory_2' },
-          { name: 'My Listings', path: '/farmer/listings', icon: 'storefront' },
-          { name: 'Farm Orders', path: '/farmer/orders', icon: 'receipt_long' },
-          { name: 'Market Intelligence', path: '/farmer/market', icon: 'trending_up' },
-          { name: 'Weather Advisories', path: '/farmer/weather', icon: 'partly_cloudy_day' },
-          { name: 'Kheti AI Doctor', path: '/farmer/ai', icon: 'psychiatry' },
+          { name: 'Dashboard', path: '/farmer/dashboard', Icon: LayoutDashboard },
+          { name: 'Produce Batches', path: '/farmer/batches', Icon: Boxes },
+          { name: 'My Listings', path: '/farmer/listings', Icon: Store },
+          { name: 'Farm Orders', path: '/farmer/orders', Icon: Receipt },
+          { name: 'Market Intelligence', path: '/farmer/market', Icon: TrendingUp },
+          { name: 'Weather Advisories', path: '/farmer/weather', Icon: CloudSun },
+          { name: 'Kheti AI Doctor', path: '/farmer/ai', Icon: Sparkles },
         ];
       case 'BUSINESS':
         return [
-          { name: 'Dashboard', path: '/business/dashboard', icon: 'grid_view' },
-          { name: 'Bulk Marketplace', path: '/marketplace?type=b2b', icon: 'pallet' },
-          { name: 'Bulk Purchase Orders', path: '/business/orders', icon: 'shopping_bag' },
-          { name: 'Mandi Trends', path: '/farmer/market', icon: 'monitoring' },
+          { name: 'Dashboard', path: '/business/dashboard', Icon: LayoutDashboard },
+          { name: 'Bulk Marketplace', path: '/marketplace?type=b2b', Icon: Package },
+          { name: 'Bulk Purchase Orders', path: '/business/orders', Icon: ShoppingBag },
+          { name: 'Mandi Trends', path: '/farmer/market', Icon: TrendingUp },
         ];
       case 'ADMIN':
         return [
-          { name: 'Overview', path: '/admin/dashboard', icon: 'analytics' },
-          { name: 'User Management', path: '/admin/users', icon: 'group' },
-          { name: 'Product Moderation', path: '/admin/products', icon: 'verified' },
-          { name: 'Logistics Fleet', path: '/admin/logistics', icon: 'local_shipping' },
-          { name: 'Audit Security Logs', path: '/admin/audit', icon: 'shield' },
+          { name: 'Overview', path: '/admin/dashboard', Icon: LayoutDashboard },
+          { name: 'User Management', path: '/admin/users', Icon: Users },
+          { name: 'Product Moderation', path: '/admin/products', Icon: CheckCircle2 },
+          { name: 'Logistics Fleet', path: '/admin/logistics', Icon: Truck },
+          { name: 'Audit Security Logs', path: '/admin/audit', Icon: ShieldCheck },
         ];
       case 'CONSUMER':
       default:
         return [
-          { name: 'Marketplace', path: '/marketplace', icon: 'storefront' },
-          { name: 'My Cart', path: '/consumer/cart', icon: 'shopping_cart' },
-          { name: 'My Orders', path: '/consumer/orders', icon: 'receipt_long' },
-          { name: 'Produce Traceability', path: '/marketplace', icon: 'qr_code_scanner' },
-          { name: 'Kheti AI Assistant', path: '/farmer/ai', icon: 'smart_toy' },
+          { name: 'Marketplace', path: '/marketplace', Icon: Store },
+          { name: 'My Cart', path: '/consumer/cart', Icon: ShoppingCart },
+          { name: 'My Orders', path: '/consumer/orders', Icon: Receipt },
+          { name: 'Produce Traceability', path: '/marketplace', Icon: QrCode },
+          { name: 'Kheti AI Assistant', path: '/farmer/ai', Icon: Sparkles },
         ];
     }
   };
@@ -49,18 +68,18 @@ const Sidebar = () => {
   const navItems = getNavItems();
 
   return (
-    <aside className="w-64 bg-primary text-on-primary min-h-screen flex flex-col justify-between p-6 shrink-0 grain-overlay border-r border-outline-variant/20 relative z-20">
+    <aside className="w-64 bg-[#08241a] text-[#fdf9f0] min-h-screen flex flex-col justify-between p-6 shrink-0 border-r border-[#154633] relative z-20">
       <div>
         {/* Brand Header */}
-        <Link to="/" className="flex items-center gap-3 mb-10 px-2">
-          <div className="w-10 h-10 rounded-[12px] bg-surface-container flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[24px]">psychiatry</span>
+        <Link to="/" className="flex items-center gap-3 mb-8 px-2 group">
+          <div className="w-10 h-10 rounded-[12px] bg-[#0d3829] flex items-center justify-center text-emerald-300 border border-[#1b5c42]">
+            <Sprout className="w-5 h-5 text-emerald-300" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg tracking-tight text-on-primary">
+            <h1 className="font-display font-bold text-lg tracking-tight text-white">
               KHETISETU
             </h1>
-            <p className="text-[10px] text-on-primary-container tracking-wider uppercase font-medium">
+            <p className="text-[10px] text-emerald-300/80 tracking-wider uppercase font-semibold font-mono">
               {role} PORTAL
             </p>
           </div>
@@ -68,53 +87,53 @@ const Sidebar = () => {
 
         {/* Navigation Links */}
         <nav className="flex flex-col gap-1.5">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path.endsWith('/dashboard')}
-              className={({ isActive }) =>
-                `flex items-center gap-3.5 px-3 py-3 rounded-[12px] text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-surface/15 text-on-primary shadow-sm font-semibold'
-                    : 'text-on-primary/70 hover:text-on-primary hover:bg-surface/10'
-                }`
-              }
-            >
-              {/* Monolinear icon encased in circular tile per DESIGN.md */}
-              <div className="w-8 h-8 rounded-full bg-surface-container/15 flex items-center justify-center text-on-primary shrink-0">
-                <span className="material-symbols-outlined text-[18px]">
-                  {item.icon}
-                </span>
-              </div>
-              <span className="truncate">{item.name}</span>
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.Icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path.endsWith('/dashboard')}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-xs sm:text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold shadow-sm'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`
+                }
+              >
+                <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-current shrink-0">
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span className="truncate">{item.name}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 
       {/* User Footer Card */}
-      <div className="pt-6 border-t border-outline-variant/20 flex flex-col gap-3">
+      <div className="pt-6 border-t border-[#154633] flex flex-col gap-3">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-9 h-9 rounded-full bg-surface-container-high text-primary font-bold flex items-center justify-center text-sm shrink-0">
+          <div className="w-9 h-9 rounded-full bg-emerald-800 text-emerald-200 font-bold flex items-center justify-center text-xs shrink-0">
             {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-semibold text-on-primary truncate">
-              {user?.fullName}
+            <p className="text-xs font-semibold text-white truncate">
+              {user?.fullName || 'Active Steward'}
             </p>
-            <p className="text-[10px] text-on-primary-container truncate">
-              {user?.email}
+            <p className="text-[10px] text-emerald-400/70 truncate font-mono">
+              {user?.email || 'authenticated'}
             </p>
           </div>
         </div>
 
         <button
           onClick={logout}
-          className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-error-container hover:bg-surface/10 rounded-[8px] transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-300 hover:bg-rose-950/40 rounded-[8px] transition-colors"
         >
-          <span className="material-symbols-outlined text-[16px]">logout</span>
-          Sign Out
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>

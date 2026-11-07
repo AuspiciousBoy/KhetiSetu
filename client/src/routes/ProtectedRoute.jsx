@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Skeleton } from '../components/ui/Skeleton';
 
@@ -44,7 +45,7 @@ export const RoleRoute = ({ allowedRoles = [], children }) => {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-8">
         <div className="w-16 h-16 rounded-full bg-error-container text-error flex items-center justify-center mb-4">
-          <span className="material-symbols-outlined text-[32px]">lock</span>
+          <Lock className="w-8 h-8 text-error" />
         </div>
         <h2 className="font-display font-bold text-2xl text-primary mb-2">Access Restricted</h2>
         <p className="text-sm text-on-surface-variant max-w-md mb-6">
