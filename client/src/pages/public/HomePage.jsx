@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
+import AgriWeatherBar from '../../components/agri/AgriWeatherBar';
+import FarmProfitCalculator from '../../components/agri/FarmProfitCalculator';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -15,8 +17,8 @@ const HomePage = () => {
 
   return (
     <div className="w-full">
-      {/* Hero Section matching code.html */}
-      <section className="relative w-full min-h-[75vh] flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-16 bg-surface overflow-hidden">
+      {/* Hero Section matching code.html with authentic farmland texture */}
+      <section className="relative w-full min-h-[72vh] flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-14 sm:py-16 bg-surface overflow-hidden">
         {/* Farmland Background Texture with Blur */}
         <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
           <img
@@ -28,19 +30,19 @@ const HomePage = () => {
         </div>
 
         <div className="relative z-10 max-w-container-max mx-auto w-full flex flex-col md:flex-row gap-12 items-center">
-          <div className="w-full md:w-3/4">
+          <div className="w-full md:w-4/5 lg:w-3/4">
             <span className="text-xs font-bold uppercase tracking-widest text-secondary font-label-md mb-3 block">
               "Khet Se Bazaar Tak, Ek Hi Setu."
             </span>
-            <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl text-primary mb-6 max-w-3xl tracking-tight leading-tight">
-              The Future of Indian Farming is Grounded in Intelligence.
+            <h1 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-primary mb-5 max-w-3xl tracking-tight leading-tight">
+              The Modern Digital Agricultural Ecosystem for India's Growers.
             </h1>
-            <p className="text-base sm:text-lg text-on-surface-variant max-w-2xl font-normal leading-relaxed mb-4">
-              Connecting farmers directly to consumers, wholesale mandis, AI-assisted post-harvest quality assessment, and transparent pricing.
+            <p className="text-base sm:text-lg text-on-surface-variant max-w-2xl font-normal leading-relaxed mb-6">
+              Connecting farmers directly to consumers, wholesale mandis, AI-assisted produce quality grading, and transparent pricing with zero middleman deductions.
             </p>
 
             {/* Interactive Search Console Card directly reproducing code.html */}
-            <div className="bg-surface p-4 sm:p-5 rounded-[24px] max-w-2xl soil-shadow flex flex-col gap-4 border border-surface-variant mt-6">
+            <div className="bg-surface p-4 sm:p-5 rounded-[24px] max-w-2xl soil-shadow flex flex-col gap-4 border border-surface-variant">
               <form
                 onSubmit={handleSearch}
                 className="flex items-center gap-3 bg-surface-container rounded-lg px-4 py-3 border focus-within:border-primary border-transparent transition-colors"
@@ -50,8 +52,8 @@ const HomePage = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="What agricultural advice or produce do you need today?"
-                  className="w-full bg-transparent border-none focus:ring-0 text-base text-on-surface placeholder:text-on-surface-variant/70 outline-none"
+                  placeholder="Ask crop advice, check mandi price or find harvest produce..."
+                  className="w-full bg-transparent border-none focus:ring-0 text-sm sm:text-base text-on-surface placeholder:text-on-surface-variant/70 outline-none"
                 />
                 <button
                   type="submit"
@@ -61,7 +63,7 @@ const HomePage = () => {
                 </button>
               </form>
 
-              {/* Quick Action Chips matching code.html */}
+              {/* Quick Action Chips */}
               <div className="flex flex-wrap gap-2">
                 <Link
                   to="/farmer/batches"
@@ -71,25 +73,25 @@ const HomePage = () => {
                   Diagnose Crop Quality
                 </Link>
                 <Link
-                  to="/weather"
-                  className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[18px]">partly_cloudy_day</span>
-                  Check Weather
-                </Link>
-                <Link
-                  to="/marketplace"
-                  className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[18px]">storefront</span>
-                  Buy / Sell Produce
-                </Link>
-                <Link
                   to="/market-prices"
                   className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-[18px]">trending_up</span>
-                  Mandi Prices & Trends
+                  Mandi Live Prices
+                </Link>
+                <Link
+                  to="/weather"
+                  className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">partly_cloudy_day</span>
+                  Agro-Weather
+                </Link>
+                <Link
+                  to="/ai-assistant"
+                  className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                  Ask Kheti AI
                 </Link>
               </div>
             </div>
@@ -97,48 +99,57 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Field Microclimate & Spraying Advisory Banner */}
+      <section className="px-margin-mobile md:px-margin-desktop -mt-6 mb-8 max-w-container-max mx-auto relative z-20">
+        <AgriWeatherBar />
+      </section>
+
+      {/* Interactive Net Realization Calculator (FBN / Indigo Ag Style) */}
+      <section className="py-12 px-margin-mobile md:px-margin-desktop bg-background max-w-container-max mx-auto">
+        <FarmProfitCalculator />
+      </section>
+
       {/* Bento Grid Feature Section reproducing code.html */}
-      <section className="py-20 md:py-[100px] px-margin-mobile md:px-margin-desktop bg-background max-w-container-max mx-auto">
-        <div className="mb-12">
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-primary">
-            Intelligent Ecosystem
+      <section className="py-12 md:py-16 px-margin-mobile md:px-margin-desktop bg-background max-w-container-max mx-auto">
+        <div className="mb-10">
+          <span className="text-xs font-bold uppercase tracking-widest text-secondary font-mono block mb-1">
+            Platform Capabilities
+          </span>
+          <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-primary">
+            Precision Agricultural Ecosystem
           </h2>
-          <p className="text-base text-on-surface-variant mt-2 max-w-xl">
-            Precision farm-to-market tools engineered for the modern steward of the land.
+          <p className="text-sm sm:text-base text-on-surface-variant mt-1.5 max-w-xl">
+            Practical, field-tested digital tools engineered for farmers, agribusinesses, and consumers.
           </p>
         </div>
 
         {/* 12-Column Bento Grid matching code.html */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter auto-rows-[250px]">
           {/* AI Produce Quality Assessor (Large 8-col Bento Tile) */}
-          <div className="col-span-1 md:col-span-8 row-span-2 bg-surface-container-low rounded-[24px] border border-surface-variant p-8 flex flex-col justify-between overflow-hidden relative group grain-overlay soil-shadow">
+          <div className="col-span-1 md:col-span-8 row-span-2 bg-surface-container-low rounded-[24px] border border-surface-variant p-6 sm:p-8 flex flex-col justify-between overflow-hidden relative group grain-overlay soil-shadow">
             <div className="relative z-10 md:w-3/5">
-              <div className="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center mb-6 border border-surface-tint/20">
+              <div className="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center mb-5 border border-surface-tint/20">
                 <span className="material-symbols-outlined text-primary text-[24px]">eco</span>
               </div>
               <h3 className="font-display font-semibold text-2xl text-primary mb-2">
                 AI Post-Harvest Quality Doctor
               </h3>
-              <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-on-surface-variant mb-5 leading-relaxed">
                 Upload photos of freshly harvested produce for instantaneous shelf-life estimation, defect analysis, and Grade-A commercial classification before dispatching to mandis.
               </p>
 
-              <ul className="flex flex-col gap-2.5 mb-8">
-                <li className="flex items-center gap-2.5 text-xs font-semibold text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                  Visual Blemish & Decay Identification
+              <ul className="flex flex-col gap-2 mb-6">
+                <li className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  Visual Blemish, Decay & Sunscald Detection
                 </li>
-                <li className="flex items-center gap-2.5 text-xs font-semibold text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                  Estimated Shelf-Life Projection (Ventilated vs Cooled)
+                <li className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  Estimated Shelf-Life Projection (Ambient vs Cold-Chain)
                 </li>
-                <li className="flex items-center gap-2.5 text-xs font-semibold text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                  APMC Commercial Grade Verification
-                </li>
-                <li className="flex items-center gap-2.5 text-xs font-semibold text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[18px] text-primary">check_circle</span>
-                  Visual Estimate Only — Transparent Food Safety Disclaimers
+                <li className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  Standard APMC Grade-A/B/C Commercial Verification
                 </li>
               </ul>
 
@@ -150,7 +161,7 @@ const HomePage = () => {
               </Link>
             </div>
 
-            {/* Floating Visual Accent Card from code.html */}
+            {/* Floating Visual Accent Card */}
             <div className="absolute bottom-6 right-6 z-20 bg-surface/95 backdrop-blur-md p-3.5 rounded-[16px] border border-surface-variant soil-shadow flex items-center gap-3 hidden sm:flex">
               <div className="w-12 h-12 rounded-[10px] overflow-hidden border border-outline-variant/30 shrink-0">
                 <img
@@ -174,7 +185,7 @@ const HomePage = () => {
 
             {/* Macro Background Image Slice */}
             <div
-              className="absolute right-0 bottom-0 w-2/5 h-full opacity-60 pointer-events-none hidden md:block"
+              className="absolute right-0 bottom-0 w-2/5 h-full opacity-40 pointer-events-none hidden md:block"
               style={{
                 backgroundImage:
                   "url('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600')",
@@ -184,7 +195,7 @@ const HomePage = () => {
             ></div>
           </div>
 
-          {/* Soil & Farm Metrics (Small 4-col Bento Tile with Deep Forest bg from code.html) */}
+          {/* Soil & Farm Metrics (Small 4-col Bento Tile) */}
           <div className="col-span-1 md:col-span-4 row-span-1 bg-primary text-on-primary rounded-[24px] p-6 flex flex-col justify-between grain-overlay soil-shadow">
             <div>
               <div className="flex justify-between items-start mb-4">
@@ -192,20 +203,20 @@ const HomePage = () => {
                   <span className="material-symbols-outlined text-on-primary text-[20px]">layers</span>
                 </div>
                 <span className="bg-surface-tint/30 px-2 py-0.5 rounded-[4px] text-[11px] font-bold text-on-primary">
-                  Farm Region • Pune
+                  Farm Region • Maharashtra
                 </span>
               </div>
               <h3 className="font-display font-semibold text-lg mb-1">
-                Ecosystem Health
+                Batch Traceability
               </h3>
-              <p className="text-xs text-on-primary/70">Traceable harvests registered on platform</p>
+              <p className="text-xs text-on-primary/70">Verified farm gate batches with tamper-resistant QR codes</p>
             </div>
 
             <div className="flex items-end gap-2">
               <span className="font-display font-bold text-4xl text-secondary-fixed">
                 100%
               </span>
-              <span className="text-xs text-on-primary/70 mb-1">Verified Farm Gate Batches</span>
+              <span className="text-xs text-on-primary/70 mb-1">Direct Farm Gate Origin</span>
             </div>
           </div>
 
@@ -219,7 +230,7 @@ const HomePage = () => {
                 Market Price Analytics
               </h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">
-                Weighted Moving Average algorithmic price predictions & transparent mandi net-return rankings.
+                Deterministic Weighted Moving Average (WMA) algorithmic forecasts & mandi net realization rankings.
               </p>
             </div>
 

@@ -1,19 +1,64 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { z } = require('zod');
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
 const { GEMINI_API_KEY } = require('../config/env');
 const logger = require('../utils/logger');
 
+/**
+ * Resolves the active Gemini API key.
+ * Checks process.env first, and re-reads server/.env if needed
+ * so runtime key additions are immediately detected without restarting.
+ */
+const getActiveApiKey = () => {
+  let key = process.env.GEMINI_API_KEY || GEMINI_API_KEY;
+  if (!key || key.trim() === '' || key.includes('your_gemini')) {
+    try {
+      const envPath = path.resolve(__dirname, '../.env');
+      if (fs.existsSync(envPath)) {
+        const parsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
+        if (parsed.GEMINI_API_KEY && !parsed.GEMINI_API_KEY.includes('your_gemini') && parsed.GEMINI_API_KEY.trim().length > 10) {
+          key = parsed.GEMINI_API_KEY.trim();
+          process.env.GEMINI_API_KEY = key;
+        }
+      }
+    } catch {
+      // Fall through if file read fails
+    }
+  }
+  return key && key.trim().length > 10 && !key.includes('your_gemini') ? key.trim() : null;
+};
+
 // Dynamic client initialization so keys provided at runtime/env are detected
 const getGenAI = () => {
-  const key = process.env.GEMINI_API_KEY || GEMINI_API_KEY;
-  if (key && key.trim().length > 10 && !key.includes('your_gemini')) {
+  const key = getActiveApiKey();
+  if (key) {
     try {
-      return new GoogleGenerativeAI(key.trim());
+      return new GoogleGenerativeAI(key);
     } catch (err) {
       logger.warn('Failed to initialize GoogleGenerativeAI client', { error: err.message });
     }
   }
   return null;
+};
+
+/**
+ * Returns current status of Gemini AI configuration
+ */
+const getAIStatus = () => {
+  const key = getActiveApiKey();
+  return {
+    isGeminiConfigured: !!key,
+    engine: key ? 'Google Gemini AI' : 'KhetiSetu Agronomy Knowledge Engine',
+    model: key ? 'gemini-2.0-flash' : 'local-knowledge-engine',
+    provider: key ? 'Google AI Cloud' : 'Built-in Agronomy Engine',
+    status: key ? 'ONLINE' : 'FALLBACK_READY',
+    message: key
+      ? 'Connected to Google Gemini AI. Real-time multi-modal agronomic intelligence active.'
+      : 'GEMINI_API_KEY not configured in server/.env. Using comprehensive Indian Agronomy Knowledge Engine.',
+    supportedModels: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+  };
 };
 
 // Zod Schema for Produce Quality Assessment structured output
@@ -149,7 +194,7 @@ Do NOT include markdown formatting, backticks, or other text outside the JSON ob
 Disclaimer: This is visual image analysis only, not certified laboratory food safety testing.`;
 
   const runGemini = async () => {
-    const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b'];
     let lastErr = null;
 
     for (const modelName of candidateModels) {
@@ -450,7 +495,7 @@ ${farmContext.location ? `Farmer location: ${farmContext.location.district}, ${f
 ${farmContext.soilType ? `Soil type: ${farmContext.soilType}` : ''}`;
 
   const runChat = async () => {
-    const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b'];
     let lastErr = null;
 
     // Filter and sanitize conversation history: must start with 'user' and alternate strictly
@@ -560,4 +605,5 @@ module.exports = {
   assessProduceQuality,
   consultKhetiAI,
   explainMarketTrend,
+  getAIStatus,
 };

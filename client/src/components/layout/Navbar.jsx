@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
+import MandiTicker from './MandiTicker';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -34,7 +35,8 @@ const Navbar = () => {
 
   return (
     <nav className="bg-surface/95 backdrop-blur-md sticky top-0 w-full z-50 border-b border-outline-variant/30 transition-all duration-200 ease-in-out">
-      <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+      <MandiTicker />
+      <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-3.5 max-w-container-max mx-auto">
         {/* Brand & Left Navigation */}
         <div className="flex items-center gap-8">
           <Link

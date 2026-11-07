@@ -4,18 +4,81 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 
+const PRESET_TOPICS = [
+  {
+    category: 'Diseases',
+    icon: 'coronavirus',
+    label: 'पत्ती झुलसा / Leaf Spot',
+    prompt: 'टमाटर की फसल में पत्ती धब्बा और अगेती झुलसा (Early Blight) के लक्षण और उपचार बताएं।',
+  },
+  {
+    category: 'Pests',
+    icon: 'pest_control',
+    label: 'सफेद मक्खी / Whitefly & Thrips',
+    prompt: 'फसल में रस चूसक कीट (सफेद मक्खी और थ्रिप्स) के जैविक एवं CIBRC अनुमोदित रासायनिक उपाय बताएं।',
+  },
+  {
+    category: 'Nutrition',
+    icon: 'science',
+    label: 'संतुलित खाद / Fertilizer Schedule',
+    prompt: 'गेहूं और आलू की फसल के लिए वैज्ञानिक NPK और जिंक खाद तालिका बताएं।',
+  },
+  {
+    category: 'Weather',
+    icon: 'rainy',
+    label: 'बारिश बाद स्प्रे / Spray Advisory',
+    prompt: 'भारी बारिश के बाद खेत में फफूंद रोगों से बचाव हेतु कीटनाशक/फफूंदनाशक छिड़काव कब और कैसे करें?',
+  },
+  {
+    category: 'Mandi',
+    icon: 'trending_up',
+    label: 'शुद्ध मुनाफा / Mandi Strategy',
+    prompt: 'स्थानीय मंडी बनाम दूर की थोक मंडी: परिवहन खर्च और कमीशन काटकर शुद्ध मुनाफा कैसे निकालें?',
+  },
+];
+
 const KhetiAIPage = () => {
   const [messages, setMessages] = useState([
     {
       role: 'model',
       content:
-        'नमस्ते किसान भाई! मैं खेतीसेतु का डिजिटल सहायक "खेती AI" हूँ। आप मुझसे फसल पोषण, कीट रोकथाम, खाद प्रबंधन और मौसम संबंधी सलाह हिंदी, English या Hinglish में पूछ सकते हैं। मैं आपकी क्या सहायता करूँ?',
+        'नमस्ते किसान भाई! मैं खेतीसेतु का डिजिटल कृषि सलाहकार "खेती AI" हूँ।\n\nआप मुझसे फसल रोग निदान, कीट नियंत्रण, संतुलित खाद (NPK/Urea), मौसम अनुसार छिड़काव और मंडी भाव बिक्री रणनीति के संबंध में हिंदी, English या Hinglish में मार्गदर्शन ले सकते हैं।',
+      source: 'local-knowledge-engine',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [aiStatus, setAiStatus] = useState({
+    isGeminiConfigured: false,
+    engine: 'KhetiSetu Agronomy Engine',
+    model: 'local-knowledge-engine',
+    status: 'CHECKING',
+  });
+  const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // Check AI engine status on mount
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await apiClient.get('/ai/status');
+        if (res.data?.data) {
+          setAiStatus(res.data.data);
+        }
+      } catch {
+        // Fallback default
+        setAiStatus({
+          isGeminiConfigured: false,
+          engine: 'KhetiSetu Agronomy Engine',
+          model: 'local-knowledge-engine',
+          status: 'FALLBACK_READY',
+        });
+      }
+    };
+    fetchStatus();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -26,12 +89,17 @@ const KhetiAIPage = () => {
   }, [messages]);
 
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!inputMessage.trim() || loading) return;
 
     const userText = inputMessage.trim();
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     setInputMessage('');
-    setMessages((prev) => [...prev, { role: 'user', content: userText }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: userText, timestamp: timeNow },
+    ]);
     setLoading(true);
 
     try {
@@ -42,13 +110,17 @@ const KhetiAIPage = () => {
 
       const res = await apiClient.post('/ai/chat', payload);
 
-      setConversationId(res.data.data.conversationId);
+      if (res.data?.data?.conversationId) {
+        setConversationId(res.data.data.conversationId);
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           role: 'model',
           content: res.data.data.reply,
-          source: res.data.data.source,
+          source: res.data.data.source || 'gemini',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
     } catch (err) {
@@ -58,7 +130,9 @@ const KhetiAIPage = () => {
           role: 'model',
           content:
             err.response?.data?.error?.message ||
-            'खेती AI सर्वर से संपर्क नहीं हो पाया। कृपया कुछ क्षणों बाद पुनः प्रयास करें।',
+            'खेती AI से संपर्क में समस्या आई। कृपया पुनः प्रयास करें।',
+          source: 'error',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
     } finally {
@@ -66,128 +140,249 @@ const KhetiAIPage = () => {
     }
   };
 
-  const handleSuggestedPrompt = (promptText) => {
-    setInputMessage(promptText);
+  const handleCopy = (text, index) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleResetSession = () => {
+    setMessages([
+      {
+        role: 'model',
+        content:
+          'नया कृषि परामर्श सत्र शुरू हो चुका है। आप अपनी फसल, कीट लक्षण या खाद संबंधी कोई भी सवाल पूछ सकते हैं।',
+        source: aiStatus.isGeminiConfigured ? 'gemini' : 'local-knowledge-engine',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
+    setConversationId(null);
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto h-[82vh]">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-surface-variant">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
-            <span className="material-symbols-outlined text-[22px]">psychiatry</span>
+    <div className="flex flex-col gap-4 max-w-5xl mx-auto min-h-[85vh] py-2">
+      {/* Agritech Telemetry Header */}
+      <div className="bg-surface rounded-[20px] p-4 border border-surface-variant soil-shadow flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm">
+            <span className="material-symbols-outlined text-[24px]">psychiatry</span>
           </div>
           <div>
-            <h1 className="font-display font-bold text-xl text-primary flex items-center gap-2">
-              खेती AI • Farming Assistant
-              <Badge variant="success">Online</Badge>
-            </h1>
-            <p className="text-xs text-on-surface-variant">
-              English • हिंदी • Hinglish • Multi-lingual Agronomy Guidance
+            <div className="flex items-center gap-2">
+              <h1 className="font-display font-bold text-lg md:text-xl text-primary">
+                खेती AI • Agricultural Intelligence Center
+              </h1>
+              {aiStatus.isGeminiConfigured ? (
+                <Badge variant="success" className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                  Google Gemini Live
+                </Badge>
+              ) : (
+                <Badge variant="warning" className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                  Agronomy Engine Active
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-on-surface-variant font-medium">
+              Multi-lingual Crop Doctor • Hindi (हिंदी) • English • Hinglish • CIBRC Safety Verified
             </p>
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            setMessages([
-              {
-                role: 'model',
-                content:
-                  'नमस्ते! नया सत्र शुरू हो चुका है। आप मुझसे अपनी फसल, खाद या कीट नियंत्रण के संबंध में कोई भी सवाल पूछ सकते हैं।',
-              },
-            ]);
-            setConversationId(null);
-          }}
-          className="text-xs font-semibold text-secondary hover:underline flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-          New Session
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end text-right">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">
+              Active Engine
+            </span>
+            <span className="text-xs font-semibold text-primary font-mono">
+              {aiStatus.isGeminiConfigured ? 'Gemini 2.0 / 1.5 Flash' : 'KhetiSetu Precision Agronomy'}
+            </span>
+          </div>
+
+          <button
+            onClick={handleResetSession}
+            className="px-3 py-1.5 rounded-[10px] bg-surface-container hover:bg-surface-variant text-on-surface text-xs font-semibold border border-surface-variant flex items-center gap-1.5 transition-colors"
+            title="Start new conversation"
+          >
+            <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+            New Session
+          </button>
+        </div>
       </div>
 
-      {/* Chat Messages Box */}
-      <Card className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-surface-container-low soil-shadow">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex items-start gap-3 ${
-              msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-            }`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                msg.role === 'user'
-                  ? 'bg-secondary text-on-secondary'
-                  : 'bg-primary text-on-primary'
-              }`}
-            >
-              {msg.role === 'user' ? 'Me' : 'AI'}
-            </div>
-
-            <div
-              className={`max-w-[80%] rounded-[16px] px-4 py-3 text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
-                msg.role === 'user'
-                  ? 'bg-primary text-on-primary rounded-tr-none'
-                  : 'bg-surface text-on-surface border border-surface-variant rounded-tl-none soil-shadow'
-              }`}
-            >
-              {msg.content}
-            </div>
+      {/* Notice Banner for Gemini API Key if not configured */}
+      {!aiStatus.isGeminiConfigured && (
+        <div className="bg-amber-50 border border-amber-200/80 rounded-[14px] px-4 py-2.5 flex items-center justify-between text-xs text-amber-900 gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-amber-600 text-[20px]">lightbulb</span>
+            <span>
+              <strong>Gemini API Setup:</strong> Running on KhetiSetu's calibrated agronomy knowledge base.
+              To activate live Google Gemini cloud AI, add your free key to <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-[11px]">server/.env</code> as <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-[11px]">GEMINI_API_KEY=AIzaSy...</code>
+            </span>
           </div>
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 text-amber-800 font-bold hover:underline inline-flex items-center gap-1"
+          >
+            Get Free Key
+            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+          </a>
+        </div>
+      )}
+
+      {/* Preset Crop Advisory Shortcuts */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <span className="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider shrink-0 flex items-center gap-1">
+          <span className="material-symbols-outlined text-[14px]">tune</span>
+          Quick Inquiries:
+        </span>
+        {PRESET_TOPICS.map((topic, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => {
+              setInputMessage(topic.prompt);
+            }}
+            className="px-3 py-1.5 rounded-full bg-surface hover:bg-surface-container text-on-surface text-xs font-medium shrink-0 border border-surface-variant transition-all hover:border-primary/40 flex items-center gap-1.5 soil-shadow"
+          >
+            <span className="material-symbols-outlined text-[15px] text-secondary">
+              {topic.icon}
+            </span>
+            {topic.label}
+          </button>
         ))}
+      </div>
+
+      {/* Main Conversation Stream */}
+      <Card className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 bg-surface-container-low soil-shadow min-h-[460px] max-h-[56vh]">
+        {messages.map((msg, index) => {
+          const isUser = msg.role === 'user';
+          return (
+            <div
+              key={index}
+              className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+            >
+              {/* Avatar Icon */}
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                  isUser
+                    ? 'bg-secondary text-on-secondary'
+                    : 'bg-primary text-on-primary shadow-sm'
+                }`}
+              >
+                {isUser ? (
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                ) : (
+                  <span className="material-symbols-outlined text-[16px]">psychiatry</span>
+                )}
+              </div>
+
+              {/* Message Content Bubble */}
+              <div
+                className={`max-w-[85%] sm:max-w-[78%] rounded-[18px] p-4 text-xs sm:text-sm leading-relaxed ${
+                  isUser
+                    ? 'bg-primary text-on-primary rounded-tr-none'
+                    : 'bg-surface text-on-surface border border-surface-variant rounded-tl-none soil-shadow'
+                }`}
+              >
+                <div className="whitespace-pre-line font-normal">{msg.content}</div>
+
+                {/* Footer metadata for AI replies */}
+                <div
+                  className={`mt-3 pt-2 flex items-center justify-between gap-3 text-[10px] border-t ${
+                    isUser
+                      ? 'border-on-primary/20 text-on-primary/70'
+                      : 'border-surface-variant text-on-surface-variant/70'
+                  }`}
+                >
+                  <span className="flex items-center gap-1 font-mono">
+                    {!isUser && (
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        {msg.source?.includes('gemini')
+                          ? `Google ${msg.source}`
+                          : 'KhetiSetu Agronomy Engine'}
+                      </span>
+                    )}
+                    <span>• {msg.timestamp}</span>
+                  </span>
+
+                  {!isUser && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(msg.content, index)}
+                      className="hover:text-primary transition-colors flex items-center gap-1 font-semibold"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">
+                        {copiedIndex === index ? 'check' : 'content_copy'}
+                      </span>
+                      {copiedIndex === index ? 'Copied' : 'Copy'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
 
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-secondary italic">
-            <span className="material-symbols-outlined animate-spin text-[16px]">
+          <div className="flex items-center gap-3 p-3 bg-surface rounded-[14px] border border-surface-variant max-w-sm text-xs text-primary font-medium animate-pulse">
+            <span className="material-symbols-outlined animate-spin text-[18px]">
               progress_activity
             </span>
-            Kheti AI is synthesizing agronomy response...
+            <span>Analyzing agronomic query & consulting database...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </Card>
 
-      {/* Suggested Prompts */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <span className="text-[11px] font-bold text-on-surface-variant shrink-0">Try asking:</span>
-        <button
-          type="button"
-          onClick={() => handleSuggestedPrompt('टमाटर की फसल में पत्ती धब्बा (Leaf Spot) का जैविक उपचार बताएं')}
-          className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-variant text-on-surface text-xs shrink-0 border border-surface-variant"
-        >
-          🍃 टमाटर में पत्ती धब्बा रोग
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSuggestedPrompt('बारिश के बाद प्याज की फसल में फफूंदनाशक कब छिड़कना चाहिए?')}
-          className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-variant text-on-surface text-xs shrink-0 border border-surface-variant"
-        >
-          🌧️ बारिश बाद प्याज में स्प्रे
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSuggestedPrompt('What is the recommended NPK fertilizer schedule for wheat?')}
-          className="px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-variant text-on-surface text-xs shrink-0 border border-surface-variant"
-        >
-          🌾 Wheat NPK dosage
-        </button>
-      </div>
+      {/* Input Console */}
+      <div className="flex flex-col gap-2">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2.5">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Ask in Hindi, English or Hinglish (उदा. धान में खैरा रोग का इलाज क्या है?)..."
+              disabled={loading}
+              className="w-full bg-surface text-on-surface placeholder:text-on-surface-variant/60 rounded-[14px] py-3.5 pl-4 pr-12 text-sm border border-surface-variant focus:border-primary focus:bg-surface-bright focus:outline-none focus:ring-1 focus:ring-primary soil-shadow transition-colors"
+            />
+            {inputMessage.trim() && (
+              <button
+                type="button"
+                onClick={() => setInputMessage('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-xs"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            )}
+          </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-        <input
-          type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Ask in Hindi, English or Hinglish (e.g. फसल में यूरिया कब डालें?)..."
-          className="flex-1 bg-surface-container text-on-surface placeholder:text-on-surface-variant/70 rounded-[12px] py-3.5 px-4 text-sm border border-transparent focus:border-primary focus:bg-surface-bright focus:outline-none focus:ring-1 focus:ring-primary"
-        />
-        <Button type="submit" variant="primary" size="lg" loading={loading} disabled={!inputMessage.trim()}>
-          <span className="material-symbols-outlined text-[20px]">send</span>
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            loading={loading}
+            disabled={!inputMessage.trim()}
+            className="rounded-[14px] px-5 py-3.5 flex items-center gap-1.5 shadow-sm"
+          >
+            <span className="hidden sm:inline">Ask AI</span>
+            <span className="material-symbols-outlined text-[18px]">send</span>
+          </Button>
+        </form>
+
+        {/* Agricultural Safety Disclaimer */}
+        <p className="text-[11px] text-on-surface-variant/75 text-center flex items-center justify-center gap-1.5">
+          <span className="material-symbols-outlined text-[14px] text-secondary">verified_user</span>
+          <span>
+            Advice adheres to CIBRC agrochemical safety guidelines. Always consult your local Krishi Vigyan Kendra (KVK) officer before applying concentrated sprays.
+          </span>
+        </p>
+      </div>
     </div>
   );
 };
