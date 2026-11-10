@@ -30,11 +30,7 @@ const Input = forwardRef(
         <div className="relative flex items-center">
           {icon && (
             <div className="absolute left-3.5 flex items-center pointer-events-none text-on-surface-variant/70">
-              {typeof icon === 'string' ? (
-                <span className="material-symbols-outlined text-[20px]">{icon}</span>
-              ) : (
-                icon
-              )}
+              {typeof icon === 'string' ? null : icon}
             </div>
           )}
           <input

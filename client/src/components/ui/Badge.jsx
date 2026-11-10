@@ -29,11 +29,7 @@ const Badge = ({
       } ${className}`}
     >
       {icon && (
-        typeof icon === 'string' ? (
-          <span className="material-symbols-outlined text-[14px]">{icon}</span>
-        ) : (
-          icon
-        )
+        typeof icon === 'string' ? null : icon
       )}
       {children}
     </span>

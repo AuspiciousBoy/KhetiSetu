@@ -25,7 +25,7 @@ export const EmptyState = ({
       <div className="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center text-secondary mb-4">
         {icon ? (
           typeof icon === 'string' ? (
-            <span className="material-symbols-outlined text-[32px]">{icon}</span>
+            <PackageSearch className="w-8 h-8 text-secondary" />
           ) : (
             icon
           )
