@@ -19,6 +19,7 @@ import {
   Award,
   BadgePercent,
   Check,
+  QrCode,
 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import AgriWeatherBar from '../../components/agri/AgriWeatherBar';
