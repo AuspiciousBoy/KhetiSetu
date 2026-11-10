@@ -16,7 +16,6 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
-import MandiTicker from './MandiTicker';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -48,7 +47,6 @@ const Navbar = () => {
 
   return (
     <nav className="bg-surface/95 backdrop-blur-md sticky top-0 w-full z-50 border-b border-outline-variant/30 transition-all duration-200 ease-in-out">
-      <MandiTicker />
       <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-3 max-w-container-max mx-auto">
         {/* Brand & Left Navigation */}
         <div className="flex items-center gap-8">

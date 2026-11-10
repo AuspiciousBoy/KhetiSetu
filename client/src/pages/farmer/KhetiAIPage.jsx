@@ -13,10 +13,8 @@ import {
   TrendingUp,
   User,
   X,
-  ExternalLink,
   ShieldCheck,
   Loader2,
-  Lightbulb,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
@@ -229,28 +227,6 @@ const KhetiAIPage = () => {
           </button>
         </div>
       </div>
-
-      {/* Notice Banner for Gemini API Key if not configured */}
-      {!aiStatus.isGeminiConfigured && (
-        <div className="bg-amber-50 border border-amber-200/80 rounded-[14px] px-4 py-2.5 flex items-center justify-between text-xs text-amber-900 gap-3">
-          <div className="flex items-center gap-2.5">
-            <Lightbulb className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>
-              <strong>Gemini AI Setup:</strong> Running on KhetiSetu's calibrated agronomy knowledge base.
-              To activate live Google Gemini cloud AI, add your free key to <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-[11px]">server/.env</code> as <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-[11px]">GEMINI_API_KEY=AIzaSy...</code>
-            </span>
-          </div>
-          <a
-            href="https://aistudio.google.com/app/apikey"
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 text-amber-800 font-bold hover:underline inline-flex items-center gap-1"
-          >
-            <span>Get Free Key</span>
-            <ExternalLink className="w-3 h-3 text-amber-800" />
-          </a>
-        </div>
-      )}
 
       {/* Preset Crop Advisory Shortcuts */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">

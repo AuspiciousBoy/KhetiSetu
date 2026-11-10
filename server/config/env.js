@@ -19,6 +19,7 @@ const JWT_ACCESS_EXPIRY = process.env.JWT_ACCESS_EXPIRY || '15m';
 const JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '7d';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY || '';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
   .split(',')
@@ -56,6 +57,7 @@ module.exports = {
   JWT_ACCESS_EXPIRY,
   JWT_REFRESH_EXPIRY,
   GEMINI_API_KEY,
+  WEATHER_API_KEY,
   FRONTEND_URL,
   CORS_ORIGINS,
   UPLOAD_DIR,
