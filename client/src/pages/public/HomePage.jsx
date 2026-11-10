@@ -321,7 +321,7 @@ const HomePage = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Full payment escrow & doorstep tracking</span>
+                  <span>Direct farm dispatch & doorstep tracking</span>
                 </li>
               </ul>
             </div>

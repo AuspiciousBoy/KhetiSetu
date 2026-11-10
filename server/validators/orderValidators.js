@@ -19,7 +19,7 @@ const deliveryAddressSchema = z.object({
 const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'Order must contain at least one item'),
   deliveryAddress: deliveryAddressSchema,
-  paymentMethod: z.enum(['UPI', 'NET_BANKING', 'CARD', 'CASH_ON_DELIVERY']).default('UPI'),
+  paymentMethod: z.string().default('DIRECT_ORDER').optional(),
   idempotencyKey: z.string().max(100).optional(),
 });
 

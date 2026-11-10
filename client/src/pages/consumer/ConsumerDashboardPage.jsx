@@ -84,10 +84,6 @@ const ConsumerDashboardPage = () => {
                   >
                     {order.status.replace(/_/g, ' ')}
                   </Badge>
-
-                  <Badge variant={order.paymentStatus === 'PAID' ? 'success' : 'default'}>
-                    {order.paymentStatus}
-                  </Badge>
                 </div>
               </div>
 

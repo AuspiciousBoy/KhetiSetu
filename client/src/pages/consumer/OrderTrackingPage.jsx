@@ -142,16 +142,16 @@ const OrderTrackingPage = () => {
 
         <Card className="p-6">
           <span className="text-[10px] uppercase font-bold text-secondary block mb-2">
-            Payment & Invoice
+            Order Fulfillment
           </span>
           <p className="text-xs text-on-surface-variant">
-            Payment Method: <span className="font-semibold text-primary">{order.paymentMethod}</span>
+            Fulfillment Mode: <span className="font-semibold text-primary">Direct Farm Booking</span>
           </p>
           <p className="text-xs text-on-surface-variant mt-1">
-            Payment Status: <span className="font-semibold text-primary">{order.paymentStatus}</span>
+            Dispatch Status: <span className="font-semibold text-primary">{order.status}</span>
           </p>
           <p className="text-base font-display font-bold text-primary mt-2">
-            Total Paid: ₹{order.total}
+            Order Value: ₹{order.total}
           </p>
         </Card>
       </div>

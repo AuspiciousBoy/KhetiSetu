@@ -28,7 +28,7 @@ const createOrder = async ({
   buyerRole,
   items,
   deliveryAddress,
-  paymentMethod = 'UPI',
+  paymentMethod = 'DIRECT_ORDER',
   idempotencyKey,
   req,
 }) => {
@@ -137,7 +137,7 @@ const createOrder = async ({
     tax,
     total: grandTotal,
     status: 'PLACED',
-    paymentStatus: paymentMethod === 'CASH_ON_DELIVERY' ? 'PENDING' : 'PAID', // In mock checkout
+    paymentStatus: 'CONFIRMED',
     paymentMethod,
     deliveryAddress,
     idempotencyKey,

@@ -31,7 +31,7 @@ const FarmProfitCalculator = () => {
     const traditionalNet = grossMarketValue - mandiCommission - freightOverhead - spoilageWastage;
 
     // KhetiSetu Direct Route
-    const platformHandling = grossMarketValue * 0.025; // Transparent 2.5% platform & payment
+    const platformHandling = grossMarketValue * 0.025; // Transparent 2.5% platform handling
     const directColdLogistics = grossMarketValue * 0.05; // 5% direct farm-to-buyer route
     const aiQualityBonus = grossMarketValue * 0.08; // 8% Grade-A certified buyer premium
     const khetisetuNet = grossMarketValue - platformHandling - directColdLogistics + aiQualityBonus;
@@ -288,7 +288,7 @@ const FarmProfitCalculator = () => {
                 +{formatINR(calculations.extraEarnings)}
               </span>
               <span className="text-[11px] text-on-surface-variant block">
-                Zero middleman commissions • Direct buyer connection • Traceable payments
+                Zero middleman commissions • Direct buyer connection • Traceable farm produce
               </span>
             </div>
 

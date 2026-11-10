@@ -67,7 +67,7 @@ const MOCK_DATA = {
     deliveryFee: 40,
     tax: 25,
     grandTotal: 555,
-    paymentMethod: 'UPI',
+    paymentMethod: 'DIRECT_ORDER',
     deliveryAddress: {
       line1: 'Flat 402, Green Meadows',
       city: 'Pune',

@@ -56,7 +56,7 @@ const ProductDetailPage = () => {
           state: 'Maharashtra',
           pincode: '411001',
         },
-        paymentMethod: 'UPI',
+        paymentMethod: 'DIRECT_ORDER',
       });
 
       navigate('/consumer/orders');
@@ -247,7 +247,7 @@ const ProductDetailPage = () => {
                 className="w-full mt-2"
               >
                 <ShoppingBag className="w-5 h-5 shrink-0" />
-                {isAuthenticated ? 'Direct Checkout & Dispatch' : 'Sign in to Place Order'}
+                {isAuthenticated ? 'Place Direct Farm Order' : 'Sign in to Place Order'}
               </Button>
             </div>
           </Card>

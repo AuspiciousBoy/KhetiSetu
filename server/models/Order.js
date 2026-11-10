@@ -111,14 +111,12 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'],
-      default: 'PENDING',
+      default: 'CONFIRMED',
       index: true,
     },
     paymentMethod: {
       type: String,
-      enum: ['UPI', 'NET_BANKING', 'CARD', 'CASH_ON_DELIVERY'],
-      default: 'UPI',
+      default: 'DIRECT_ORDER',
     },
     deliveryAddress: {
       fullName: { type: String, required: true },

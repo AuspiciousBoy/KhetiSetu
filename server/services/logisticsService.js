@@ -63,9 +63,6 @@ const updateDeliveryStatus = async ({
   const order = await Order.findById(delivery.orderId);
   if (order) {
     order.status = newStatus;
-    if (newStatus === 'DELIVERED' && order.paymentMethod === 'CASH_ON_DELIVERY') {
-      order.paymentStatus = 'PAID';
-    }
     await order.save();
   }
 

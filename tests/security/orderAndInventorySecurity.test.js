@@ -41,7 +41,7 @@ test('KhetiSetu Security Test Suite: Server-Authoritative Pricing, BOLA & Invent
         state: 'Maharashtra',
         pincode: '411001',
       },
-      paymentMethod: 'UPI',
+      paymentMethod: 'DIRECT_ORDER',
     });
 
     assert.equal(

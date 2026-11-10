@@ -28,8 +28,6 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://
 
 const UPLOAD_DIR = path.resolve(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
 const LOG_LEVEL = process.env.LOG_LEVEL || (NODE_ENV === 'production' ? 'info' : 'debug');
-const PAYMENT_SECRET = process.env.PAYMENT_SECRET || '';
-const PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || '';
 
 // Fail fast in production if security secrets are missing or default
 if (NODE_ENV === 'production') {
@@ -62,8 +60,6 @@ module.exports = {
   CORS_ORIGINS,
   UPLOAD_DIR,
   LOG_LEVEL,
-  PAYMENT_SECRET,
-  PAYMENT_WEBHOOK_SECRET,
   isProd: NODE_ENV === 'production',
   isDev: NODE_ENV === 'development',
   isTest: NODE_ENV === 'test',

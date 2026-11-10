@@ -27,7 +27,7 @@ const getPlatformOverview = async () => {
     User.countDocuments({ role: 'BUSINESS' }),
     Product.countDocuments({ status: 'ACTIVE' }),
     Order.countDocuments(),
-    Order.find({ paymentStatus: 'PAID' }).select('total'),
+    Order.find({ status: { $ne: 'CANCELLED' } }).select('total'),
     AuditLog.find().sort({ timestamp: -1 }).limit(10),
     ProduceBatch.countDocuments(),
     AIConversation.countDocuments(),

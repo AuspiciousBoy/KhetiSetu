@@ -337,7 +337,7 @@ const createListing = async (farmerId, listingData, req) => {
  */
 const getFarmerAnalytics = async (farmerId) => {
   const [orders, activeListingsCount, batchesCount] = await Promise.all([
-    Order.find({ farmerId, paymentStatus: 'PAID' }).select('total status createdAt items'),
+    Order.find({ farmerId, status: { $ne: 'CANCELLED' } }).select('total status createdAt items'),
     Product.countDocuments({ farmerId, status: 'ACTIVE' }),
     ProduceBatch.countDocuments({ farmerId }),
   ]);
