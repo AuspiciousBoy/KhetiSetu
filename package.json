@@ -4,8 +4,11 @@
   "description": "KhetiSetu – An AI-Assisted Digital Agricultural Ecosystem for Farm-to-Market Connectivity",
   "private": true,
   "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
     "client": "npm --prefix client run dev",
     "client:build": "npm --prefix client run build",
+    "build": "npm --prefix client run build",
     "server": "node server/server.js",
     "seed": "node server/jobs/seedData.js",
     "test": "node tests/runTests.js"

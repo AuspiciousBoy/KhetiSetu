@@ -10,10 +10,14 @@ export const AuthProvider = ({ children }) => {
   // Initialize session on page mount by attempting silent refresh with the HttpOnly cookie
   const initializeAuth = useCallback(async () => {
     try {
-      const response = await apiClient.post('/auth/refresh');
-      const { user: userData, accessToken } = response.data.data;
-      setAccessToken(accessToken);
-      setUser(userData);
+      const response = await apiClient.post('/auth/refresh', {}, { timeout: 3000 });
+      const { user: userData, accessToken } = response.data?.data || {};
+      if (accessToken && userData) {
+        setAccessToken(accessToken);
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
     } catch (err) {
       // User is unauthenticated / no active refresh cookie
       setUser(null);

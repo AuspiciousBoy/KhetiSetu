@@ -2,10 +2,11 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 
-const { PORT, NODE_ENV, UPLOAD_DIR } = require('./config/env');
+const { PORT, NODE_ENV, UPLOAD_DIR, isProd } = require('./config/env');
 const { connectDB } = require('./config/db');
 const helmetConfig = require('./config/helmetConfig');
 const corsOptions = require('./config/corsConfig');
@@ -87,7 +88,21 @@ app.get('/ready', (req, res) => {
 // 10. Mount API Version 1
 app.use('/api/v1', v1Router);
 
-// 11. 404 Route Handler
+// 11. Serve Static Frontend (Production / Unified Single-Port Mode)
+const clientDistPath = path.resolve(__dirname, '../client/dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+
+  // Single Page Application (SPA) client fallback for non-API routes (Express 5 compatible)
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      return res.sendFile(path.join(clientDistPath, 'index.html'));
+    }
+    next();
+  });
+}
+
+// 12. 404 Route Handler for unmatched API endpoints
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -104,7 +119,13 @@ app.use(errorHandler);
 
 // Start Server and Database
 const startServer = async () => {
-  await connectDB();
+  if (isProd) {
+    await connectDB();
+  } else {
+    connectDB().catch((err) => {
+      logger.warn('Initial MongoDB connection deferred in dev mode', { error: err.message });
+    });
+  }
 
   const server = app.listen(PORT, () => {
     logger.info(`========================================================`);
