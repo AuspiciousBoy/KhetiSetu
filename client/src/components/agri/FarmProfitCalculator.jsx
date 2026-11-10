@@ -1,24 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Calculator, TrendingDown, TrendingUp, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Calculator, TrendingDown, ArrowRight } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { useTranslation } from '../../i18n/LanguageContext';
 
-const CROPS = [
-  { id: 'onion', name: 'Nashik Red Onion (प्याज)', pricePerQtl: 2600, unit: 'qtl', defaultQty: 100 },
-  { id: 'tomato', name: 'Hybrid Red Tomato (टमाटर)', pricePerQtl: 2000, unit: 'qtl', defaultQty: 80 },
-  { id: 'potato', name: 'Jyoti / Agra Potato (आलू)', pricePerQtl: 1600, unit: 'qtl', defaultQty: 150 },
-  { id: 'wheat', name: 'Sharbati Wheat (गेहूं)', pricePerQtl: 3200, unit: 'qtl', defaultQty: 120 },
-  { id: 'basmati', name: '1121 Basmati Paddy (धान)', pricePerQtl: 4800, unit: 'qtl', defaultQty: 90 },
-  { id: 'mustard', name: 'Yellow Mustard (सरसों)', pricePerQtl: 5600, unit: 'qtl', defaultQty: 60 },
+const CROP_CONFIG = [
+  { id: 'onion', pricePerQtl: 2600, unit: 'qtl', defaultQty: 100 },
+  { id: 'tomato', pricePerQtl: 2000, unit: 'qtl', defaultQty: 80 },
+  { id: 'potato', pricePerQtl: 1600, unit: 'qtl', defaultQty: 150 },
+  { id: 'wheat', pricePerQtl: 3200, unit: 'qtl', defaultQty: 120 },
+  { id: 'basmati', pricePerQtl: 4800, unit: 'qtl', defaultQty: 90 },
+  { id: 'mustard', pricePerQtl: 5600, unit: 'qtl', defaultQty: 60 },
 ];
 
 const FarmProfitCalculator = () => {
+  const { t } = useTranslation();
   const [selectedCropId, setSelectedCropId] = useState('onion');
   const [quantityQtl, setQuantityQtl] = useState(100);
 
   const currentCrop = useMemo(() => {
-    return CROPS.find((c) => c.id === selectedCropId) || CROPS[0];
+    return CROP_CONFIG.find((c) => c.id === selectedCropId) || CROP_CONFIG[0];
   }, [selectedCropId]);
 
   const calculations = useMemo(() => {
@@ -73,13 +75,13 @@ const FarmProfitCalculator = () => {
         <div>
           <span className="text-[11px] font-bold uppercase tracking-wider text-secondary font-mono flex items-center gap-1.5">
             <Calculator className="w-4 h-4 text-secondary" />
-            Farm Gate Value Realization
+            {t('profitCalculator.badge')}
           </span>
           <h3 className="font-display font-bold text-2xl text-primary mt-1">
-            Compare Your Net Realization: Traditional Mandi vs KhetiSetu Direct
+            {t('profitCalculator.title')}
           </h3>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
-            See how much middleman commission, transit spoilage, and multi-hop freight cuts into your harvest profits.
+            {t('profitCalculator.subtitle')}
           </p>
         </div>
 
@@ -89,10 +91,10 @@ const FarmProfitCalculator = () => {
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-              Avg. Farmer Gain
+              {t('profitCalculator.avgFarmerGain')}
             </span>
             <p className="font-display font-bold text-lg text-primary leading-tight">
-              +{calculations.percentageIncrease}% Net In Hand
+              +{calculations.percentageIncrease}% {t('profitCalculator.netInHand')}
             </p>
           </div>
         </div>
@@ -105,10 +107,10 @@ const FarmProfitCalculator = () => {
           {/* Crop Selector Chips */}
           <div>
             <label className="text-xs font-bold text-on-surface uppercase tracking-wider block mb-2">
-              1. Select Harvest Crop
+              1. {t('profitCalculator.selectCropLabel')}
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {CROPS.map((crop) => (
+              {CROP_CONFIG.map((crop) => (
                 <button
                   key={crop.id}
                   type="button"
@@ -122,13 +124,13 @@ const FarmProfitCalculator = () => {
                       : 'bg-surface-container hover:bg-surface-variant text-on-surface border-surface-variant'
                   }`}
                 >
-                  <span className="truncate">{crop.name}</span>
+                  <span className="truncate">{t(`profitCalculator.crops.${crop.id}`)}</span>
                   <span
                     className={`text-[10px] font-mono mt-0.5 ${
                       selectedCropId === crop.id ? 'text-on-primary/80' : 'text-on-surface-variant'
                     }`}
                   >
-                    Benchmark ₹{crop.pricePerQtl.toLocaleString('en-IN')}/qtl
+                    Benchmark ₹{crop.pricePerQtl.toLocaleString('en-IN')}/{t('common.qtl')}
                   </span>
                 </button>
               ))}
@@ -139,13 +141,13 @@ const FarmProfitCalculator = () => {
           <div className="bg-surface-container rounded-[16px] p-4 border border-surface-variant/80">
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                2. Harvest Quantity
+                2. {t('profitCalculator.enterQuantityLabel')}
               </label>
               <div className="flex items-center gap-1 bg-surface px-2.5 py-1 rounded-[8px] border border-surface-variant font-mono font-bold text-xs text-primary">
                 <span>{quantityQtl}</span>
-                <span className="text-on-surface-variant font-normal">Quintals</span>
+                <span className="text-on-surface-variant font-normal">{t('common.qtl')}</span>
                 <span className="text-[10px] text-on-surface-variant/70 font-normal">
-                  ({(quantityQtl * 100).toLocaleString('en-IN')} kg)
+                  ({(quantityQtl * 100).toLocaleString('en-IN')} {t('common.kg')})
                 </span>
               </div>
             </div>
@@ -160,17 +162,17 @@ const FarmProfitCalculator = () => {
               className="w-full accent-primary cursor-pointer h-2 bg-surface-variant rounded-lg"
             />
             <div className="flex justify-between text-[10px] text-on-surface-variant font-mono mt-1">
-              <span>10 qtl</span>
-              <span>150 qtl</span>
-              <span>300 qtl</span>
-              <span>500 qtl</span>
+              <span>10 {t('common.qtl')}</span>
+              <span>150 {t('common.qtl')}</span>
+              <span>300 {t('common.qtl')}</span>
+              <span>500 {t('common.qtl')}</span>
             </div>
           </div>
 
           {/* Quick Realization Summary Pill */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-[14px] p-3 text-xs text-emerald-950 flex items-center justify-between">
             <div>
-              <span className="font-bold block">Gross Harvest Valuation</span>
+              <span className="font-bold block">{t('profitCalculator.grossMarketValue')}</span>
               <span className="text-[11px] text-emerald-800">
                 At benchmark mandi price without deductions
               </span>
@@ -189,26 +191,26 @@ const FarmProfitCalculator = () => {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-rose-800 font-mono">
-                    Traditional Mandi
+                    {t('profitCalculator.traditionalTitle')}
                   </span>
                   <TrendingDown className="w-4 h-4 text-rose-600" />
                 </div>
 
                 <div className="flex flex-col gap-2 text-xs mb-4">
                   <div className="flex justify-between text-rose-900/80">
-                    <span>Arhatiya / Commission (7%)</span>
+                    <span>{t('profitCalculator.traditionalCommission')}</span>
                     <span className="font-mono font-semibold text-rose-700">
                       -{formatINR(calculations.traditional.commission)}
                     </span>
                   </div>
                   <div className="flex justify-between text-rose-900/80">
-                    <span>Multi-hop Transit Freight (11%)</span>
+                    <span>{t('profitCalculator.traditionalFreight')}</span>
                     <span className="font-mono font-semibold text-rose-700">
                       -{formatINR(calculations.traditional.freight)}
                     </span>
                   </div>
                   <div className="flex justify-between text-rose-900/80">
-                    <span>Transit Spoilage & Weigh Loss (12%)</span>
+                    <span>{t('profitCalculator.traditionalSpoilage')}</span>
                     <span className="font-mono font-semibold text-rose-700">
                       -{formatINR(calculations.traditional.spoilage)}
                     </span>
@@ -218,7 +220,7 @@ const FarmProfitCalculator = () => {
 
               <div className="pt-3 border-t border-rose-200">
                 <span className="text-[10px] uppercase font-bold text-rose-800/80 block">
-                  Farmer In-Pocket Realization
+                  {t('profitCalculator.traditionalNet')}
                 </span>
                 <span className="font-display font-bold text-xl text-rose-950 font-mono">
                   {formatINR(calculations.traditional.net)}
@@ -235,7 +237,7 @@ const FarmProfitCalculator = () => {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 font-mono flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    KhetiSetu Direct
+                    {t('profitCalculator.khetisetuTitle')}
                   </span>
                   <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
                     +{calculations.percentageIncrease}% Gain
@@ -244,19 +246,19 @@ const FarmProfitCalculator = () => {
 
                 <div className="flex flex-col gap-2 text-xs mb-4">
                   <div className="flex justify-between text-[#c4b59f]">
-                    <span>Platform Tech Fee (2.5%)</span>
+                    <span>{t('profitCalculator.khetisetuHandling')}</span>
                     <span className="font-mono text-white/90">
                       -{formatINR(calculations.khetisetu.handling)}
                     </span>
                   </div>
                   <div className="flex justify-between text-[#c4b59f]">
-                    <span>Direct Farm Logistics (5%)</span>
+                    <span>{t('profitCalculator.khetisetuLogistics')}</span>
                     <span className="font-mono text-white/90">
                       -{formatINR(calculations.khetisetu.logistics)}
                     </span>
                   </div>
                   <div className="flex justify-between text-emerald-300">
-                    <span>AI Grade-A Quality Bonus (+8%)</span>
+                    <span>{t('profitCalculator.khetisetuBonus')}</span>
                     <span className="font-mono font-bold text-emerald-400">
                       +{formatINR(calculations.khetisetu.bonus)}
                     </span>
@@ -266,7 +268,7 @@ const FarmProfitCalculator = () => {
 
               <div className="pt-3 border-t border-[#1b4334]">
                 <span className="text-[10px] uppercase font-bold text-emerald-300/80 block">
-                  Farmer In-Pocket Realization
+                  {t('profitCalculator.khetisetuNet')}
                 </span>
                 <span className="font-display font-bold text-2xl text-emerald-300 font-mono">
                   {formatINR(calculations.khetisetu.net)}
@@ -282,19 +284,19 @@ const FarmProfitCalculator = () => {
           <div className="bg-surface-container rounded-[16px] p-4 border border-surface-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="text-xs font-bold text-primary block">
-                Additional Net Profit In Your Pocket:
+                {t('profitCalculator.pocketGainTitle')}
               </span>
               <span className="font-display font-bold text-2xl text-primary font-mono">
                 +{formatINR(calculations.extraEarnings)}
               </span>
               <span className="text-[11px] text-on-surface-variant block">
-                Zero middleman commissions • Direct buyer connection • Traceable farm produce
+                {t('profitCalculator.pocketGainSub')}
               </span>
             </div>
 
             <Link to="/farmer/listings">
               <Button variant="primary" size="md" className="shrink-0 w-full sm:w-auto flex items-center gap-1.5">
-                <span>Sell Harvest Now</span>
+                <span>{t('profitCalculator.sellHarvestCta')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>

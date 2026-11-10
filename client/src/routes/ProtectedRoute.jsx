@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/LanguageContext';
 import { Skeleton } from '../components/ui/Skeleton';
 
 export const ProtectedRoute = ({ children }) => {
@@ -28,6 +29,7 @@ export const ProtectedRoute = ({ children }) => {
 
 export const RoleRoute = ({ allowedRoles = [], children }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -47,15 +49,17 @@ export const RoleRoute = ({ allowedRoles = [], children }) => {
         <div className="w-16 h-16 rounded-full bg-error-container text-error flex items-center justify-center mb-4">
           <Lock className="w-8 h-8 text-error" />
         </div>
-        <h2 className="font-display font-bold text-2xl text-primary mb-2">Access Restricted</h2>
+        <h2 className="font-display font-bold text-2xl text-primary mb-2">
+          {t('common.status')} : {t('common.actions')}
+        </h2>
         <p className="text-sm text-on-surface-variant max-w-md mb-6">
-          Your current account role ({user?.role}) does not have administrative permissions to view this section.
+          {t('common.noData')} ({user?.role})
         </p>
         <button
           onClick={() => window.history.back()}
           className="text-xs font-semibold text-primary underline"
         >
-          Return to Previous Page
+          {t('common.back')}
         </button>
       </div>
     );

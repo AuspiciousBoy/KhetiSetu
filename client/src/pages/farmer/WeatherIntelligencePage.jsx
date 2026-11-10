@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, CloudRain, CloudSun } from 'lucide-react';
+import { Sun, CloudRain } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const WeatherIntelligencePage = () => {
+  const { t } = useTranslation();
   const [district, setDistrict] = useState('Pune');
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,18 +34,18 @@ const WeatherIntelligencePage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Agro-Meteorology
+            {t('weatherPage.headerBadge')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            Weather Intelligence & Field Advisories
+            {t('weatherPage.pageTitle')}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Farming recommendations calibrated for spraying suitability, irrigation and harvest safety
+            {t('weatherPage.pageSubtitle')}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-on-surface-variant">District:</span>
+          <span className="text-xs font-medium text-on-surface-variant">{t('weatherPage.district')}</span>
           <select
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
@@ -68,13 +70,13 @@ const WeatherIntelligencePage = () => {
         </div>
       ) : (
         <>
-          {/* Main Current Conditions Hero Card (Deep Forest Grain from code.html) */}
+          {/* Main Current Conditions Hero Card */}
           <div className="bg-primary text-on-primary rounded-[24px] p-8 sm:p-10 grain-overlay soil-shadow flex flex-col md:flex-row justify-between gap-8 items-start md:items-center">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Sun className="w-8 h-8 text-secondary-fixed shrink-0" />
                 <span className="text-xs font-bold uppercase tracking-wider text-on-primary-container font-mono">
-                  Live Agricultural Conditions
+                  {t('weatherPage.liveAgriConditions')}
                 </span>
               </div>
               <h2 className="font-display font-bold text-5xl sm:text-6xl text-secondary-fixed mb-2">
@@ -89,7 +91,7 @@ const WeatherIntelligencePage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full md:w-auto">
               <div className="p-4 rounded-[16px] bg-surface/10 border border-surface-variant/20">
                 <span className="text-[10px] uppercase font-bold text-on-primary-container block">
-                  Relative Humidity
+                  {t('weatherPage.relHumidity')}
                 </span>
                 <span className="font-display font-bold text-2xl text-on-primary">
                   {weatherData?.current?.humidityPercent}%
@@ -97,7 +99,7 @@ const WeatherIntelligencePage = () => {
               </div>
               <div className="p-4 rounded-[16px] bg-surface/10 border border-surface-variant/20">
                 <span className="text-[10px] uppercase font-bold text-on-primary-container block">
-                  Wind Speed
+                  {t('weatherPage.windSpeed')}
                 </span>
                 <span className="font-display font-bold text-2xl text-on-primary">
                   {weatherData?.current?.windSpeedKmh} <span className="text-xs font-normal">km/h</span>
@@ -105,7 +107,7 @@ const WeatherIntelligencePage = () => {
               </div>
               <div className="p-4 rounded-[16px] bg-surface/10 border border-surface-variant/20">
                 <span className="text-[10px] uppercase font-bold text-on-primary-container block">
-                  Rainfall (24h)
+                  {t('weatherPage.rainfall24h')}
                 </span>
                 <span className="font-display font-bold text-2xl text-on-primary">
                   {weatherData?.current?.rainfallMm} <span className="text-xs font-normal">mm</span>
@@ -113,7 +115,7 @@ const WeatherIntelligencePage = () => {
               </div>
               <div className="p-4 rounded-[16px] bg-surface/10 border border-surface-variant/20">
                 <span className="text-[10px] uppercase font-bold text-on-primary-container block">
-                  UV Radiation
+                  {t('weatherPage.uvRadiation')}
                 </span>
                 <span className="font-display font-bold text-2xl text-on-primary">
                   {weatherData?.current?.uvIndex}
@@ -125,7 +127,7 @@ const WeatherIntelligencePage = () => {
           {/* Actionable Field Operations Advisories */}
           <div className="flex flex-col gap-4">
             <h3 className="font-display font-semibold text-xl text-primary">
-              Field Operations Action Matrix
+              {t('weatherPage.actionMatrixTitle')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {weatherData?.advisories?.map((adv, idx) => (
@@ -159,7 +161,7 @@ const WeatherIntelligencePage = () => {
                     </p>
                   </div>
                   <span className="text-[10px] text-on-surface-variant/70 italic border-t border-surface-variant/50 pt-3 block">
-                    {adv.confidenceLevel || 'Rule-based agro-meteorology inference'}
+                    {adv.confidenceLevel || t('weatherPage.confidenceNote')}
                   </span>
                 </Card>
               ))}
@@ -169,7 +171,7 @@ const WeatherIntelligencePage = () => {
           {/* 5-Day Agricultural Forecast */}
           <Card className="p-8">
             <h3 className="font-display font-semibold text-xl text-primary mb-6 pb-4 border-b border-surface-variant/60">
-              5-Day Regional Meteorological Forecast
+              {t('weatherPage.forecast5DayTitle')}
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -198,14 +200,14 @@ const WeatherIntelligencePage = () => {
                     <span className="text-on-surface-variant">/ {day.tempMinC}°</span>
                   </div>
                   <span className="text-[10px] text-secondary mt-1 font-semibold">
-                    💧 {day.precipitationProbabilityPercent}% Rain
+                    {t('weatherPage.rainProb', { percent: day.precipitationProbabilityPercent })}
                   </span>
                 </div>
               ))}
             </div>
 
             <p className="text-[11px] text-on-surface-variant/70 mt-6 text-center italic">
-              Notice: Forecast models are probabilistic guidance. Always observe in-situ field moisture and local micro-climate conditions before major pesticide or harvesting actions.
+              {t('weatherPage.probabilisticNotice')}
             </p>
           </Card>
         </>

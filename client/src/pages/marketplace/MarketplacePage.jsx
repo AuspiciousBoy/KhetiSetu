@@ -6,8 +6,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const MarketplacePage = () => {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,11 +20,11 @@ const MarketplacePage = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   const categories = [
-    { label: 'All Crops', value: '' },
-    { label: 'Vegetables', value: 'VEGETABLE' },
-    { label: 'Fruits', value: 'FRUIT' },
-    { label: 'Grains & Cereals', value: 'GRAIN_CEREAL' },
-    { label: 'Pulses', value: 'PULSE' },
+    { label: t('marketplace.allCrops'), value: '' },
+    { label: t('marketplace.vegetables'), value: 'VEGETABLE' },
+    { label: t('marketplace.fruits'), value: 'FRUIT' },
+    { label: t('marketplace.grains'), value: 'GRAIN_CEREAL' },
+    { label: t('marketplace.pulses'), value: 'PULSE' },
   ];
 
   const fetchProducts = async () => {
@@ -53,15 +55,13 @@ const MarketplacePage = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-surface-variant">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Direct Farm-to-Market
+            {t('marketplace.directFarmToMarket')}
           </span>
           <h1 className="font-display font-bold text-3xl sm:text-4xl text-primary mt-1">
-            {isB2B ? 'B2B Wholesale Procurement' : 'Fresh Harvest Marketplace'}
+            {isB2B ? t('marketplace.b2bTitle') : t('marketplace.b2cTitle')}
           </h1>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
-            {isB2B
-              ? 'Procure full truckloads and commercial lots with verified APMC grade standards'
-              : 'Direct from Maharashtra & Northern farms to your doorstep with batch traceability'}
+            {isB2B ? t('marketplace.b2bSubtitle') : t('marketplace.b2cSubtitle')}
           </p>
         </div>
 
@@ -78,7 +78,7 @@ const MarketplacePage = () => {
                 : 'text-on-surface hover:text-primary'
             }`}
           >
-            🛒 Retail B2C
+            {t('marketplace.retailTab')}
           </button>
           <button
             onClick={() => {
@@ -91,7 +91,7 @@ const MarketplacePage = () => {
                 : 'text-on-surface hover:text-primary'
             }`}
           >
-            🏢 Wholesale B2B
+            {t('marketplace.wholesaleTab')}
           </button>
         </div>
       </div>
@@ -119,7 +119,7 @@ const MarketplacePage = () => {
         <div className="w-full sm:w-72 relative">
           <input
             type="text"
-            placeholder="Search crop or title..."
+            placeholder={t('marketplace.searchCropPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-surface-container text-on-surface placeholder:text-on-surface-variant/70 rounded-[12px] py-2 pl-9 pr-3 text-xs border border-transparent focus:border-primary focus:outline-none"
@@ -136,8 +136,8 @@ const MarketplacePage = () => {
       ) : products.length === 0 ? (
         <EmptyState
           icon="eco"
-          title="No produce found"
-          description="Try adjusting your category filter or search keywords."
+          title={t('marketplace.noProduceFound')}
+          description={t('marketplace.noProduceAdjust')}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -183,26 +183,26 @@ const MarketplacePage = () => {
                 {/* Price and Stock row */}
                 <div className="flex items-baseline justify-between pt-3 border-t border-surface-variant/60">
                   <div>
-                    <span className="text-xs text-on-surface-variant">Price: </span>
+                    <span className="text-xs text-on-surface-variant">{t('marketplace.priceLabel')} </span>
                     <span className="font-display font-bold text-2xl text-primary">
                       ₹{item.pricePerUnit}
                     </span>
                     <span className="text-xs text-on-surface-variant font-medium"> / {item.unit}</span>
                   </div>
                   <span className="text-xs font-semibold text-on-surface">
-                    Available: {item.availableQuantity} {item.unit}
+                    {t('marketplace.availableLabel')} {item.availableQuantity} {item.unit}
                   </span>
                 </div>
               </div>
 
               <div className="mt-5 pt-4 border-t border-surface-variant/60 flex items-center justify-between gap-3">
                 <span className="text-[11px] text-on-surface-variant font-medium">
-                  Min order: {item.minOrderQuantity} {item.unit}
+                  {t('marketplace.minOrderLabel')} {item.minOrderQuantity} {item.unit}
                 </span>
 
                 <Link to={`/marketplace/${item.id}`}>
                   <Button variant="primary" size="sm" className="flex items-center gap-1.5">
-                    <span>View Produce & Buy</span>
+                    <span>{t('marketplace.viewProduceAndBuy')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </Link>

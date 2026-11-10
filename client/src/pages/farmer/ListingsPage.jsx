@@ -7,8 +7,10 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const ListingsPage = () => {
+  const { t } = useTranslation();
   const [listings, setListings] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,13 +82,13 @@ const ListingsPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Direct Commerce
+            {t('listingsPage.directCommerce')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            Marketplace Produce Listings
+            {t('listingsPage.pageTitle')}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Publish harvest lots to B2C retail consumers and B2B wholesale buyers
+            {t('listingsPage.pageSubtitle')}
           </p>
         </div>
 
@@ -98,7 +100,7 @@ const ListingsPage = () => {
           className="flex items-center gap-1.5"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>Publish Listing from Batch</span>
+          <span>{t('listingsPage.publishFromBatch')}</span>
         </Button>
       </div>
 
@@ -109,11 +111,11 @@ const ListingsPage = () => {
       ) : listings.length === 0 ? (
         <EmptyState
           icon={<Store className="w-8 h-8 text-secondary" />}
-          title="No active marketplace listings"
-          description="Select an available produce harvest batch to list on KhetiSetu's consumer and B2B marketplace."
+          title={t('listingsPage.noListingsTitle')}
+          description={t('listingsPage.noListingsDesc')}
           action={
             <Button variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
-              Publish First Listing
+              {t('listingsPage.publishFirstListing')}
             </Button>
           }
         />
@@ -150,20 +152,20 @@ const ListingsPage = () => {
 
                 <div className="flex items-baseline justify-between pt-2 border-t border-surface-variant/50">
                   <div>
-                    <span className="text-xs text-on-surface-variant">Price: </span>
+                    <span className="text-xs text-on-surface-variant">{t('listingsPage.priceLabel')} </span>
                     <span className="font-display font-bold text-xl text-primary">
                       ₹{item.pricePerUnit}
                     </span>
                     <span className="text-xs text-on-surface-variant"> / {item.unit}</span>
                   </div>
                   <span className="text-xs font-medium text-on-surface">
-                    Stock: {item.availableQuantity} {item.unit}
+                    {t('listingsPage.stockLabel')} {item.availableQuantity} {item.unit}
                   </span>
                 </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-surface-variant/60 flex items-center justify-between text-xs text-on-surface-variant">
-                <span>MOQ: {item.minOrderQuantity} {item.unit}</span>
+                <span>{t('listingsPage.moqLabel')} {item.minOrderQuantity} {item.unit}</span>
                 <span className="font-semibold text-primary">{item.status}</span>
               </div>
             </Card>
@@ -175,13 +177,13 @@ const ListingsPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Publish Marketplace Listing"
-        subtitle="Link listing to a verified harvest batch for automatic provenance & stock tracking"
+        title={t('listingsPage.modalTitle')}
+        subtitle={t('listingsPage.modalSubtitle')}
       >
         <form onSubmit={handleCreateListing} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5 text-left">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md">
-              Select Produce Batch
+              {t('listingsPage.selectBatch')}
             </label>
             <select
               value={selectedBatchId}
@@ -197,23 +199,23 @@ const ListingsPage = () => {
           </div>
 
           <Input
-            label="Listing Title"
+            label={t('listingsPage.listingTitle')}
             required
-            placeholder="e.g. Farm Fresh Grade-A Hybrid Tomatoes"
+            placeholder={t('listingsPage.listingTitlePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
           <Input
-            label="Produce Description"
-            placeholder="Describe harvest attributes, ripeness, packaging"
+            label={t('listingsPage.produceDesc')}
+            placeholder={t('listingsPage.produceDescPlaceholder')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Price per Unit (INR)"
+              label={t('listingsPage.pricePerUnit')}
               type="number"
               step="0.5"
               min="1"
@@ -222,7 +224,7 @@ const ListingsPage = () => {
               onChange={(e) => setPricePerUnit(e.target.value)}
             />
             <Input
-              label="Available Stock"
+              label={t('listingsPage.availableStock')}
               type="number"
               min="1"
               required
@@ -233,7 +235,7 @@ const ListingsPage = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label="Min Order Qty (MOQ)"
+              label={t('listingsPage.moq')}
               type="number"
               min="1"
               required
@@ -248,7 +250,7 @@ const ListingsPage = () => {
                   onChange={(e) => setIsB2C(e.target.checked)}
                   className="rounded text-primary focus:ring-primary"
                 />
-                Retail B2C
+                {t('listingsPage.retailB2C')}
               </label>
               <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
                 <input
@@ -257,13 +259,13 @@ const ListingsPage = () => {
                   onChange={(e) => setIsB2B(e.target.checked)}
                   className="rounded text-primary focus:ring-primary"
                 />
-                Bulk B2B
+                {t('listingsPage.bulkB2B')}
               </label>
             </div>
           </div>
 
           <Button type="submit" variant="primary" size="lg" loading={submitting} className="mt-4">
-            Publish Live Listing
+            {t('listingsPage.publishLiveBtn')}
           </Button>
         </form>
       </Modal>

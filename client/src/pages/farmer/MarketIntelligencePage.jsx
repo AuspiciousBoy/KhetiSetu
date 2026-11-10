@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 import {
   LineChart,
   Line,
@@ -16,6 +17,7 @@ import {
 } from 'recharts';
 
 const MarketIntelligencePage = () => {
+  const { t } = useTranslation();
   const [selectedCrop, setSelectedCrop] = useState('Tomato');
   const [quantityKg, setQuantityKg] = useState(1000);
   const [priceHistory, setPriceHistory] = useState(null);
@@ -61,13 +63,13 @@ const MarketIntelligencePage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Marketplace Analytics
+            {t('mandiPage.analyticsBadge')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            APMC Mandi Price Analytics & Forecasting
+            {t('mandiPage.pageTitle')}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Algorithmic 30-day price trends and transparent Net-Return Mandi optimization
+            {t('mandiPage.pageSubtitle')}
           </p>
         </div>
 
@@ -101,20 +103,20 @@ const MarketIntelligencePage = () => {
             <Card className="md:col-span-4 flex flex-col justify-between">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-                  Current Benchmark Price
+                  {t('mandiPage.currentBenchmark')}
                 </span>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="font-display font-bold text-4xl text-primary">
                     ₹{priceHistory?.currentPrice}
                   </span>
-                  <span className="text-xs text-on-surface-variant">/ kg (Avg)</span>
+                  <span className="text-xs text-on-surface-variant">{t('mandiPage.avgPerKg')}</span>
                 </div>
               </div>
 
               <div className="pt-6 border-t border-surface-variant/60 mt-6">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-                    Algorithmic 15-Day Forecast
+                    {t('mandiPage.algoForecast')}
                   </span>
                   <Badge variant={priceHistory?.changePercent >= 0 ? 'success' : 'warning'}>
                     {priceHistory?.changePercent >= 0 ? '+' : ''}
@@ -125,10 +127,10 @@ const MarketIntelligencePage = () => {
                   <span className="font-display font-bold text-2xl text-secondary">
                     ₹{priceHistory?.predictedPrice}
                   </span>
-                  <span className="text-xs text-on-surface-variant">/ kg (WMA Model)</span>
+                  <span className="text-xs text-on-surface-variant">{t('mandiPage.wmaModel')}</span>
                 </div>
                 <p className="text-[11px] text-on-surface-variant/80 mt-1">
-                  Computed via Weighted Moving Average and seasonal momentum.
+                  {t('mandiPage.wmaDesc')}
                 </p>
               </div>
             </Card>
@@ -138,11 +140,11 @@ const MarketIntelligencePage = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-5 h-5 text-secondary" />
                   <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-                    Market Intelligence Summary
+                    {t('mandiPage.summaryBadge')}
                   </span>
                 </div>
                 <h3 className="font-display font-semibold text-lg text-primary mb-2">
-                  Commercial Outlook for {selectedCrop}
+                  {t('mandiPage.commercialOutlook', { crop: selectedCrop })}
                 </h3>
                 <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
                   {priceHistory?.explanation}
@@ -150,24 +152,24 @@ const MarketIntelligencePage = () => {
               </div>
 
               <div className="p-3.5 rounded-[12px] bg-surface-container border border-surface-variant/70 text-[11px] text-on-surface-variant mt-4">
-                <span className="font-bold text-primary block mb-0.5">Note for Growers:</span>
-                Prices reflect official APMC Mandi arrivals. For Grade-A sorted produce, KhetiSetu marketplace listings typically yield 10-15% above standard un-graded auction lots.
+                <span className="font-bold text-primary block mb-0.5">{t('mandiPage.growerNoteTitle')}</span>
+                {t('mandiPage.growerNote')}
               </div>
             </Card>
           </div>
 
-          {/* Historical Price Chart matching Agri-Modernism specification */}
+          {/* Historical Price Chart */}
           <Card className="p-8">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
               <div>
                 <h3 className="font-display font-semibold text-xl text-primary">
-                  30-Day Historical Price Movement (₹ / kg)
+                  {t('mandiPage.historyChartTitle')}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">
-                  Deep Forest trend line with soft sand gridlines per DESIGN.md
+                  {t('mandiPage.historyChartSubtitle')}
                 </p>
               </div>
-              <Badge variant="primary">Agmarknet Index</Badge>
+              <Badge variant="primary">{t('mandiPage.agmarknetIndex')}</Badge>
             </div>
 
             <div className="h-72 w-full">
@@ -185,14 +187,13 @@ const MarketIntelligencePage = () => {
                       boxShadow: '0 8px 16px rgba(120,88,56,0.08)',
                     }}
                   />
-                  {/* Deep Forest Line from Design System */}
                   <Line
                     type="monotone"
                     dataKey="price"
                     stroke="#08241a"
                     strokeWidth={2.5}
                     dot={{ fill: '#08241a', r: 3 }}
-                    activeDot={{ r: 6, fill: '#e78353' }} // Terracotta anomaly dot
+                    activeDot={{ r: 6, fill: '#e78353' }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -204,16 +205,16 @@ const MarketIntelligencePage = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-surface-variant/60">
               <div>
                 <h3 className="font-display font-semibold text-xl text-primary">
-                  Smart Market Recommendation (Net Return Optimization)
+                  {t('mandiPage.smartRecTitle')}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">
-                  Ranked by realistic Net Return = (Gross Revenue) - (Logistics Freight) - (Mandi Cess)
+                  {t('mandiPage.smartRecSubtitle')}
                 </p>
               </div>
 
               {/* Quantity Form */}
               <form onSubmit={handleRecalculate} className="flex items-center gap-2">
-                <span className="text-xs font-medium text-on-surface-variant">Batch Load:</span>
+                <span className="text-xs font-medium text-on-surface-variant">{t('mandiPage.batchLoad')}</span>
                 <input
                   type="number"
                   min="50"
@@ -224,7 +225,7 @@ const MarketIntelligencePage = () => {
                 />
                 <span className="text-xs text-on-surface-variant">kg</span>
                 <Button type="submit" variant="secondary" size="sm">
-                  Recalculate
+                  {t('mandiPage.recalculate')}
                 </Button>
               </form>
             </div>
@@ -233,13 +234,13 @@ const MarketIntelligencePage = () => {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-surface-variant text-on-surface-variant uppercase tracking-wider font-semibold">
-                    <th className="py-3 px-4">Rank / Mandi</th>
-                    <th className="py-3 px-4">Distance</th>
-                    <th className="py-3 px-4">Mandi Rate</th>
-                    <th className="py-3 px-4">Gross Revenue</th>
-                    <th className="py-3 px-4">Transport Freight</th>
-                    <th className="py-3 px-4 font-bold text-primary">Est. Net Return</th>
-                    <th className="py-3 px-4 text-right">Effective Rate</th>
+                    <th className="py-3 px-4">{t('mandiPage.rankMandiCol')}</th>
+                    <th className="py-3 px-4">{t('mandiPage.distanceCol')}</th>
+                    <th className="py-3 px-4">{t('mandiPage.mandiRateCol')}</th>
+                    <th className="py-3 px-4">{t('mandiPage.grossRevenueCol')}</th>
+                    <th className="py-3 px-4">{t('mandiPage.transportFreightCol')}</th>
+                    <th className="py-3 px-4 font-bold text-primary">{t('mandiPage.estNetReturnCol')}</th>
+                    <th className="py-3 px-4 text-right">{t('mandiPage.effectiveRateCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-variant/50">
@@ -255,7 +256,7 @@ const MarketIntelligencePage = () => {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
                           {mandi.isRecommended ? (
-                            <Badge variant="success">★ BEST OPTION</Badge>
+                            <Badge variant="success">{t('mandiPage.bestOptionBadge')}</Badge>
                           ) : (
                             <span className="font-bold text-on-surface-variant">#{idx + 1}</span>
                           )}

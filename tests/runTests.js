@@ -6,6 +6,7 @@ require('module').Module._initPaths();
 
 // Spawn node --test runner with all test files
 const testFiles = [
+  path.resolve(__dirname, 'authAndGstinFlow.test.js'),
   path.resolve(__dirname, 'security/authAndRoleSecurity.test.js'),
   path.resolve(__dirname, 'security/noSqlAndInputSecurity.test.js'),
   path.resolve(__dirname, 'security/orderAndInventorySecurity.test.js'),

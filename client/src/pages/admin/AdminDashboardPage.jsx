@@ -5,8 +5,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const AdminDashboardPage = () => {
+  const { t } = useTranslation();
   const [overview, setOverview] = useState(null);
   const [users, setUsers] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -64,13 +66,13 @@ const AdminDashboardPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Super Administrator Control Plane
+            {t('adminDashboard.controlPlane')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            Platform Operations & Security
+            {t('adminDashboard.operationsSecurity')}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Real-time telemetry, user role governance, system health and immutable audit trails
+            {t('adminDashboard.adminSubtitle')}
           </p>
         </div>
 
@@ -84,7 +86,7 @@ const AdminDashboardPage = () => {
                 : 'text-on-surface hover:text-primary'
             }`}
           >
-            Metrics Overview
+            {t('adminDashboard.tabOverview')}
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -94,7 +96,7 @@ const AdminDashboardPage = () => {
                 : 'text-on-surface hover:text-primary'
             }`}
           >
-            User Accounts
+            {t('adminDashboard.tabUsers')}
           </button>
           <button
             onClick={() => setActiveTab('audit')}
@@ -104,7 +106,7 @@ const AdminDashboardPage = () => {
                 : 'text-on-surface hover:text-primary'
             }`}
           >
-            Security Audit Logs
+            {t('adminDashboard.tabAudit')}
           </button>
         </div>
       </div>
@@ -116,49 +118,52 @@ const AdminDashboardPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Total Registered Users
+                {t('adminDashboard.registeredUsers')}
               </span>
               <div className="font-display font-bold text-3xl text-primary mt-2">
                 {overview?.metrics?.totalUsers}
               </div>
               <p className="text-[11px] text-on-surface-variant mt-1">
-                {overview?.metrics?.totalFarmers} Farmers • {overview?.metrics?.totalBusinesses} Businesses
+                {t('adminDashboard.usersBreakdown', {
+                  farmers: overview?.metrics?.totalFarmers,
+                  businesses: overview?.metrics?.totalBusinesses,
+                })}
               </p>
             </Card>
 
             <Card>
               <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Active Marketplace Listings
+                {t('adminDashboard.activeProducts')}
               </span>
               <div className="font-display font-bold text-3xl text-primary mt-2">
                 {overview?.metrics?.totalActiveProducts}
               </div>
               <p className="text-[11px] text-on-surface-variant mt-1">
-                {overview?.metrics?.totalBatchesTracked} Batches in provenance vault
+                {t('adminDashboard.batchesTracked', { count: overview?.metrics?.totalBatchesTracked })}
               </p>
             </Card>
 
             <Card>
               <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Gross Platform Turnover
+                {t('adminDashboard.grossTurnover')}
               </span>
               <div className="font-display font-bold text-3xl text-primary mt-2">
                 ₹{(overview?.metrics?.totalGrossRevenue || 0).toLocaleString('en-IN')}
               </div>
               <p className="text-[11px] text-secondary mt-1">
-                From {overview?.metrics?.totalOrders} total completed orders
+                {t('adminDashboard.completedOrders', { count: overview?.metrics?.totalOrders })}
               </p>
             </Card>
 
             <Card>
               <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Kheti AI Consultations
+                {t('adminDashboard.aiConsultations')}
               </span>
               <div className="font-display font-bold text-3xl text-primary mt-2">
                 {overview?.metrics?.aiConsultationsCount}
               </div>
               <p className="text-[11px] text-on-surface-variant mt-1">
-                Multi-lingual agronomy conversations
+                {t('adminDashboard.multilingualConversations')}
               </p>
             </Card>
           </div>
@@ -171,14 +176,18 @@ const AdminDashboardPage = () => {
               </div>
               <div>
                 <h4 className="font-display font-semibold text-primary text-sm">
-                  System Health: {overview?.systemHealth?.databaseStatus}
+                  {t('adminDashboard.systemHealth', { status: overview?.systemHealth?.databaseStatus })}
                 </h4>
                 <p className="text-xs text-on-surface-variant">
-                  Environment: {overview?.systemHealth?.nodeEnvironment} • Node Process Heap: {overview?.systemHealth?.memoryUsageMb} MB • Uptime: {Math.round((overview?.systemHealth?.serverUptimeSeconds || 0) / 60)} mins
+                  {t('adminDashboard.envInfo', {
+                    env: overview?.systemHealth?.nodeEnvironment,
+                    heap: overview?.systemHealth?.memoryUsageMb,
+                    uptime: Math.round((overview?.systemHealth?.serverUptimeSeconds || 0) / 60),
+                  })}
                 </p>
               </div>
             </div>
-            <Badge variant="success">All Systems Nominal</Badge>
+            <Badge variant="success">{t('adminDashboard.allSystemsNominal')}</Badge>
           </Card>
         </div>
       )}
@@ -187,19 +196,19 @@ const AdminDashboardPage = () => {
       {activeTab === 'users' && (
         <Card className="p-8">
           <h3 className="font-display font-semibold text-xl text-primary mb-6 pb-4 border-b border-surface-variant/60">
-            Platform Users Governance
+            {t('adminDashboard.usersGovernance')}
           </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-surface-variant text-on-surface-variant uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-4">User</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Verified</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Created Date</th>
-                  <th className="py-3 px-4 text-right">Administrative Action</th>
+                  <th className="py-3 px-4">{t('adminDashboard.userCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.roleCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.verifiedCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.statusCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.createdDateCol')}</th>
+                  <th className="py-3 px-4 text-right">{t('adminDashboard.actionCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant/50">
@@ -214,9 +223,9 @@ const AdminDashboardPage = () => {
                     </td>
                     <td className="py-3.5 px-4">
                       {u.isEmailVerified ? (
-                        <span className="text-primary font-semibold">✓ Verified</span>
+                        <span className="text-primary font-semibold">{t('adminDashboard.verifiedBadge')}</span>
                       ) : (
-                        <span className="text-on-surface-variant">Pending</span>
+                        <span className="text-on-surface-variant">{t('adminDashboard.pendingBadge')}</span>
                       )}
                     </td>
                     <td className="py-3.5 px-4">
@@ -234,7 +243,7 @@ const AdminDashboardPage = () => {
                           size="sm"
                           onClick={() => handleToggleUserStatus(u.id, u.isActive)}
                         >
-                          {u.isActive ? 'Lock Account' : 'Unlock Account'}
+                          {u.isActive ? t('adminDashboard.lockAccount') : t('adminDashboard.unlockAccount')}
                         </Button>
                       )}
                     </td>
@@ -252,25 +261,25 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
             <div>
               <h3 className="font-display font-semibold text-xl text-primary">
-                Immutable Forensics & Security Audit Trail
+                {t('adminDashboard.auditTrailTitle')}
               </h3>
               <p className="text-xs text-on-surface-variant mt-0.5">
-                Every sensitive action is written to an immutable log with correlation ID and actor identity
+                {t('adminDashboard.auditTrailSubtitle')}
               </p>
             </div>
-            <Badge variant="primary">Non-Repudiation Protected</Badge>
+            <Badge variant="primary">{t('adminDashboard.nonRepudiationBadge')}</Badge>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
               <thead>
                 <tr className="border-b border-surface-variant text-on-surface-variant uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-4">Timestamp</th>
-                  <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Actor</th>
-                  <th className="py-3 px-4">Resource</th>
-                  <th className="py-3 px-4">Result</th>
-                  <th className="py-3 px-4">Request ID</th>
+                  <th className="py-3 px-4">{t('adminDashboard.timestampCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.actionCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.actorCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.resourceCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.resultCol')}</th>
+                  <th className="py-3 px-4">{t('adminDashboard.requestIdCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant/50">

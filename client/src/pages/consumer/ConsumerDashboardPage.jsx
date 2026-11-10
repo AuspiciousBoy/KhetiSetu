@@ -6,8 +6,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const ConsumerDashboardPage = () => {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,13 +33,13 @@ const ConsumerDashboardPage = () => {
     <div className="flex flex-col gap-8">
       <div>
         <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-          Consumer Portal
+          {t('consumerDashboard.portalBadge')}
         </span>
         <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-          My Farm-Direct Orders
+          {t('consumerDashboard.pageTitle')}
         </h1>
         <p className="text-xs text-on-surface-variant mt-0.5">
-          Track harvest dispatches, cold-chain delivery milestones, and batch quality
+          {t('consumerDashboard.pageSubtitle')}
         </p>
       </div>
 
@@ -48,12 +50,12 @@ const ConsumerDashboardPage = () => {
       ) : orders.length === 0 ? (
         <EmptyState
           icon="shopping_basket"
-          title="No orders placed yet"
-          description="Browse direct farm listings on the marketplace to purchase seasonal harvest lots."
+          title={t('consumerDashboard.noOrdersTitle')}
+          description={t('consumerDashboard.noOrdersDesc')}
           action={
             <Link to="/marketplace">
               <Button variant="primary" size="md">
-                Browse Marketplace
+                {t('consumerDashboard.browseMarketplace')}
               </Button>
             </Link>
           }
@@ -65,10 +67,13 @@ const ConsumerDashboardPage = () => {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-surface-variant/60 pb-4">
                 <div>
                   <span className="font-mono text-xs font-bold text-primary">
-                    Order #{order.orderId}
+                    {t('consumerDashboard.orderNumber', { orderId: order.orderId })}
                   </span>
                   <p className="text-xs text-on-surface-variant mt-0.5">
-                    Placed on {new Date(order.createdAt).toLocaleDateString()} • Fulfilled by {order.farmerId?.fullName || 'Sahyadri Organic Farm'}
+                    {t('consumerDashboard.placedBy', {
+                      date: new Date(order.createdAt).toLocaleDateString(),
+                      grower: order.farmerId?.fullName || 'Sahyadri Organic Farm',
+                    })}
                   </p>
                 </div>
 
@@ -104,12 +109,12 @@ const ConsumerDashboardPage = () => {
               {/* Order Footer & Total */}
               <div className="pt-3 border-t border-surface-variant/60 flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-on-surface-variant">Grand Total: </span>
+                  <span className="text-xs text-on-surface-variant">{t('consumerDashboard.grandTotal')} </span>
                   <span className="font-display font-bold text-lg text-primary">
                     ₹{order.total}
                   </span>
                   <span className="text-[10px] text-on-surface-variant ml-1">
-                    (incl. ₹{order.deliveryFee} freight & tax)
+                    {t('consumerDashboard.freightTaxNote', { fee: order.deliveryFee })}
                   </span>
                 </div>
 
@@ -117,7 +122,7 @@ const ConsumerDashboardPage = () => {
                   <Link to={`/consumer/orders/${order._id}`}>
                     <Button variant="secondary" size="sm" className="flex items-center gap-1.5">
                       <Truck className="w-3.5 h-3.5" />
-                      <span>Track Delivery Milestones</span>
+                      <span>{t('consumerDashboard.trackMilestones')}</span>
                     </Button>
                   </Link>
                 )}

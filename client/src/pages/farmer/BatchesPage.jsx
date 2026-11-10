@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Sparkles, Camera, Check, Upload, CheckCircle2 } from 'lucide-react';
+import { Plus, Sparkles, Camera, Check } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -8,8 +8,10 @@ import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
 import ProgressRing from '../../components/ui/ProgressRing';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const BatchesPage = () => {
+  const { t } = useTranslation();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -111,13 +113,13 @@ const BatchesPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Produce Provenance
+            {t('batchesPage.provenanceBadge')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            Harvest Batch Traceability
+            {t('batchesPage.pageTitle')}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Log, assess and trace farm produce from gate harvest to mandi sale
+            {t('batchesPage.pageSubtitle')}
           </p>
         </div>
 
@@ -128,7 +130,7 @@ const BatchesPage = () => {
           className="flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" />
-          <span>Register New Batch</span>
+          <span>{t('batchesPage.registerNewBatch')}</span>
         </Button>
       </div>
 
@@ -140,11 +142,11 @@ const BatchesPage = () => {
       ) : batches.length === 0 ? (
         <EmptyState
           icon="inventory_2"
-          title="No harvest batches recorded"
-          description="Register your first produce harvest lot to unlock AI visual grading and direct marketplace listings."
+          title={t('batchesPage.noBatchesRecorded')}
+          description={t('batchesPage.noBatchesDesc')}
           action={
             <Button variant="primary" size="md" onClick={() => setIsNewBatchOpen(true)}>
-              Register Harvest
+              {t('batchesPage.registerHarvest')}
             </Button>
           }
         />
@@ -174,13 +176,17 @@ const BatchesPage = () => {
                   {batch.cropName}
                 </h3>
                 <p className="text-xs text-on-surface-variant mb-4">
-                  Harvested on {new Date(batch.harvestDate).toLocaleDateString()} • {batch.originLocation.district}, {batch.originLocation.state}
+                  {t('batchesPage.harvestedOn', {
+                    date: new Date(batch.harvestDate).toLocaleDateString(),
+                    district: batch.originLocation?.district || 'Pune',
+                    state: batch.originLocation?.state || 'Maharashtra',
+                  })}
                 </p>
 
                 <div className="bg-surface-container rounded-[16px] p-3.5 mb-4 grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-on-surface-variant/70 block">
-                      Stock Volume
+                      {t('batchesPage.stockVolume')}
                     </span>
                     <span className="font-semibold text-primary text-sm">
                       {batch.availableQuantity} / {batch.quantity} {batch.unit}
@@ -188,10 +194,10 @@ const BatchesPage = () => {
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold text-on-surface-variant/70 block">
-                      Est. Shelf Life
+                      {t('batchesPage.estShelfLife')}
                     </span>
                     <span className="font-semibold text-primary text-sm">
-                      {batch.shelfLifeDays} Days
+                      {batch.shelfLifeDays} {t('batchesPage.days')}
                     </span>
                   </div>
                 </div>
@@ -216,7 +222,11 @@ const BatchesPage = () => {
                   className="w-full flex items-center justify-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>{batch.qualityGrade === 'PENDING_ASSESSMENT' ? 'Assess Quality' : 'View Assessment'}</span>
+                  <span>
+                    {batch.qualityGrade === 'PENDING_ASSESSMENT'
+                      ? t('batchesPage.assessQuality')
+                      : t('batchesPage.viewAssessment')}
+                  </span>
                 </Button>
               </div>
             </Card>
@@ -228,14 +238,14 @@ const BatchesPage = () => {
       <Modal
         isOpen={isNewBatchOpen}
         onClose={() => setIsNewBatchOpen(false)}
-        title="Register Harvest Batch"
-        subtitle="Log farm-gate harvest details for quality tracking and commercial listing"
+        title={t('batchesPage.registerBatchModalTitle')}
+        subtitle={t('batchesPage.registerBatchModalSubtitle')}
       >
         <form onSubmit={handleCreateBatch} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 text-left">
               <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Crop
+                {t('batchesPage.crop')}
               </label>
               <select
                 value={cropName}
@@ -254,7 +264,7 @@ const BatchesPage = () => {
             </div>
 
             <Input
-              label="Quantity"
+              label={t('batchesPage.quantity')}
               type="number"
               min="1"
               required
@@ -266,7 +276,7 @@ const BatchesPage = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 text-left">
               <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Unit
+                {t('batchesPage.unit')}
               </label>
               <select
                 value={unit}
@@ -281,7 +291,7 @@ const BatchesPage = () => {
             </div>
 
             <Input
-              label="Harvest Date"
+              label={t('batchesPage.harvestDate')}
               type="date"
               required
               value={harvestDate}
@@ -290,14 +300,14 @@ const BatchesPage = () => {
           </div>
 
           <Input
-            label="Harvest Notes (Optional)"
-            placeholder="e.g. Breaker stage, vine-ripened, organic compost nourished"
+            label={t('batchesPage.notesLabel')}
+            placeholder={t('batchesPage.notesPlaceholder')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
 
           <Button type="submit" variant="primary" size="lg" loading={submittingBatch} className="mt-4">
-            Create Batch Record
+            {t('batchesPage.createBatchBtn')}
           </Button>
         </form>
       </Modal>
@@ -306,8 +316,8 @@ const BatchesPage = () => {
       <Modal
         isOpen={!!selectedBatchForAssessment}
         onClose={() => setSelectedBatchForAssessment(null)}
-        title={`AI Quality Doctor • ${selectedBatchForAssessment?.cropName}`}
-        subtitle={`Batch: ${selectedBatchForAssessment?.batchId}`}
+        title={t('batchesPage.aiDoctorTitle', { crop: selectedBatchForAssessment?.cropName })}
+        subtitle={t('batchesPage.batchCodeSubtitle', { batchId: selectedBatchForAssessment?.batchId })}
         maxWidth="max-w-2xl"
       >
         <div className="flex flex-col gap-6">
@@ -330,7 +340,7 @@ const BatchesPage = () => {
                       className="flex items-center gap-1.5"
                     >
                       <Sparkles className="w-4 h-4" />
-                      <span>Run Gemini Quality Assessment</span>
+                      <span>{t('batchesPage.runAiAssessment')}</span>
                     </Button>
                     <Button
                       variant="ghost"
@@ -340,7 +350,7 @@ const BatchesPage = () => {
                         setImagePreview(null);
                       }}
                     >
-                      Choose Different Photo
+                      {t('batchesPage.chooseDifferentPhoto')}
                     </Button>
                   </div>
                 </div>
@@ -351,10 +361,10 @@ const BatchesPage = () => {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-primary">
-                      Upload produce harvest photo
+                      {t('batchesPage.uploadPhotoTitle')}
                     </p>
                     <p className="text-xs text-on-surface-variant mt-0.5">
-                      JPG, PNG or WEBP (Max 5MB). Photo must clearly capture skin texture.
+                      {t('batchesPage.uploadPhotoDesc')}
                     </p>
                   </div>
                   <label className="cursor-pointer">
@@ -365,14 +375,13 @@ const BatchesPage = () => {
                       className="hidden"
                     />
                     <span className="inline-flex items-center justify-center bg-primary text-on-primary font-medium text-xs px-4 py-2 rounded-[12px] hover:bg-primary-container">
-                      Select Image
+                      {t('batchesPage.selectImage')}
                     </span>
                   </label>
                 </div>
               )}
             </div>
           ) : (
-            /* Structured Assessment Result Card directly conforming to prompt requirements */
             <div className="flex flex-col gap-5 bg-surface-container-low rounded-[24px] p-6 border border-surface-variant soil-shadow">
               <div className="flex items-center justify-between border-b border-surface-variant/60 pb-4">
                 <div className="flex items-center gap-3">
@@ -395,7 +404,7 @@ const BatchesPage = () => {
                       {assessmentResult.classification.replace(/_/g, ' ')}
                     </Badge>
                     <p className="text-xs text-on-surface-variant mt-1 font-medium">
-                      Confidence Level: {Math.round((assessmentResult.confidence || 0.9) * 100)}%
+                      {t('batchesPage.confidenceLevel', { percent: Math.round((assessmentResult.confidence || 0.9) * 100) })}
                     </p>
                   </div>
                 </div>
@@ -408,7 +417,7 @@ const BatchesPage = () => {
               {/* Observations list */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-primary font-label-md mb-2">
-                  Key Pathology Observations
+                  {t('batchesPage.keyPathology')}
                 </h4>
                 <ul className="flex flex-col gap-2">
                   {assessmentResult.observations?.map((obs, idx) => (
@@ -424,7 +433,7 @@ const BatchesPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div className="p-3 bg-surface rounded-[12px] border border-surface-variant">
                   <span className="text-[10px] uppercase font-bold text-secondary block">
-                    Estimated Shelf-Life
+                    {t('batchesPage.estShelfLife')}
                   </span>
                   <span className="text-xs font-semibold text-primary">
                     {assessmentResult.estimatedShelfLife}
@@ -432,7 +441,7 @@ const BatchesPage = () => {
                 </div>
                 <div className="p-3 bg-surface rounded-[12px] border border-surface-variant">
                   <span className="text-[10px] uppercase font-bold text-secondary block">
-                    Recommended Action
+                    {t('batchesPage.recommendedAction')}
                   </span>
                   <span className="text-xs font-semibold text-primary">
                     {assessmentResult.recommendedAction}
@@ -440,12 +449,12 @@ const BatchesPage = () => {
                 </div>
               </div>
 
-              {/* Strict Food-Safety Legal Disclaimer as required by prompt */}
+              {/* Legal Disclaimer */}
               <div className="p-3.5 rounded-[12px] bg-surface-container border border-outline-variant/30 text-[11px] text-on-surface-variant leading-relaxed">
                 <span className="font-semibold text-primary block mb-0.5">
-                  ⚠️ AI Visual Analysis Notice:
+                  {t('batchesPage.aiNoticeTitle')}
                 </span>
-                This assessment is an AI-assisted visual estimate based on surface morphology. It is NOT laboratory food-safety certification or chemical residue testing.
+                {t('batchesPage.aiNoticeText')}
               </div>
 
               {/* Action to upload new photo and re-run */}
@@ -461,7 +470,7 @@ const BatchesPage = () => {
                   className="flex items-center gap-1.5"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Upload New Photo & Re-Assess</span>
+                  <span>{t('batchesPage.uploadNewPhotoReassess')}</span>
                 </Button>
               </div>
             </div>

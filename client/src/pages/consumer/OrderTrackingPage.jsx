@@ -4,11 +4,20 @@ import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 const OrderTrackingPage = () => {
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Determine the correct back link based on user role
+  const ordersBackLink = user?.role === 'BUSINESS' ? '/business/orders'
+    : user?.role === 'FARMER' ? '/farmer/orders'
+    : '/consumer/orders';
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -27,12 +36,12 @@ const OrderTrackingPage = () => {
   }, [id]);
 
   const milestones = [
-    { key: 'PLACED', label: 'Order Registered', desc: 'Order received and inventory reserved' },
-    { key: 'CONFIRMED', label: 'Farmer Confirmed', desc: 'Harvest batch verified at farm gate' },
-    { key: 'PACKED', label: 'Packed & Graded', desc: 'Produce crated under ventilated protocols' },
-    { key: 'ASSIGNED', label: 'Logistics Assigned', desc: 'Assigned to verified fleet driver' },
-    { key: 'OUT_FOR_DELIVERY', label: 'In Transit', desc: 'Produce en-route to delivery destination' },
-    { key: 'DELIVERED', label: 'Delivered', desc: 'Handed over to buyer' },
+    { key: 'PLACED', label: t('orderTracking.milestones.placed'), desc: t('orderTracking.milestones.placedDesc') },
+    { key: 'CONFIRMED', label: t('orderTracking.milestones.confirmed'), desc: t('orderTracking.milestones.confirmedDesc') },
+    { key: 'PACKED', label: t('orderTracking.milestones.packed'), desc: t('orderTracking.milestones.packedDesc') },
+    { key: 'ASSIGNED', label: t('orderTracking.milestones.assigned'), desc: t('orderTracking.milestones.assignedDesc') },
+    { key: 'OUT_FOR_DELIVERY', label: t('orderTracking.milestones.inTransit'), desc: t('orderTracking.milestones.inTransitDesc') },
+    { key: 'DELIVERED', label: t('orderTracking.milestones.delivered'), desc: t('orderTracking.milestones.deliveredDesc') },
   ];
 
   const currentStatusIndex = milestones.findIndex((m) => m.key === order?.status);
@@ -48,9 +57,9 @@ const OrderTrackingPage = () => {
   if (!order) {
     return (
       <div className="max-w-3xl mx-auto p-8 text-center">
-        <p className="text-sm text-on-surface-variant">Order details unavailable.</p>
-        <Link to="/consumer/orders" className="text-xs text-primary font-bold underline mt-2 block">
-          Return to Orders
+        <p className="text-sm text-on-surface-variant">{t('orderTracking.detailsUnavailable')}</p>
+        <Link to={ordersBackLink} className="text-xs text-primary font-bold underline mt-2 block">
+          {t('orderTracking.returnToOrders')}
         </Link>
       </div>
     );
@@ -60,28 +69,31 @@ const OrderTrackingPage = () => {
     <div className="max-w-3xl mx-auto flex flex-col gap-8">
       {/* Header */}
       <div>
-        <Link to="/consumer/orders" className="text-xs text-secondary font-semibold hover:underline mb-2 inline-block">
-          ← Back to Orders
+        <Link to={ordersBackLink} className="text-xs text-secondary font-semibold hover:underline mb-2 inline-block">
+          {t('orderTracking.backToOrders')}
         </Link>
         <div className="flex items-center justify-between">
           <h1 className="font-display font-bold text-2xl text-primary">
-            Delivery Tracking • {order.orderId}
+            {t('orderTracking.deliveryTracking', { orderId: order.orderId })}
           </h1>
           <Badge variant="success">{order.status.replace(/_/g, ' ')}</Badge>
         </div>
         <p className="text-xs text-on-surface-variant mt-1">
-          Fulfilled from {order.farmerId?.fullName} ({order.deliveryAddress?.city}, {order.deliveryAddress?.state})
+          {t('orderTracking.fulfilledFrom', {
+            grower: order.farmerId?.fullName,
+            city: order.deliveryAddress?.city,
+            state: order.deliveryAddress?.state,
+          })}
         </p>
       </div>
 
-      {/* Chronological Timeline Card following DESIGN.md specifications */}
+      {/* Chronological Timeline Card */}
       <Card className="p-8">
         <h3 className="font-display font-semibold text-lg text-primary mb-6 pb-3 border-b border-surface-variant/60">
-          Delivery Progression Milestones
+          {t('orderTracking.progressionTitle')}
         </h3>
 
         <div className="relative pl-6 flex flex-col gap-8">
-          {/* Vertical 2px Soft Sand Line */}
           <div className="absolute left-[33px] top-3 bottom-3 w-[2px] bg-surface-variant" />
 
           {milestones.map((m, idx) => {
@@ -90,7 +102,6 @@ const OrderTrackingPage = () => {
 
             return (
               <div key={m.key} className="relative flex items-start gap-5">
-                {/* Active node: Deep Forest circle with 4px white inner dot per DESIGN.md */}
                 <div
                   className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
                     isCurrent
@@ -107,7 +118,6 @@ const OrderTrackingPage = () => {
                   />
                 </div>
 
-                {/* Milestone Details */}
                 <div className="flex-1">
                   <span
                     className={`text-sm font-display font-semibold block ${
@@ -130,7 +140,7 @@ const OrderTrackingPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Card className="p-6">
           <span className="text-[10px] uppercase font-bold text-secondary block mb-2">
-            Delivery Destination
+            {t('orderTracking.deliveryDestination')}
           </span>
           <p className="text-xs font-semibold text-primary">{order.deliveryAddress?.fullName}</p>
           <p className="text-xs text-on-surface-variant mt-0.5">{order.deliveryAddress?.line1}</p>
@@ -142,16 +152,16 @@ const OrderTrackingPage = () => {
 
         <Card className="p-6">
           <span className="text-[10px] uppercase font-bold text-secondary block mb-2">
-            Order Fulfillment
+            {t('orderTracking.orderFulfillment')}
           </span>
           <p className="text-xs text-on-surface-variant">
-            Fulfillment Mode: <span className="font-semibold text-primary">Direct Farm Booking</span>
+            {t('orderTracking.fulfillmentMode')} <span className="font-semibold text-primary">{t('orderTracking.directFarmBooking')}</span>
           </p>
           <p className="text-xs text-on-surface-variant mt-1">
-            Dispatch Status: <span className="font-semibold text-primary">{order.status}</span>
+            {t('orderTracking.dispatchStatus')} <span className="font-semibold text-primary">{order.status}</span>
           </p>
           <p className="text-base font-display font-bold text-primary mt-2">
-            Order Value: ₹{order.total}
+            {t('orderTracking.orderValue')} ₹{order.total}
           </p>
         </Card>
       </div>

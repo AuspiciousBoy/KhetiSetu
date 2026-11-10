@@ -85,6 +85,21 @@ app.get('/ready', (req, res) => {
   });
 });
 
+// Database connection readiness check for API routes: prevents infinite buffering timeouts
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState === 0) {
+    return res.status(503).json({
+      success: false,
+      error: {
+        code: 'DATABASE_UNAVAILABLE',
+        message: 'Database service is currently disconnected. Please ensure MongoDB is running at 127.0.0.1:27017.',
+        requestId: req.id,
+      },
+    });
+  }
+  next();
+});
+
 // 10. Mount API Version 1
 app.use('/api/v1', v1Router);
 
@@ -127,13 +142,27 @@ const startServer = async () => {
     });
   }
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`========================================================`);
     logger.info(`  KhetiSetu Production API Server Active`);
-    logger.info(`  Listening on: http://localhost:${PORT}`);
+    logger.info(`  Listening on: http://127.0.0.1:${PORT} (0.0.0.0)`);
     logger.info(`  Environment:  ${NODE_ENV}`);
-    logger.info(`  Health Probe: http://localhost:${PORT}/health`);
+    logger.info(`  Health Probe: http://127.0.0.1:${PORT}/health`);
     logger.info(`========================================================`);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    logger.error('Unhandled Promise Rejection caught at process level', {
+      error: reason?.message || String(reason),
+      stack: reason?.stack,
+    });
+  });
+
+  process.on('uncaughtException', (err) => {
+    logger.error('Uncaught Exception caught at process level', {
+      error: err.message,
+      stack: err.stack,
+    });
   });
 
   // Graceful shutdown handling

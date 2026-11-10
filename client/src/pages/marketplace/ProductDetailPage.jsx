@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Check, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { Check, ShoppingBag } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -8,8 +8,10 @@ import Button from '../../components/ui/Button';
 import ProgressRing from '../../components/ui/ProgressRing';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const ProductDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -45,7 +47,7 @@ const ProductDetailPage = () => {
     setOrdering(true);
     try {
       // Direct checkout for quick ordering
-      const res = await apiClient.post('/orders', {
+      await apiClient.post('/orders', {
         items: [{ productId: product.id, quantity: Number(quantity) }],
         deliveryAddress: {
           fullName: user.fullName || 'Registered Buyer',
@@ -59,7 +61,17 @@ const ProductDetailPage = () => {
         paymentMethod: 'DIRECT_ORDER',
       });
 
-      navigate('/consumer/orders');
+      // Redirect to the correct orders page based on user role
+      const role = user?.role;
+      if (role === 'BUSINESS') {
+        navigate('/business/orders');
+      } else if (role === 'FARMER') {
+        navigate('/farmer/orders');
+      } else if (role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/consumer/orders');
+      }
     } catch (err) {
       alert(err.response?.data?.error?.message || 'Order creation failed');
     } finally {
@@ -78,9 +90,9 @@ const ProductDetailPage = () => {
   if (!product) {
     return (
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 text-center">
-        <p className="text-sm text-on-surface-variant">Produce item not found.</p>
+        <p className="text-sm text-on-surface-variant">{t('productDetail.produceNotFound')}</p>
         <Link to="/marketplace" className="text-xs text-primary font-bold underline mt-2 inline-block">
-          Return to Marketplace
+          {t('productDetail.returnToMarketplace')}
         </Link>
       </div>
     );
@@ -91,7 +103,7 @@ const ProductDetailPage = () => {
       {/* Breadcrumb Navigation */}
       <div className="flex items-center gap-2 text-xs text-on-surface-variant">
         <Link to="/marketplace" className="hover:text-primary">
-          Marketplace
+          {t('productDetail.breadcrumbMarketplace')}
         </Link>
         <span>/</span>
         <span className="text-primary font-medium">{product.title}</span>
@@ -123,19 +135,21 @@ const ProductDetailPage = () => {
                   />
                   <div>
                     <h4 className="font-display font-semibold text-primary text-sm">
-                      AI Verified Quality Grade: {product.qualityAssessment.classification.replace(/_/g, ' ')}
+                      {t('productDetail.aiVerifiedGrade', { grade: product.qualityAssessment.classification.replace(/_/g, ' ') })}
                     </h4>
                     <p className="text-[11px] text-on-surface-variant">
-                      Assessed on {new Date(product.qualityAssessment.assessedAt).toLocaleDateString()}
+                      {t('productDetail.assessedOn', { date: new Date(product.qualityAssessment.assessedAt).toLocaleDateString() })}
                     </p>
                   </div>
                 </div>
-                <Badge variant="success">Confidence {Math.round((product.qualityAssessment.confidence || 0.9) * 100)}%</Badge>
+                <Badge variant="success">
+                  {t('productDetail.confidenceScore', { percent: Math.round((product.qualityAssessment.confidence || 0.9) * 100) })}
+                </Badge>
               </div>
 
               <div>
                 <span className="text-[10px] uppercase font-bold text-secondary block mb-1">
-                  Morphological Observations:
+                  {t('productDetail.morphologicalObservations')}
                 </span>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-on-surface">
                   {product.qualityAssessment.observations?.map((obs, i) => (
@@ -174,7 +188,7 @@ const ProductDetailPage = () => {
                   ₹{product.pricePerUnit}
                 </span>
                 <span className="text-sm text-on-surface-variant font-medium">
-                  / {product.unit} (Inclusive of farm handling)
+                  / {product.unit} {t('marketplace.inclusiveHandling')}
                 </span>
               </div>
             </div>
@@ -187,21 +201,21 @@ const ProductDetailPage = () => {
             {product.batchTraceability && (
               <div className="p-4 rounded-[16px] bg-surface-container border border-surface-variant/60 flex flex-col gap-2.5 text-xs">
                 <div className="flex items-center justify-between font-mono font-bold text-primary">
-                  <span>Batch Code:</span>
+                  <span>{t('productDetail.batchCodeLabel')}</span>
                   <span>{product.batchTraceability.batchId}</span>
                 </div>
                 <div className="flex items-center justify-between text-on-surface">
-                  <span>Harvest Date:</span>
+                  <span>{t('farmerDashboard.harvestDateCol')}:</span>
                   <span>{new Date(product.batchTraceability.harvestDate).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center justify-between text-on-surface">
-                  <span>Storage Protocol:</span>
-                  <span>{product.batchTraceability.storageMethod || 'Ventilated Farm Storage'}</span>
+                  <span>{t('productDetail.storageProtocolLabel')}</span>
+                  <span>{product.batchTraceability.storageMethod || t('productDetail.ventilatedFarmStorage')}</span>
                 </div>
                 <div className="flex items-center justify-between text-on-surface">
-                  <span>Projected Shelf-Life:</span>
+                  <span>{t('productDetail.projectedShelfLifeLabel')}</span>
                   <span className="font-semibold text-secondary">
-                    {product.batchTraceability.shelfLifeDays} Days
+                    {product.batchTraceability.shelfLifeDays} {t('productDetail.days')}
                   </span>
                 </div>
               </div>
@@ -210,7 +224,7 @@ const ProductDetailPage = () => {
             {/* Quantity Stepper & Buy Action */}
             <div className="pt-4 border-t border-surface-variant/60 flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-on-surface">Order Quantity:</span>
+                <span className="text-xs font-semibold text-on-surface">{t('productDetail.orderQuantityLabel')}</span>
                 <div className="flex items-center gap-3 bg-surface-container rounded-full px-3 py-1 border border-surface-variant">
                   <button
                     type="button"
@@ -233,7 +247,7 @@ const ProductDetailPage = () => {
               </div>
 
               <div className="flex items-center justify-between text-xs text-on-surface-variant">
-                <span>Total Value (approx):</span>
+                <span>{t('productDetail.subtotalEstimate')}</span>
                 <span className="font-display font-bold text-xl text-primary">
                   ₹{product.pricePerUnit * quantity}
                 </span>
@@ -247,7 +261,7 @@ const ProductDetailPage = () => {
                 className="w-full mt-2"
               >
                 <ShoppingBag className="w-5 h-5 shrink-0" />
-                {isAuthenticated ? 'Place Direct Farm Order' : 'Sign in to Place Order'}
+                {isAuthenticated ? t('productDetail.placeOrderBtn') : t('productDetail.signInToOrderBtn')}
               </Button>
             </div>
           </Card>

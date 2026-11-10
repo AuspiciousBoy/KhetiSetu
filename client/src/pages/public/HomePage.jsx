@@ -11,9 +11,7 @@ import {
   CheckCircle2,
   Layers,
   Truck,
-  ShieldCheck,
   Sprout,
-  Users,
   Building2,
   ShoppingBag,
   Award,
@@ -24,57 +22,59 @@ import {
 import Button from '../../components/ui/Button';
 import AgriWeatherBar from '../../components/agri/AgriWeatherBar';
 import FarmProfitCalculator from '../../components/agri/FarmProfitCalculator';
-
-const FEATURED_PRODUCE = [
-  {
-    id: 'prod-1',
-    name: 'Nashik Red Onion (नासिक लाल प्याज)',
-    grade: 'Grade-A Prime',
-    origin: 'Lasalgaon Cluster, MH',
-    price: '₹26/kg',
-    unit: 'Bulk & Crate',
-    image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&q=80&w=500',
-    harvested: 'Harvested Yesterday',
-    shelfLife: '35-45 Days',
-  },
-  {
-    id: 'prod-2',
-    name: 'Vine-Ripened Hybrid Tomato (टमाटर)',
-    grade: 'Grade-A Export Quality',
-    origin: 'Kolar Mandi Hub, KA',
-    price: '₹20/kg',
-    unit: '20kg Ventilated Crates',
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=500',
-    harvested: 'Harvested Today',
-    shelfLife: '7-10 Days',
-  },
-  {
-    id: 'prod-3',
-    name: 'MP Sharbati Wheat (शरबती गेहूं)',
-    grade: 'Grade-A Golden Grain',
-    origin: 'Sehore Belt, MP',
-    price: '₹32/kg',
-    unit: '50kg Jute Bags',
-    image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=500',
-    harvested: 'Cured & Machine Cleaned',
-    shelfLife: '12 Months',
-  },
-  {
-    id: 'prod-4',
-    name: 'Taraori 1121 Basmati Paddy (बासमती धान)',
-    grade: 'Grade-A Long Grain',
-    origin: 'Karnal Belt, HR',
-    price: '₹48/kg',
-    unit: 'Bulk Lots & Retail',
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=500',
-    harvested: 'Aromatic New Harvest',
-    shelfLife: '18 Months',
-  },
-];
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const HomePage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const FEATURED_PRODUCE = [
+    {
+      id: 'prod-1',
+      name: t('profitCalculator.crops.onion'),
+      grade: 'Grade-A Prime',
+      origin: 'Lasalgaon Cluster, MH',
+      price: '₹26/kg',
+      unit: 'Bulk & Crate',
+      image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&q=80&w=500',
+      harvested: t('home.harvestedYesterday'),
+      shelfLife: '35-45 Days',
+    },
+    {
+      id: 'prod-2',
+      name: t('profitCalculator.crops.tomato'),
+      grade: 'Grade-A Export Quality',
+      origin: 'Kolar Mandi Hub, KA',
+      price: '₹20/kg',
+      unit: '20kg Ventilated Crates',
+      image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=500',
+      harvested: t('home.harvestedToday'),
+      shelfLife: '7-10 Days',
+    },
+    {
+      id: 'prod-3',
+      name: t('profitCalculator.crops.wheat'),
+      grade: 'Grade-A Golden Grain',
+      origin: 'Sehore Belt, MP',
+      price: '₹32/kg',
+      unit: '50kg Jute Bags',
+      image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=500',
+      harvested: t('home.curedCleaned'),
+      shelfLife: '12 Months',
+    },
+    {
+      id: 'prod-4',
+      name: t('profitCalculator.crops.basmati'),
+      grade: 'Grade-A Long Grain',
+      origin: 'Karnal Belt, HR',
+      price: '₹48/kg',
+      unit: 'Bulk Lots & Retail',
+      image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=500',
+      harvested: t('home.aromaticHarvest'),
+      shelfLife: '18 Months',
+    },
+  ];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -85,7 +85,7 @@ const HomePage = () => {
 
   return (
     <div className="w-full">
-      {/* Hero Section matching Indigo Ag / FBN caliber */}
+      {/* Hero Section */}
       <section className="relative w-full min-h-[72vh] flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-14 sm:py-20 bg-surface overflow-hidden">
         {/* Farmland Background Texture with Soft Blur */}
         <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
@@ -101,14 +101,14 @@ const HomePage = () => {
           <div className="w-full md:w-4/5 lg:w-3/4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4 font-mono">
               <Sprout className="w-4 h-4 text-emerald-600" />
-              <span>"Khet Se Bazaar Tak, Ek Hi Setu."</span>
+              <span>{t('home.heroBadge')}</span>
             </div>
 
             <h1 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-primary mb-5 max-w-3xl tracking-tight leading-tight">
-              India's Transparent Digital Agricultural Ecosystem.
+              {t('home.heroTitle')}
             </h1>
             <p className="text-base sm:text-lg text-on-surface-variant max-w-2xl font-normal leading-relaxed mb-6">
-              Connecting farmers directly to consumers, wholesale buyers, AI-assisted post-harvest quality assessment, and transparent APMC mandi pricing with zero middleman deductions.
+              {t('home.heroSubtitle')}
             </p>
 
             {/* Interactive Search Console Card */}
@@ -122,7 +122,7 @@ const HomePage = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Ask crop advice, check mandi price or find harvest produce..."
+                  placeholder={t('home.searchPlaceholder')}
                   className="w-full bg-transparent border-none focus:ring-0 text-sm sm:text-base text-on-surface placeholder:text-on-surface-variant/70 outline-none"
                 />
                 <button
@@ -140,28 +140,28 @@ const HomePage = () => {
                   className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-secondary" />
-                  Diagnose Crop Quality
+                  {t('home.diagnoseQualityChip')}
                 </Link>
                 <Link
                   to="/market-prices"
                   className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
                 >
                   <TrendingUp className="w-4 h-4 text-secondary" />
-                  Mandi Live Prices
+                  {t('home.mandiPricesChip')}
                 </Link>
                 <Link
                   to="/weather"
                   className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
                 >
                   <CloudSun className="w-4 h-4 text-secondary" />
-                  Agro-Weather
+                  {t('home.agroWeatherChip')}
                 </Link>
                 <Link
                   to="/ai-assistant"
                   className="px-3.5 py-2 bg-surface-container hover:bg-surface-variant transition-colors rounded-[12px] text-xs font-semibold text-secondary border border-surface-variant flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4 text-secondary" />
-                  Ask Kheti AI
+                  {t('home.askKhetiAiChip')}
                 </Link>
               </div>
             </div>
@@ -174,7 +174,7 @@ const HomePage = () => {
         <AgriWeatherBar />
       </section>
 
-      {/* Trust & Network Stats Banner (FBN Style) */}
+      {/* Trust & Network Stats Banner */}
       <section className="py-6 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-surface rounded-[20px] p-5 border border-surface-variant soil-shadow flex items-center gap-3.5">
@@ -182,8 +182,12 @@ const HomePage = () => {
               <BadgePercent className="w-5 h-5 text-emerald-700" />
             </div>
             <div>
-              <span className="font-display font-bold text-xl text-primary block leading-none">0%</span>
-              <span className="text-xs text-on-surface-variant font-medium">Middleman Arhatiya Cut</span>
+              <span className="font-display font-bold text-xl text-primary block leading-none">
+                {t('home.trustStats.zeroMiddleman')}
+              </span>
+              <span className="text-xs text-on-surface-variant font-medium">
+                {t('home.trustStats.zeroMiddlemanLabel')}
+              </span>
             </div>
           </div>
 
@@ -192,8 +196,12 @@ const HomePage = () => {
               <QrCode className="w-5 h-5 text-sky-700" />
             </div>
             <div>
-              <span className="font-display font-bold text-xl text-primary block leading-none">100%</span>
-              <span className="text-xs text-on-surface-variant font-medium">Traceable Farm-Gate Lots</span>
+              <span className="font-display font-bold text-xl text-primary block leading-none">
+                {t('home.trustStats.traceable')}
+              </span>
+              <span className="text-xs text-on-surface-variant font-medium">
+                {t('home.trustStats.traceableLabel')}
+              </span>
             </div>
           </div>
 
@@ -202,8 +210,12 @@ const HomePage = () => {
               <TrendingUp className="w-5 h-5 text-amber-700" />
             </div>
             <div>
-              <span className="font-display font-bold text-xl text-primary block leading-none">24+ APMC</span>
-              <span className="text-xs text-on-surface-variant font-medium">Mandi Feeds Indexed</span>
+              <span className="font-display font-bold text-xl text-primary block leading-none">
+                {t('home.trustStats.apmcMandis')}
+              </span>
+              <span className="text-xs text-on-surface-variant font-medium">
+                {t('home.trustStats.apmcMandisLabel')}
+              </span>
             </div>
           </div>
 
@@ -212,21 +224,25 @@ const HomePage = () => {
               <Award className="w-5 h-5 text-purple-700" />
             </div>
             <div>
-              <span className="font-display font-bold text-xl text-primary block leading-none">Grade-A</span>
-              <span className="text-xs text-on-surface-variant font-medium">Instant AI Quality Grading</span>
+              <span className="font-display font-bold text-xl text-primary block leading-none">
+                {t('home.trustStats.instantGrading')}
+              </span>
+              <span className="text-xs text-on-surface-variant font-medium">
+                {t('home.trustStats.instantGradingLabel')}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Audience Pathways Grid (Indigo Ag Style) */}
+      {/* Audience Pathways Grid */}
       <section className="py-10 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
         <div className="mb-6">
           <span className="text-xs font-bold uppercase tracking-widest text-secondary font-mono block">
-            Tailored Gateways
+            {t('home.gateways.sectionTitle')}
           </span>
           <h2 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            Engineered for Every Agricultural Stakeholder
+            {t('home.gateways.sectionSubtitle')}
           </h2>
         </div>
 
@@ -238,28 +254,28 @@ const HomePage = () => {
                 <Sprout className="w-6 h-6 text-emerald-300" />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">
-                For Independent Growers
+                {t('home.gateways.farmerCategory')}
               </span>
               <h3 className="font-display font-bold text-xl text-primary mt-1 mb-2">
-                Sell Direct & Retain Full Margin
+                {t('home.gateways.farmerTitle')}
               </h3>
               <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
-                Bypass exploitative mandi agents. Upload harvest photos for instant Grade-A certification, list batches, and receive direct bank settlements.
+                {t('home.gateways.farmerDesc')}
               </p>
               <ul className="flex flex-col gap-2 text-xs text-on-surface-variant mb-6">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>AI Crop Doctor & Disease Diagnostics</span>
+                  <span>{t('home.gateways.farmerPoint1')}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Optimal Net Realization Mandi Calculator</span>
+                  <span>{t('home.gateways.farmerPoint2')}</span>
                 </li>
               </ul>
             </div>
             <Link to="/farmer/listings">
               <Button variant="primary" size="sm" className="w-full flex items-center justify-center gap-1.5">
-                <span>Start Selling Harvest</span>
+                <span>{t('home.gateways.farmerCta')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -272,28 +288,28 @@ const HomePage = () => {
                 <Building2 className="w-6 h-6 text-amber-300" />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">
-                For Agribusiness & Processors
+                {t('home.gateways.businessCategory')}
               </span>
               <h3 className="font-display font-bold text-xl text-primary mt-1 mb-2">
-                Procure Traceable Bulk Lots
+                {t('home.gateways.businessTitle')}
               </h3>
               <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
-                Contract directly with verified farm clusters. Inspect standardized digital moisture, blemish, and shelf-life metrics with cold-chain transit tracking.
+                {t('home.gateways.businessDesc')}
               </p>
               <ul className="flex flex-col gap-2 text-xs text-on-surface-variant mb-6">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Batch QR Traceability & Provenance</span>
+                  <span>{t('home.gateways.businessPoint1')}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Server-authoritative stock protection</span>
+                  <span>{t('home.gateways.businessPoint2')}</span>
                 </li>
               </ul>
             </div>
             <Link to="/marketplace?type=b2b">
               <Button variant="secondary" size="sm" className="w-full flex items-center justify-center gap-1.5">
-                <span>Browse Wholesale Lots</span>
+                <span>{t('home.gateways.businessCta')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -306,28 +322,28 @@ const HomePage = () => {
                 <ShoppingBag className="w-6 h-6 text-amber-300" />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">
-                For Households & Communities
+                {t('home.gateways.consumerCategory')}
               </span>
               <h3 className="font-display font-bold text-xl text-primary mt-1 mb-2">
-                Farm-Fresh Seasonal Crates
+                {t('home.gateways.consumerTitle')}
               </h3>
               <p className="text-xs text-on-surface-variant leading-relaxed mb-4">
-                Order freshly harvested produce crates picked within 24 hours from regional growers. Clean, chemical-tested, and transparently priced.
+                {t('home.gateways.consumerDesc')}
               </p>
               <ul className="flex flex-col gap-2 text-xs text-on-surface-variant mb-6">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Zero cold-storage staleness</span>
+                  <span>{t('home.gateways.consumerPoint1')}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Direct farm dispatch & doorstep tracking</span>
+                  <span>{t('home.gateways.consumerPoint2')}</span>
                 </li>
               </ul>
             </div>
             <Link to="/marketplace">
               <Button variant="secondary" size="sm" className="w-full flex items-center justify-center gap-1.5">
-                <span>Shop Fresh Produce</span>
+                <span>{t('home.gateways.consumerCta')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -345,17 +361,17 @@ const HomePage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-secondary font-mono block">
-              Direct From The Soil
+              {t('home.directFromSoil')}
             </span>
             <h2 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-              Active Verified Harvest Lots
+              {t('home.activeVerifiedLots')}
             </h2>
           </div>
           <Link
             to="/marketplace"
             className="text-xs font-semibold text-secondary hover:text-primary flex items-center gap-1 transition-colors"
           >
-            <span>View All Produce Listings</span>
+            <span>{t('home.viewAllListings')}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -389,11 +405,15 @@ const HomePage = () => {
 
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-surface-variant text-xs">
                     <div>
-                      <span className="text-[10px] text-on-surface-variant block uppercase font-mono">Direct Price</span>
+                      <span className="text-[10px] text-on-surface-variant block uppercase font-mono">
+                        {t('home.directPrice')}
+                      </span>
                       <span className="font-bold font-mono text-base text-primary">{crop.price}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-on-surface-variant block uppercase font-mono">Freshness</span>
+                      <span className="text-[10px] text-on-surface-variant block uppercase font-mono">
+                        {t('home.freshness')}
+                      </span>
                       <span className="font-semibold text-emerald-700 text-xs">{crop.harvested}</span>
                     </div>
                   </div>
@@ -403,7 +423,7 @@ const HomePage = () => {
               <div className="p-4 pt-0">
                 <Link to="/marketplace">
                   <Button variant="secondary" size="sm" className="w-full text-xs">
-                    View Batch Traceability
+                    {t('home.viewBatchTraceability')}
                   </Button>
                 </Link>
               </div>
@@ -416,13 +436,13 @@ const HomePage = () => {
       <section className="py-12 md:py-16 px-margin-mobile md:px-margin-desktop bg-background max-w-container-max mx-auto">
         <div className="mb-10">
           <span className="text-xs font-bold uppercase tracking-widest text-secondary font-mono block mb-1">
-            Core Technology
+            {t('home.coreTechnology')}
           </span>
           <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-primary">
-            Precision Agricultural Ecosystem
+            {t('home.precisionAgroTitle')}
           </h2>
           <p className="text-sm sm:text-base text-on-surface-variant mt-1.5 max-w-xl">
-            Practical, field-tested digital tools engineered for farmers, agribusinesses, and consumers.
+            {t('home.precisionAgroDesc')}
           </p>
         </div>
 
@@ -435,30 +455,30 @@ const HomePage = () => {
                 <Leaf className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-display font-semibold text-2xl text-primary mb-2">
-                AI Post-Harvest Quality Doctor
+                {t('home.bentoAiQualityTitle')}
               </h3>
               <p className="text-xs sm:text-sm text-on-surface-variant mb-5 leading-relaxed">
-                Upload photos of freshly harvested produce for instantaneous shelf-life estimation, defect analysis, and Grade-A commercial classification before dispatching to mandis.
+                {t('home.bentoAiQualityDesc')}
               </p>
 
               <ul className="flex flex-col gap-2 mb-6">
                 <li className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                  Visual Blemish, Decay & Sunscald Detection
+                  {t('home.bentoAiFeature1')}
                 </li>
                 <li className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                  Estimated Shelf-Life Projection (Ambient vs Cold-Chain)
+                  {t('home.bentoAiFeature2')}
                 </li>
                 <li className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                  Standard APMC Grade-A/B/C Commercial Verification
+                  {t('home.bentoAiFeature3')}
                 </li>
               </ul>
 
               <Link to="/farmer/batches">
                 <Button variant="primary" size="md" className="flex items-center gap-1.5">
-                  <span>Start Quality Assessment</span>
+                  <span>{t('home.bentoStartAssessment')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -475,12 +495,12 @@ const HomePage = () => {
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70 font-mono">
-                  Recent Scan • Batch #TOM-A101
+                  {t('home.recentScan')}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-primary"></span>
                   <span className="text-xs font-bold text-primary">
-                    Grade-A Prime Quality (94%)
+                    {t('home.gradeAPrimeQuality')}
                   </span>
                 </div>
               </div>
@@ -506,20 +526,20 @@ const HomePage = () => {
                   <Layers className="w-5 h-5 text-on-primary" />
                 </div>
                 <span className="bg-surface-tint/30 px-2 py-0.5 rounded-[4px] text-[11px] font-bold text-on-primary font-mono">
-                  Farm Region • Maharashtra
+                  {t('home.farmRegion')}
                 </span>
               </div>
               <h3 className="font-display font-semibold text-lg mb-1">
-                Batch Traceability
+                {t('home.bentoBatchTraceTitle')}
               </h3>
-              <p className="text-xs text-on-primary/70">Verified farm gate batches with tamper-resistant QR codes</p>
+              <p className="text-xs text-on-primary/70">{t('home.bentoBatchTraceDesc')}</p>
             </div>
 
             <div className="flex items-end gap-2">
               <span className="font-display font-bold text-4xl text-secondary-fixed">
                 100%
               </span>
-              <span className="text-xs text-on-primary/70 mb-1">Direct Farm Gate Origin</span>
+              <span className="text-xs text-on-primary/70 mb-1">{t('home.directFarmOrigin')}</span>
             </div>
           </div>
 
@@ -530,10 +550,10 @@ const HomePage = () => {
                 <TrendingUp className="w-5 h-5" />
               </div>
               <h3 className="font-display font-semibold text-lg text-primary mb-1">
-                Market Price Analytics
+                {t('home.bentoMarketPriceTitle')}
               </h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">
-                Deterministic Weighted Moving Average (WMA) algorithmic forecasts & mandi net realization rankings.
+                {t('home.bentoMarketPriceDesc')}
               </p>
             </div>
 
@@ -541,7 +561,7 @@ const HomePage = () => {
               to="/market-prices"
               className="text-xs font-semibold text-secondary hover:underline flex items-center gap-1 mt-4"
             >
-              <span>View Mandi Trends</span>
+              <span>{t('home.bentoViewMandiTrends')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -550,12 +570,14 @@ const HomePage = () => {
           <div className="col-span-1 md:col-span-6 row-span-1 bg-surface-container-low rounded-[24px] border border-surface-variant p-6 flex flex-col justify-between soil-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">Direct Commerce</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">
+                  {t('home.directCommerce')}
+                </span>
                 <h3 className="font-display font-semibold text-xl text-primary mt-1">
-                  B2C & B2B Dual Marketplace
+                  {t('home.bentoDualMarketTitle')}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-1.5 max-w-sm">
-                  Households order fresh seasonal harvest crates; retailers and food processors procure bulk lots with server-authoritative stock protection.
+                  {t('home.bentoDualMarketDesc')}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center text-primary shrink-0">
@@ -563,7 +585,7 @@ const HomePage = () => {
               </div>
             </div>
             <Link to="/marketplace" className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
-              <span>Explore Active Produce</span>
+              <span>{t('home.exploreActiveProduce')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -572,12 +594,14 @@ const HomePage = () => {
           <div className="col-span-1 md:col-span-6 row-span-1 bg-surface-container-low rounded-[24px] border border-surface-variant p-6 flex flex-col justify-between soil-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">Transport Network</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-secondary font-mono">
+                  {t('home.transportNetwork')}
+                </span>
                 <h3 className="font-display font-semibold text-xl text-primary mt-1">
-                  Traceable Cold-Chain Logistics
+                  {t('home.bentoLogisticsTitle')}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-1.5 max-w-sm">
-                  Dedicated agricultural vehicle fleet (mini-trucks, reefers) with chronological delivery state-machine progression and real-time tracking.
+                  {t('home.bentoLogisticsDesc')}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center text-secondary shrink-0">
@@ -585,7 +609,7 @@ const HomePage = () => {
               </div>
             </div>
             <Link to="/marketplace" className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline">
-              <span>Track Dispatches</span>
+              <span>{t('home.trackDispatches')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

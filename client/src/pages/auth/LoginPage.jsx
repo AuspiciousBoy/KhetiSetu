@@ -5,8 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,7 +53,7 @@ const LoginPage = () => {
       const msg =
         err.response?.data?.error?.message ||
         err.message ||
-        'Unable to sign in. Please verify your credentials.';
+        t('auth.loginErrorDefault');
       setErrorMessage(msg);
     } finally {
       setLoading(false);
@@ -71,10 +73,10 @@ const LoginPage = () => {
             </span>
           </Link>
           <h2 className="font-display font-semibold text-xl text-primary">
-            Sign In to Ecosystem
+            {t('auth.signInEcosystem')}
           </h2>
           <p className="text-xs text-on-surface-variant mt-1">
-            "Khet Se Bazaar Tak, Ek Hi Setu."
+            {t('common.tagline')}
           </p>
         </div>
 
@@ -87,7 +89,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <Input
-            label="Email Address"
+            label={t('auth.emailAddress')}
             type="email"
             required
             icon={<Mail className="w-4 h-4" />}
@@ -99,13 +101,13 @@ const LoginPage = () => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md">
-                Password
+                {t('auth.password')}
               </label>
               <Link
                 to="/forgot-password"
                 className="text-xs text-secondary hover:underline font-medium"
               >
-                Forgot password?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
             <Input
@@ -119,7 +121,7 @@ const LoginPage = () => {
           </div>
 
           <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-2 flex items-center justify-center gap-2">
-            <span>Sign In</span>
+            <span>{t('auth.signInBtn')}</span>
             <ArrowRight className="w-4 h-4" />
           </Button>
         </form>
@@ -127,7 +129,7 @@ const LoginPage = () => {
         {/* Demo Credentials Quick-Fill helper */}
         <div className="mt-8 pt-6 border-t border-surface-variant/70">
           <p className="text-[11px] font-bold text-secondary uppercase tracking-wider text-center mb-3">
-            One-Click Demo Roles
+            {t('auth.demoRolesTitle')}
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <button
@@ -137,7 +139,7 @@ const LoginPage = () => {
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
-              🌱 Demo Farmer
+              {t('auth.demoFarmer')}
             </button>
             <button
               type="button"
@@ -146,7 +148,7 @@ const LoginPage = () => {
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
-              🛒 Demo Consumer
+              {t('auth.demoConsumer')}
             </button>
             <button
               type="button"
@@ -155,7 +157,7 @@ const LoginPage = () => {
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
-              🏢 Demo Business
+              {t('auth.demoBusiness')}
             </button>
             <button
               type="button"
@@ -164,15 +166,15 @@ const LoginPage = () => {
               }}
               className="p-2 rounded-[8px] bg-surface-container text-primary hover:bg-surface-variant text-left font-medium border border-surface-variant"
             >
-              🛡️ Demo Admin
+              {t('auth.demoAdmin')}
             </button>
           </div>
         </div>
 
         <p className="text-center text-xs text-on-surface-variant mt-6">
-          Don't have an account?{' '}
+          {t('auth.noAccountPrompt')}{' '}
           <Link to="/register" className="font-semibold text-primary underline">
-            Register as Farmer / Buyer
+            {t('auth.registerPrompt')}
           </Link>
         </p>
       </Card>

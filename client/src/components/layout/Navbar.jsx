@@ -14,11 +14,14 @@ import {
   CloudSun,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,10 +62,10 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold tracking-tight text-primary leading-none text-lg">
-                KHETISETU
+                {t('common.appName')}
               </span>
               <span className="text-[9px] font-sans font-medium tracking-wider text-secondary uppercase leading-none mt-0.5">
-                Khet Se Bazaar Tak
+                {t('common.tagline')}
               </span>
             </div>
           </Link>
@@ -73,35 +76,35 @@ const Navbar = () => {
               className="text-on-surface-variant font-medium hover:text-primary transition-colors text-sm font-label-md flex items-center gap-1.5"
             >
               <Store className="w-4 h-4 text-secondary/70" />
-              Marketplace
+              {t('nav.marketplace')}
             </Link>
             <Link
               to="/market-prices"
               className="text-on-surface-variant font-medium hover:text-primary transition-colors text-sm font-label-md flex items-center gap-1.5"
             >
               <TrendingUp className="w-4 h-4 text-secondary/70" />
-              Mandi Analytics
+              {t('nav.mandiAnalytics')}
             </Link>
             <Link
               to="/weather"
               className="text-on-surface-variant font-medium hover:text-primary transition-colors text-sm font-label-md flex items-center gap-1.5"
             >
               <CloudSun className="w-4 h-4 text-secondary/70" />
-              Weather Advisories
+              {t('nav.weatherAdvisories')}
             </Link>
             <Link
               to="/ai-assistant"
               className="text-on-surface-variant font-medium hover:text-primary transition-colors text-sm font-label-md flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-full border border-primary/10"
             >
               <Sparkles className="w-3.5 h-3.5 text-secondary" />
-              <span>Kheti AI</span>
+              <span>{t('nav.khetiAi')}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             </Link>
           </div>
         </div>
 
-        {/* Right Search & Profile Actions */}
-        <div className="flex items-center gap-3">
+        {/* Right Search, Language Selector & Profile Actions */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
           {/* Search Bar */}
           <form
             onSubmit={handleSearch}
@@ -112,10 +115,13 @@ const Navbar = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search crops, mandis..."
-              className="bg-transparent border-none p-0 focus:ring-0 text-xs sm:text-sm text-on-surface placeholder:text-on-surface-variant/70 w-32 lg:w-44 outline-none"
+              placeholder={t('nav.searchPlaceholder')}
+              className="bg-transparent border-none p-0 focus:ring-0 text-xs sm:text-sm text-on-surface placeholder:text-on-surface-variant/70 w-28 lg:w-44 outline-none"
             />
           </form>
+
+          {/* Website-Wide Language Selector */}
+          <LanguageSwitcher />
 
           {/* User Status / Action Buttons */}
           {isAuthenticated ? (
@@ -123,7 +129,7 @@ const Navbar = () => {
               <Link to={getDashboardPath()}>
                 <Button variant="primary" size="sm" className="hidden sm:inline-flex items-center gap-1.5">
                   <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Button>
               </Link>
 
@@ -148,14 +154,14 @@ const Navbar = () => {
                     className="flex items-center gap-2 px-3 py-2 text-xs text-on-surface hover:bg-surface-container rounded-[8px]"
                   >
                     <LayoutDashboard className="w-3.5 h-3.5 text-secondary" />
-                    My Dashboard
+                    {t('nav.dashboard')}
                   </Link>
                   <button
                     onClick={logout}
                     className="w-full flex items-center gap-2 text-left px-3 py-2 text-xs text-error hover:bg-error-container/30 rounded-[8px]"
                   >
                     <LogOut className="w-3.5 h-3.5 text-error" />
-                    Sign Out
+                    {t('nav.signOut')}
                   </button>
                 </div>
               </div>
@@ -164,12 +170,12 @@ const Navbar = () => {
             <div className="flex items-center gap-2">
               <Link to="/login">
                 <Button variant="secondary" size="sm">
-                  Sign In
+                  {t('nav.signIn')}
                 </Button>
               </Link>
               <Link to="/register">
                 <Button variant="primary" size="sm">
-                  Join Free
+                  {t('nav.register')}
                 </Button>
               </Link>
             </div>
@@ -179,6 +185,7 @@ const Navbar = () => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden p-2 text-on-surface-variant hover:text-on-surface"
+            aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -194,7 +201,7 @@ const Navbar = () => {
             className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
           >
             <Store className="w-4 h-4 text-secondary" />
-            Marketplace
+            {t('nav.marketplace')}
           </Link>
           <Link
             to="/market-prices"
@@ -202,7 +209,7 @@ const Navbar = () => {
             className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
           >
             <TrendingUp className="w-4 h-4 text-secondary" />
-            Mandi Analytics
+            {t('nav.mandiAnalytics')}
           </Link>
           <Link
             to="/weather"
@@ -210,7 +217,7 @@ const Navbar = () => {
             className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
           >
             <CloudSun className="w-4 h-4 text-secondary" />
-            Weather Advisories
+            {t('nav.weatherAdvisories')}
           </Link>
           <Link
             to="/ai-assistant"
@@ -218,7 +225,7 @@ const Navbar = () => {
             className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-secondary" />
-            Kheti AI Assistant
+            {t('nav.khetiAi')}
           </Link>
         </div>
       )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { PackageSearch, AlertTriangle } from 'lucide-react';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 export const Skeleton = ({ className = '', count = 1 }) => {
   return (
@@ -16,10 +17,14 @@ export const Skeleton = ({ className = '', count = 1 }) => {
 
 export const EmptyState = ({
   icon,
-  title = 'No items found',
-  description = 'There are currently no records to display.',
+  title,
+  description,
   action,
 }) => {
+  const { t } = useTranslation();
+  const displayTitle = title || t('common.noData');
+  const displayDescription = description || t('marketplace.noProduceDesc');
+
   return (
     <div className="flex flex-col items-center justify-center p-12 text-center bg-surface-container-low rounded-[24px] border border-surface-variant my-4">
       <div className="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center text-secondary mb-4">
@@ -33,31 +38,35 @@ export const EmptyState = ({
           <PackageSearch className="w-8 h-8 text-secondary" />
         )}
       </div>
-      <h3 className="font-display font-semibold text-lg text-primary mb-1">{title}</h3>
-      <p className="text-sm text-on-surface-variant max-w-sm mb-6">{description}</p>
+      <h3 className="font-display font-semibold text-lg text-primary mb-1">{displayTitle}</h3>
+      <p className="text-sm text-on-surface-variant max-w-sm mb-6">{displayDescription}</p>
       {action && <div>{action}</div>}
     </div>
   );
 };
 
 export const ErrorState = ({
-  title = 'Unable to load content',
-  message = 'An unexpected error occurred. Please try again.',
+  title,
+  message,
   onRetry,
 }) => {
+  const { t } = useTranslation();
+  const displayTitle = title || t('errorBoundary.title');
+  const displayMessage = message || t('errorBoundary.message');
+
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center bg-error-container/20 rounded-[24px] border border-error/20 my-4 text-on-surface">
       <div className="w-12 h-12 rounded-full bg-error-container flex items-center justify-center text-error mb-3">
         <AlertTriangle className="w-6 h-6 text-error" />
       </div>
-      <h4 className="font-display font-semibold text-primary mb-1">{title}</h4>
-      <p className="text-xs text-on-surface-variant max-w-sm mb-4">{message}</p>
+      <h4 className="font-display font-semibold text-primary mb-1">{displayTitle}</h4>
+      <p className="text-xs text-on-surface-variant max-w-sm mb-4">{displayMessage}</p>
       {onRetry && (
         <button
           onClick={onRetry}
           className="text-xs font-semibold text-primary underline hover:text-primary-container"
         >
-          Try Again
+          {t('common.retry')}
         </button>
       )}
     </div>

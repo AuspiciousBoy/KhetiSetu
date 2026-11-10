@@ -20,46 +20,42 @@ import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
-
-const PRESET_TOPICS = [
-  {
-    category: 'Diseases',
-    Icon: Leaf,
-    label: 'पत्ती झुलसा / Leaf Spot',
-    prompt: 'टमाटर की फसल में पत्ती धब्बा और अगेती झुलसा (Early Blight) के लक्षण और उपचार बताएं।',
-  },
-  {
-    category: 'Pests',
-    Icon: Bug,
-    label: 'सफेद मक्खी / Whitefly & Thrips',
-    prompt: 'फसल में रस चूसक कीट (सफेद मक्खी और थ्रिप्स) के जैविक एवं CIBRC अनुमोदित रासायनिक उपाय बताएं।',
-  },
-  {
-    category: 'Nutrition',
-    Icon: FlaskConical,
-    label: 'संतुलित खाद / Fertilizer Schedule',
-    prompt: 'गेहूं और आलू की फसल के लिए वैज्ञानिक NPK और जिंक खाद तालिका बताएं।',
-  },
-  {
-    category: 'Weather',
-    Icon: CloudRain,
-    label: 'बारिश बाद स्प्रे / Spray Advisory',
-    prompt: 'भारी बारिश के बाद खेत में फफूंद रोगों से बचाव हेतु कीटनाशक/फफूंदनाशक छिड़काव कब और कैसे करें?',
-  },
-  {
-    category: 'Mandi',
-    Icon: TrendingUp,
-    label: 'शुद्ध मुनाफा / Mandi Strategy',
-    prompt: 'स्थानीय मंडी बनाम दूर की थोक मंडी: परिवहन खर्च और कमीशन काटकर शुद्ध मुनाफा कैसे निकालें?',
-  },
-];
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const KhetiAIPage = () => {
+  const { t } = useTranslation();
+
+  const PRESET_TOPICS = [
+    {
+      category: 'Diseases',
+      Icon: Leaf,
+      label: t('khetiAiPage.topics.leafSpot'),
+      prompt: t('khetiAiPage.topics.leafSpotPrompt'),
+    },
+    {
+      category: 'Pests',
+      Icon: Bug,
+      label: t('khetiAiPage.topics.pestControl'),
+      prompt: t('khetiAiPage.topics.pestControlPrompt'),
+    },
+    {
+      category: 'Nutrition',
+      Icon: FlaskConical,
+      label: t('khetiAiPage.topics.fertilizer'),
+      prompt: t('khetiAiPage.topics.fertilizerPrompt'),
+    },
+    {
+      category: 'Mandi',
+      Icon: TrendingUp,
+      label: t('khetiAiPage.topics.mandiStrategy'),
+      prompt: t('khetiAiPage.topics.mandiStrategyPrompt'),
+    },
+  ];
+
   const [messages, setMessages] = useState([
     {
       role: 'model',
-      content:
-        'नमस्ते किसान भाई! मैं खेतीसेतु का डिजिटल कृषि सलाहकार "खेती AI" हूँ।\n\nआप मुझसे फसल रोग निदान, कीट नियंत्रण, संतुलित खाद (NPK/Urea), मौसम अनुसार छिड़काव और मंडी भाव बिक्री रणनीति के संबंध में हिंदी, English या Hinglish में मार्गदर्शन ले सकते हैं।',
+      content: t('khetiAiPage.welcomeBotMsg'),
       source: 'local-knowledge-engine',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
@@ -85,7 +81,6 @@ const KhetiAIPage = () => {
           setAiStatus(res.data.data);
         }
       } catch {
-        // Fallback default
         setAiStatus({
           isGeminiConfigured: false,
           engine: 'KhetiSetu Agronomy Engine',
@@ -145,9 +140,7 @@ const KhetiAIPage = () => {
         ...prev,
         {
           role: 'model',
-          content:
-            err.response?.data?.error?.message ||
-            'खेती AI से संपर्क में समस्या आई। कृपया पुनः प्रयास करें।',
+          content: err.response?.data?.error?.message || t('khetiAiPage.contactError'),
           source: 'error',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
@@ -167,8 +160,7 @@ const KhetiAIPage = () => {
     setMessages([
       {
         role: 'model',
-        content:
-          'नया कृषि परामर्श सत्र शुरू हो चुका है। आप अपनी फसल, कीट लक्षण या खाद संबंधी कोई भी सवाल पूछ सकते हैं।',
+        content: t('khetiAiPage.newSessionNotice'),
         source: aiStatus.isGeminiConfigured ? 'gemini' : 'local-knowledge-engine',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
@@ -187,22 +179,22 @@ const KhetiAIPage = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-display font-bold text-lg md:text-xl text-primary">
-                खेती AI • Agricultural Intelligence Center
+                {t('khetiAiPage.centerTitle')}
               </h1>
               {aiStatus.isGeminiConfigured ? (
                 <Badge variant="success" className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                  Google Gemini Live
+                  {t('khetiAiPage.geminiLiveBadge')}
                 </Badge>
               ) : (
                 <Badge variant="warning" className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-600"></span>
-                  Agronomy Engine Active
+                  {t('khetiAiPage.fallbackReady')}
                 </Badge>
               )}
             </div>
             <p className="text-xs text-on-surface-variant font-medium">
-              Multi-lingual Crop Doctor • Hindi (हिंदी) • English • Hinglish • CIBRC Safety Verified
+              {t('khetiAiPage.multiLingualCropDoctor')}
             </p>
           </div>
         </div>
@@ -210,10 +202,10 @@ const KhetiAIPage = () => {
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex flex-col items-end text-right">
             <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">
-              Active Engine
+              {t('khetiAiPage.activeEngine')}
             </span>
             <span className="text-xs font-semibold text-primary font-mono">
-              {aiStatus.isGeminiConfigured ? 'Gemini 2.0 / 1.5 Flash' : 'KhetiSetu Precision Agronomy'}
+              {aiStatus.isGeminiConfigured ? t('khetiAiPage.geminiModel') : t('khetiAiPage.precisionModel')}
             </span>
           </div>
 
@@ -223,7 +215,7 @@ const KhetiAIPage = () => {
             title="Start new conversation"
           >
             <RotateCcw className="w-3.5 h-3.5 text-secondary" />
-            <span>New Session</span>
+            <span>{t('khetiAiPage.newSessionBtn')}</span>
           </button>
         </div>
       </div>
@@ -232,7 +224,7 @@ const KhetiAIPage = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="text-[11px] font-bold text-on-surface-variant/80 uppercase tracking-wider shrink-0 flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5 text-secondary" />
-          Quick Inquiries:
+          {t('khetiAiPage.quickInquiries')}
         </span>
         {PRESET_TOPICS.map((topic, idx) => {
           const Icon = topic.Icon;
@@ -334,7 +326,7 @@ const KhetiAIPage = () => {
         {loading && (
           <div className="flex items-center gap-3 p-3 bg-surface rounded-[14px] border border-surface-variant max-w-sm text-xs text-primary font-medium">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span>Analyzing agronomic query & synthesizing response...</span>
+            <span>{t('khetiAiPage.thinking')}</span>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -348,7 +340,7 @@ const KhetiAIPage = () => {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask in Hindi, English or Hinglish (उदा. धान में खैरा रोग का इलाज क्या है?)..."
+              placeholder={t('khetiAiPage.chatPlaceholder')}
               disabled={loading}
               className="w-full bg-surface text-on-surface placeholder:text-on-surface-variant/60 rounded-[14px] py-3.5 pl-4 pr-12 text-sm border border-surface-variant focus:border-primary focus:bg-surface-bright focus:outline-none focus:ring-1 focus:ring-primary soil-shadow transition-colors"
             />
@@ -371,7 +363,7 @@ const KhetiAIPage = () => {
             disabled={!inputMessage.trim()}
             className="rounded-[14px] px-5 py-3.5 flex items-center gap-1.5 shadow-sm"
           >
-            <span className="hidden sm:inline">Ask AI</span>
+            <span className="hidden sm:inline">{t('khetiAiPage.sendBtn')}</span>
             <Send className="w-4 h-4" />
           </Button>
         </form>
@@ -380,7 +372,7 @@ const KhetiAIPage = () => {
         <p className="text-[11px] text-on-surface-variant/75 text-center flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
           <span>
-            Advice adheres to CIBRC agrochemical safety guidelines. Always consult your local Krishi Vigyan Kendra (KVK) officer before applying concentrated sprays.
+            {t('khetiAiPage.disclaimer')}
           </span>
         </p>
       </div>

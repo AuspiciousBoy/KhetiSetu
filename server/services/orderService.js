@@ -4,6 +4,7 @@ const ProduceBatch = require('../models/ProduceBatch');
 const Delivery = require('../models/Delivery');
 const Cart = require('../models/Cart');
 const User = require('../models/User');
+const BusinessProfile = require('../models/BusinessProfile');
 const { logAuditEvent } = require('../middleware/auditLogger');
 const crypto = require('crypto');
 const mongoose = require('mongoose');

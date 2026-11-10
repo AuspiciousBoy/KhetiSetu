@@ -12,7 +12,7 @@ router.use(authenticate);
 // Create order (Consumer or Business)
 router.post(
   '/',
-  authorize('CONSUMER', 'BUSINESS', 'ADMIN'),
+  authorize('CONSUMER', 'BUSINESS', 'ADMIN', 'FARMER'),
   orderLimiter,
   validate(createOrderSchema),
   orderController.createOrder

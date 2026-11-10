@@ -9,15 +9,16 @@ import {
   Truck,
   Sun,
   Camera,
-  ArrowRight,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const FarmerDashboardPage = () => {
+  const { t } = useTranslation();
   const [analytics, setAnalytics] = useState(null);
   const [batches, setBatches] = useState([]);
   const [weather, setWeather] = useState(null);
@@ -63,13 +64,13 @@ const FarmerDashboardPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Farmer Control Center
+            {t('farmerDashboard.controlCenter')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
             Sahyadri Organic Agro Farm
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Pune District, Maharashtra • Grade-A Harvest Dispatch Queue
+            {t('farmerDashboard.farmSubtitle')}
           </p>
         </div>
 
@@ -77,13 +78,13 @@ const FarmerDashboardPage = () => {
           <Link to="/farmer/batches">
             <Button variant="primary" size="md" className="flex items-center gap-1.5">
               <PlusCircle className="w-4 h-4" />
-              <span>New Harvest Batch</span>
+              <span>{t('farmerDashboard.newBatchBtn')}</span>
             </Button>
           </Link>
           <Link to="/farmer/ai">
             <Button variant="secondary" size="md" className="flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-secondary" />
-              <span>Kheti AI Doctor</span>
+              <span>{t('farmerDashboard.khetiAiDoctorBtn')}</span>
             </Button>
           </Link>
         </div>
@@ -94,7 +95,7 @@ const FarmerDashboardPage = () => {
         <Card className="flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-              Gross Realized Revenue
+              {t('farmerDashboard.grossRevenue')}
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-primary">
               <IndianRupee className="w-4 h-4 text-primary" />
@@ -104,14 +105,14 @@ const FarmerDashboardPage = () => {
             <div className="font-display font-bold text-3xl text-primary font-mono">
               ₹{(analytics?.totalRevenue || 0).toLocaleString('en-IN')}
             </div>
-            <p className="text-[11px] text-secondary mt-1">Directly credited to verified account</p>
+            <p className="text-[11px] text-secondary mt-1">{t('farmerDashboard.creditedDirectly')}</p>
           </div>
         </Card>
 
         <Card className="flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-              Active Produce Batches
+              {t('farmerDashboard.activeBatches')}
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-secondary">
               <Boxes className="w-4 h-4 text-secondary" />
@@ -121,14 +122,14 @@ const FarmerDashboardPage = () => {
             <div className="font-display font-bold text-3xl text-primary font-mono">
               {analytics?.batchesCount || 0}
             </div>
-            <p className="text-[11px] text-on-surface-variant mt-1">Traceable farm-gate batches</p>
+            <p className="text-[11px] text-on-surface-variant mt-1">{t('farmerDashboard.traceableBatchesSub')}</p>
           </div>
         </Card>
 
         <Card className="flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-              Marketplace Listings
+              {t('farmerDashboard.marketplaceListings')}
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-primary">
               <Store className="w-4 h-4 text-primary" />
@@ -138,14 +139,14 @@ const FarmerDashboardPage = () => {
             <div className="font-display font-bold text-3xl text-primary font-mono">
               {analytics?.activeListingsCount || 0}
             </div>
-            <p className="text-[11px] text-on-surface-variant mt-1">Live B2C and B2B produce lots</p>
+            <p className="text-[11px] text-on-surface-variant mt-1">{t('farmerDashboard.liveListingsSub')}</p>
           </div>
         </Card>
 
         <Card className="flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-              Fulfillment Orders
+              {t('farmerDashboard.fulfillmentOrders')}
             </span>
             <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-secondary">
               <Truck className="w-4 h-4 text-secondary" />
@@ -156,7 +157,7 @@ const FarmerDashboardPage = () => {
               {analytics?.totalOrdersCount || 0}
             </div>
             <p className="text-[11px] text-on-surface-variant mt-1">
-              {analytics?.pendingOrdersCount || 0} pending dispatch
+              {t('farmerDashboard.pendingDispatch', { count: analytics?.pendingOrdersCount || 0 })}
             </p>
           </div>
         </Card>
@@ -172,24 +173,23 @@ const FarmerDashboardPage = () => {
                 <Sun className="w-6 h-6 text-amber-300" />
               </div>
               <span className="bg-surface-tint/40 px-3 py-1 rounded-[6px] text-xs font-bold text-on-primary font-mono">
-                {weather?.location?.district || 'Pune'} District
+                {t('farmerDashboard.districtLabel', { district: weather?.location?.district || 'Pune' })}
               </span>
             </div>
             <span className="font-display font-bold text-5xl text-secondary-fixed block mb-1 font-mono">
               {weather?.current?.temperatureC || 28}°C
             </span>
             <p className="text-sm text-on-primary/80 font-medium">
-              {weather?.current?.condition || 'Clear & Sunny'} • Humidity {weather?.current?.humidityPercent || 50}%
+              {weather?.current?.condition || 'Clear & Sunny'} • {t('farmerDashboard.humidityLabel')} {weather?.current?.humidityPercent || 50}%
             </p>
           </div>
 
           <div className="pt-6 border-t border-outline-variant/30 mt-6">
             <p className="text-xs font-bold uppercase tracking-wider text-on-primary-container mb-2">
-              Agricultural Advisory:
+              {t('farmerDashboard.agriculturalAdvisory')}
             </p>
             <p className="text-xs text-on-primary/90 leading-relaxed">
-              {weather?.advisories?.[0]?.message ||
-                'Optimal dry canopy conditions present. Ideal window for early morning harvest and produce packing.'}
+              {weather?.advisories?.[0]?.message || t('farmerDashboard.defaultAdvisory')}
             </p>
           </div>
         </div>
@@ -200,14 +200,14 @@ const FarmerDashboardPage = () => {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-secondary" />
               <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-                Post-Harvest Quality Assessment
+                {t('farmerDashboard.qualityAssessmentTitle')}
               </span>
             </div>
             <h3 className="font-display font-semibold text-2xl text-primary mb-2">
-              Verify Produce Grade Before Mandi Dispatch
+              {t('farmerDashboard.verifyGradeHeading')}
             </h3>
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-lg mb-6">
-              Use KhetiSetu's AI produce model to check cosmetic blemishes, estimate shelf life, and confirm Grade-A standard. Boost mandi bargaining power by up to 15%.
+              {t('farmerDashboard.verifyGradeDesc')}
             </p>
           </div>
 
@@ -215,12 +215,12 @@ const FarmerDashboardPage = () => {
             <Link to="/farmer/batches">
               <Button variant="primary" size="md" className="flex items-center gap-1.5">
                 <Camera className="w-4 h-4" />
-                <span>Upload Harvest Image</span>
+                <span>{t('farmerDashboard.uploadHarvestBtn')}</span>
               </Button>
             </Link>
-            <Link to="/farmer/market">
+            <Link to="/market-prices">
               <Button variant="secondary" size="md">
-                Smart Mandi Recommender
+                {t('farmerDashboard.smartMandiBtn')}
               </Button>
             </Link>
           </div>
@@ -232,33 +232,33 @@ const FarmerDashboardPage = () => {
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
           <div>
             <h3 className="font-display font-semibold text-xl text-primary">
-              Recent Harvest Batches
+              {t('farmerDashboard.recentBatchesTitle')}
             </h3>
             <p className="text-xs text-on-surface-variant mt-0.5">
-              Traceable farm batches awaiting marketplace listing or dispatch
+              {t('farmerDashboard.recentBatchesSubtitle')}
             </p>
           </div>
           <Link to="/farmer/batches" className="text-xs font-semibold text-secondary hover:underline">
-            View All Batches →
+            {t('farmerDashboard.viewAllBatches')}
           </Link>
         </div>
 
         {batches.length === 0 ? (
           <p className="text-sm text-on-surface-variant py-8 text-center">
-            No produce batches registered yet. Click "New Harvest Batch" above to add your first lot.
+            {t('farmerDashboard.noBatchesMsg')}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-surface-variant text-on-surface-variant uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-4">Batch ID</th>
-                  <th className="py-3 px-4">Crop</th>
-                  <th className="py-3 px-4">Harvest Date</th>
-                  <th className="py-3 px-4">Stock</th>
-                  <th className="py-3 px-4">Quality Grade</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4">{t('farmerDashboard.batchIdCol')}</th>
+                  <th className="py-3 px-4">{t('farmerDashboard.cropCol')}</th>
+                  <th className="py-3 px-4">{t('farmerDashboard.harvestDateCol')}</th>
+                  <th className="py-3 px-4">{t('farmerDashboard.stockCol')}</th>
+                  <th className="py-3 px-4">{t('farmerDashboard.qualityGradeCol')}</th>
+                  <th className="py-3 px-4">{t('farmerDashboard.statusCol')}</th>
+                  <th className="py-3 px-4 text-right">{t('farmerDashboard.actionCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant/50">
@@ -297,7 +297,7 @@ const FarmerDashboardPage = () => {
                     <td className="py-3.5 px-4 text-right">
                       <Link to={`/farmer/batches`}>
                         <Button variant="ghost" size="sm">
-                          Details
+                          {t('farmerDashboard.detailsBtn')}
                         </Button>
                       </Link>
                     </td>

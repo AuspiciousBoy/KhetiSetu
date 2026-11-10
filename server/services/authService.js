@@ -33,7 +33,10 @@ const register = async ({ email, password, fullName, phone, role, profileData, r
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) {
-    throw new Error('An account with this email address already exists.');
+    const err = new Error('An account with this email address already exists.');
+    err.statusCode = 409;
+    err.code = 'DUPLICATE_RESOURCE';
+    throw err;
   }
 
   const passwordHash = await hashPassword(password);
@@ -70,10 +73,24 @@ const register = async ({ email, password, fullName, phone, role, profileData, r
       addresses: profileData?.address ? [profileData.address] : [],
     });
   } else if (userRole === 'BUSINESS') {
+    const rawGst = profileData?.gstNumber ? String(profileData.gstNumber).trim().toUpperCase() : '';
+    if (!rawGst) {
+      const err = new Error('GSTIN is compulsory for business accounts.');
+      err.statusCode = 400;
+      err.code = 'GSTIN_REQUIRED';
+      throw err;
+    }
+    const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    if (!GSTIN_REGEX.test(rawGst)) {
+      const err = new Error('Invalid GSTIN format. Expected 15-character Indian GSTIN (e.g. 27AAPFU0939F1ZV).');
+      err.statusCode = 400;
+      err.code = 'INVALID_GSTIN';
+      throw err;
+    }
     await BusinessProfile.create({
       userId: user._id,
       businessName: profileData?.businessName || `${fullName} Agro Enterprises`,
-      gstNumber: profileData?.gstNumber || '',
+      gstNumber: rawGst,
       businessType: profileData?.businessType || 'WHOLESALER',
     });
   }
@@ -225,7 +242,10 @@ const login = async ({ email, password, req }) => {
       result: 'FAILURE',
       metadata: { reason: 'User not found' },
     });
-    throw new Error('Invalid email or password credentials.');
+    const err = new Error('Invalid email or password credentials.');
+    err.statusCode = 401;
+    err.code = 'AUTHENTICATION_FAILED';
+    throw err;
   }
 
   // Account lockout check
@@ -241,7 +261,10 @@ const login = async ({ email, password, req }) => {
       resourceId: user._id,
       result: 'BLOCKED',
     });
-    throw new Error(`Account temporarily locked due to multiple failed login attempts. Try again in ${remainingMinutes} minutes.`);
+    const err = new Error(`Account temporarily locked due to multiple failed login attempts. Try again in ${remainingMinutes} minutes.`);
+    err.statusCode = 423;
+    err.code = 'ACCOUNT_LOCKED';
+    throw err;
   }
 
   const isMatch = await verifyPassword(user.passwordHash, password);
@@ -292,7 +315,10 @@ const login = async ({ email, password, req }) => {
         },
       });
 
-      throw new Error('Maximum login attempts exceeded. Account is locked for 15 minutes.');
+      const lockErr = new Error('Maximum login attempts exceeded. Account is locked for 15 minutes.');
+      lockErr.statusCode = 423;
+      lockErr.code = 'ACCOUNT_LOCKED';
+      throw lockErr;
     }
     await user.save();
 
@@ -306,7 +332,10 @@ const login = async ({ email, password, req }) => {
       result: 'FAILURE',
       metadata: { failedAttempts: user.failedLoginAttempts },
     });
-    throw new Error('Invalid email or password credentials.');
+    const authErr = new Error('Invalid email or password credentials.');
+    authErr.statusCode = 401;
+    authErr.code = 'AUTHENTICATION_FAILED';
+    throw authErr;
   }
 
   // Reset lockout counters upon successful login

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './i18n/LanguageContext';
 import { ProtectedRoute, RoleRoute } from './routes/ProtectedRoute';
 
 // Layouts
@@ -37,8 +38,9 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+      <LanguageProvider>
+        <AuthProvider>
+          <Routes>
           {/* Public Views wrapped in PublicLayout */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
@@ -97,6 +99,7 @@ function App() {
           >
             <Route path="/business/dashboard" element={<BusinessDashboardPage />} />
             <Route path="/business/orders" element={<BusinessDashboardPage />} />
+            <Route path="/business/orders/:id" element={<OrderTrackingPage />} />
           </Route>
 
           {/* Protected Admin Console */}
@@ -120,8 +123,9 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
-  );
+    </LanguageProvider>
+  </BrowserRouter>
+);
 }
 
 export default App;

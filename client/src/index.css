@@ -6,11 +6,11 @@
   body {
     background-color: #fdf9f0;
     color: #1c1c16;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Sora', sans-serif;
+    font-family: 'Sora', 'Noto Sans Devanagari', sans-serif;
   }
 }
 

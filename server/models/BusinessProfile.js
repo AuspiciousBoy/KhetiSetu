@@ -22,6 +22,7 @@ const BusinessProfileSchema = new mongoose.Schema(
     },
     gstNumber: {
       type: String,
+      required: [true, 'GSTIN is compulsory for business accounts'],
       trim: true,
       uppercase: true,
       index: true,

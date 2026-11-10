@@ -6,8 +6,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 const BusinessDashboardPage = () => {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,20 +34,20 @@ const BusinessDashboardPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
-            Commercial Procurement
+            {t('businessDashboard.commercialProcurement')}
           </span>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mt-1">
-            Business Buyer Console
+            {t('businessDashboard.buyerConsole')}
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Procure farm-direct truckload lots, schedule cold freight, and trace APMC batch certificates
+            {t('businessDashboard.buyerSubtitle')}
           </p>
         </div>
 
         <Link to="/marketplace?type=b2b">
           <Button variant="primary" size="md" className="flex items-center gap-1.5">
             <Package className="w-4 h-4" />
-            <span>Browse Bulk Listings</span>
+            <span>{t('businessDashboard.browseBulkListings')}</span>
           </Button>
         </Link>
       </div>
@@ -54,32 +56,32 @@ const BusinessDashboardPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <Card>
           <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-            Total Purchase Volume
+            {t('businessDashboard.totalPurchaseVolume')}
           </span>
           <div className="font-display font-bold text-3xl text-primary mt-2">
             ₹{orders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString('en-IN')}
           </div>
-          <p className="text-[11px] text-secondary mt-1">Direct-from-farm procurement</p>
+          <p className="text-[11px] text-secondary mt-1">{t('businessDashboard.directFarmProcurement')}</p>
         </Card>
 
         <Card>
           <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-            Bulk Orders Fulfilled
+            {t('businessDashboard.bulkOrdersFulfilled')}
           </span>
           <div className="font-display font-bold text-3xl text-primary mt-2">
             {orders.length}
           </div>
-          <p className="text-[11px] text-on-surface-variant mt-1">Traceable commercial consignments</p>
+          <p className="text-[11px] text-on-surface-variant mt-1">{t('businessDashboard.traceableConsignments')}</p>
         </Card>
 
         <Card>
           <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-            Verified Suppliers
+            {t('businessDashboard.verifiedSuppliers')}
           </span>
           <div className="font-display font-bold text-3xl text-primary mt-2">
-            8 Farms
+            {t('businessDashboard.farmsCount', { count: 8 })}
           </div>
-          <p className="text-[11px] text-on-surface-variant mt-1">Maharashtra & MP grower cooperatives</p>
+          <p className="text-[11px] text-on-surface-variant mt-1">{t('businessDashboard.cooperativesNote')}</p>
         </Card>
       </div>
 
@@ -87,28 +89,28 @@ const BusinessDashboardPage = () => {
       <Card className="p-8">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
           <h3 className="font-display font-semibold text-xl text-primary">
-            Recent Bulk Procurement Consignments
+            {t('businessDashboard.recentBulkConsignments')}
           </h3>
-          <Badge variant="warning">B2B Wholesale</Badge>
+          <Badge variant="warning">{t('businessDashboard.b2bWholesaleBadge')}</Badge>
         </div>
 
         {loading ? (
           <Skeleton className="h-48 rounded-[16px]" />
         ) : orders.length === 0 ? (
           <p className="text-sm text-on-surface-variant py-8 text-center">
-            No bulk orders submitted yet. Visit the B2B Wholesale Marketplace to initiate procurement.
+            {t('businessDashboard.noBulkOrders')}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-surface-variant text-on-surface-variant uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-4">Order ID</th>
-                  <th className="py-3 px-4">Fulfilling Grower</th>
-                  <th className="py-3 px-4">Produce Lot</th>
-                  <th className="py-3 px-4">Consignment Total</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4">{t('businessDashboard.orderIdCol')}</th>
+                  <th className="py-3 px-4">{t('businessDashboard.growerCol')}</th>
+                  <th className="py-3 px-4">{t('businessDashboard.produceLotCol')}</th>
+                  <th className="py-3 px-4">{t('businessDashboard.totalCol')}</th>
+                  <th className="py-3 px-4">{t('businessDashboard.statusCol')}</th>
+                  <th className="py-3 px-4 text-right">{t('businessDashboard.actionCol')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-variant/50">
@@ -122,9 +124,9 @@ const BusinessDashboardPage = () => {
                       <Badge variant="success">{ord.status}</Badge>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <Link to={`/consumer/orders/${ord._id}`}>
+                      <Link to={`/business/orders/${ord._id}`}>
                         <Button variant="ghost" size="sm">
-                          Track Freight
+                          {t('businessDashboard.trackFreight')}
                         </Button>
                       </Link>
                     </td>
