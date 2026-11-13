@@ -17,15 +17,34 @@ const deliveryAddressSchema = z.object({
   state: z.string().min(2, 'State is required'),
   pincode: z.string().min(6, 'Valid 6-digit PIN code is required'),
   landmark: z.string().optional(),
+  coordinates: z
+    .object({
+      latitude: z.number().optional().nullable(),
+      longitude: z.number().optional().nullable(),
+    })
+    .optional(),
 });
 
 const createOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'Order must contain at least one item'),
   deliveryAddress: deliveryAddressSchema,
   paymentMethod: z.string().default('DIRECT_ORDER').optional(),
+  paymentProofUrl: z.string().optional(),
   idempotencyKey: z.string().max(100).optional(),
+});
+
+const previewQuoteSchema = z.object({
+  items: z.array(orderItemSchema).min(1, 'Order must contain at least one item'),
+  deliveryAddress: deliveryAddressSchema.optional(),
+  coordinates: z
+    .object({
+      latitude: z.number().optional().nullable(),
+      longitude: z.number().optional().nullable(),
+    })
+    .optional(),
 });
 
 module.exports = {
   createOrderSchema,
+  previewQuoteSchema,
 };

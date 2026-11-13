@@ -77,34 +77,70 @@ const updateUserProfile = async (userId, updateData, req) => {
   let profile = null;
   if (user.role === 'CONSUMER') {
     profile = await ConsumerProfile.findOne({ userId });
-    if (!profile) profile = new ConsumerProfile({ userId });
     if (updateData.preferences) {
+      if (!profile) profile = new ConsumerProfile({ userId });
       profile.preferences = { ...profile.preferences, ...updateData.preferences };
+      await profile.save();
     }
-    await profile.save();
   } else if (user.role === 'BUSINESS') {
     profile = await BusinessProfile.findOne({ userId });
-    if (!profile) profile = new BusinessProfile({ userId });
-    if (updateData.businessName) profile.businessName = updateData.businessName.trim();
-    if (updateData.contactPerson) profile.contactPerson = updateData.contactPerson.trim();
-    if (updateData.businessType) profile.businessType = updateData.businessType;
-    if (updateData.gstNumber) profile.gstNumber = updateData.gstNumber.trim().toUpperCase();
-    if (updateData.billingInformation) {
-      profile.billingInformation = { ...profile.billingInformation, ...updateData.billingInformation };
+    const hasBusinessUpdates =
+      updateData.businessName ||
+      updateData.contactPerson ||
+      updateData.businessType ||
+      updateData.gstNumber ||
+      updateData.billingInformation;
+
+    if (hasBusinessUpdates) {
+      if (!profile) {
+        profile = new BusinessProfile({
+          userId,
+          businessName: updateData.businessName ? updateData.businessName.trim() : `${user.fullName} Enterprises`,
+          contactPerson: updateData.contactPerson ? updateData.contactPerson.trim() : user.fullName,
+          businessType: updateData.businessType || 'RETAILER',
+        });
+      }
+      if (updateData.businessName) profile.businessName = updateData.businessName.trim();
+      if (updateData.contactPerson) profile.contactPerson = updateData.contactPerson.trim();
+      if (updateData.businessType) profile.businessType = updateData.businessType;
+      if (updateData.gstNumber) profile.gstNumber = updateData.gstNumber.trim().toUpperCase();
+      if (updateData.billingInformation) {
+        profile.billingInformation = { ...profile.billingInformation, ...updateData.billingInformation };
+      }
+      await profile.save();
     }
-    await profile.save();
   } else if (user.role === 'FARMER') {
     profile = await FarmerProfile.findOne({ userId });
-    if (!profile) profile = new FarmerProfile({ userId });
-    if (updateData.farmName) profile.farmName = updateData.farmName.trim();
-    if (updateData.landSizeAcres !== undefined) profile.landSizeAcres = Number(updateData.landSizeAcres);
-    if (updateData.soilType) profile.soilType = updateData.soilType;
-    if (updateData.cropsGrown) profile.cropsGrown = updateData.cropsGrown;
-    if (updateData.bio !== undefined) profile.bio = updateData.bio;
-    if (updateData.location) {
-      profile.location = { ...profile.location, ...updateData.location };
+    const hasFarmerUpdates =
+      updateData.farmName ||
+      updateData.landSizeAcres !== undefined ||
+      updateData.soilType ||
+      updateData.cropsGrown ||
+      updateData.bio !== undefined ||
+      updateData.location;
+
+    if (hasFarmerUpdates) {
+      if (!profile) {
+        profile = new FarmerProfile({
+          userId,
+          farmName: updateData.farmName ? updateData.farmName.trim() : `${user.fullName}'s Farm`,
+          location: {
+            state: updateData.location?.state || 'Maharashtra',
+            district: updateData.location?.district || 'General',
+            ...updateData.location,
+          },
+        });
+      }
+      if (updateData.farmName) profile.farmName = updateData.farmName.trim();
+      if (updateData.landSizeAcres !== undefined) profile.landSizeAcres = Number(updateData.landSizeAcres);
+      if (updateData.soilType) profile.soilType = updateData.soilType;
+      if (updateData.cropsGrown) profile.cropsGrown = updateData.cropsGrown;
+      if (updateData.bio !== undefined) profile.bio = updateData.bio;
+      if (updateData.location) {
+        profile.location = { ...profile.location, ...updateData.location };
+      }
+      await profile.save();
     }
-    await profile.save();
   }
 
   await logAuditEvent({
@@ -415,13 +451,26 @@ const setDefaultAddress = async (userId, role, addressId) => {
 };
 
 /**
+ * Helper to ensure a FarmerProfile exists for a farmer user
+ */
+const getOrCreateFarmerProfile = async (farmerId) => {
+  let profile = await FarmerProfile.findOne({ userId: farmerId });
+  if (!profile) {
+    const user = await User.findById(farmerId);
+    profile = await FarmerProfile.create({
+      userId: farmerId,
+      farmName: user?.fullName ? `${user.fullName}'s Farm` : 'My Farm',
+      location: { state: 'Maharashtra', district: 'General' },
+    });
+  }
+  return profile;
+};
+
+/**
  * Farmer UPI Payment Settings
  */
 const getFarmerPayment = async (farmerId) => {
-  const profile = await FarmerProfile.findOne({ userId: farmerId });
-  if (!profile) {
-    throw new ApiError(404, 'Farmer profile not found.', 'NOT_FOUND');
-  }
+  const profile = await getOrCreateFarmerProfile(farmerId);
 
   return (
     profile.paymentSettings || {
@@ -442,10 +491,7 @@ const updateFarmerPayment = async (farmerId, { upiId, accountHolderName }, req) 
     );
   }
 
-  const profile = await FarmerProfile.findOne({ userId: farmerId });
-  if (!profile) {
-    throw new ApiError(404, 'Farmer profile not found.', 'NOT_FOUND');
-  }
+  const profile = await getOrCreateFarmerProfile(farmerId);
 
   profile.paymentSettings = {
     ...profile.paymentSettings,
@@ -472,10 +518,7 @@ const updateFarmerPayment = async (farmerId, { upiId, accountHolderName }, req) 
 };
 
 const updateFarmerQrCode = async (farmerId, qrFilePath, req) => {
-  const profile = await FarmerProfile.findOne({ userId: farmerId });
-  if (!profile) {
-    throw new ApiError(404, 'Farmer profile not found.', 'NOT_FOUND');
-  }
+  const profile = await getOrCreateFarmerProfile(farmerId);
 
   // Remove old QR image file if it existed
   if (profile.paymentSettings?.upiQrCodeUrl && profile.paymentSettings.upiQrCodeUrl.startsWith('/uploads/')) {
@@ -506,10 +549,7 @@ const updateFarmerQrCode = async (farmerId, qrFilePath, req) => {
 };
 
 const deleteFarmerQrCode = async (farmerId, req) => {
-  const profile = await FarmerProfile.findOne({ userId: farmerId });
-  if (!profile) {
-    throw new ApiError(404, 'Farmer profile not found.', 'NOT_FOUND');
-  }
+  const profile = await getOrCreateFarmerProfile(farmerId);
 
   if (profile.paymentSettings?.upiQrCodeUrl && profile.paymentSettings.upiQrCodeUrl.startsWith('/uploads/')) {
     const oldPath = path.join(UPLOAD_DIR, path.basename(profile.paymentSettings.upiQrCodeUrl));
@@ -534,10 +574,7 @@ const deleteFarmerQrCode = async (farmerId, req) => {
 };
 
 const updateFarmerLocation = async (farmerId, locationData, req) => {
-  const profile = await FarmerProfile.findOne({ userId: farmerId });
-  if (!profile) {
-    throw new ApiError(404, 'Farmer profile not found.', 'NOT_FOUND');
-  }
+  const profile = await getOrCreateFarmerProfile(farmerId);
 
   profile.location = {
     ...profile.location,

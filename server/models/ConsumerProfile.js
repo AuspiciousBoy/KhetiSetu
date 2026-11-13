@@ -15,6 +15,10 @@ const ConsumerAddressSchema = new mongoose.Schema(
     state: { type: String, required: [true, 'State is required'], trim: true },
     pincode: { type: String, required: [true, 'PIN code is required'], trim: true },
     landmark: { type: String, trim: true },
+    coordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
     isDefault: { type: Boolean, default: false },
   },
   { timestamps: true }

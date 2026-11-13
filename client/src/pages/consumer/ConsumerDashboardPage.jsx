@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck } from 'lucide-react';
+import { Truck, FileText } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
 import { useTranslation } from '../../i18n/LanguageContext';
+import InvoiceModal from '../../components/orders/InvoiceModal';
 
 const ConsumerDashboardPage = () => {
   const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -118,19 +120,38 @@ const ConsumerDashboardPage = () => {
                   </span>
                 </div>
 
-                {order.deliveryId && (
-                  <Link to={`/consumer/orders/${order._id}`}>
-                    <Button variant="secondary" size="sm" className="flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5" />
-                      <span>{t('consumerDashboard.trackMilestones')}</span>
-                    </Button>
-                  </Link>
-                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedInvoiceOrder(order)}
+                    className="flex items-center gap-1.5 text-xs py-1"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-primary" />
+                    <span>View Invoice</span>
+                  </Button>
+
+                  {order.deliveryId && (
+                    <Link to={`/consumer/orders/${order._id}`}>
+                      <Button variant="secondary" size="sm" className="flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5" />
+                        <span>{t('consumerDashboard.trackMilestones')}</span>
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Invoice Modal */}
+      <InvoiceModal
+        order={selectedInvoiceOrder}
+        isOpen={Boolean(selectedInvoiceOrder)}
+        onClose={() => setSelectedInvoiceOrder(null)}
+      />
     </div>
   );
 };

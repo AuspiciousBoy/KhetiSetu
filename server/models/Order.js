@@ -116,12 +116,60 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      default: 'CONFIRMED',
+      enum: ['PENDING_VERIFICATION', 'ADVANCE_PAID', 'CONFIRMED', 'PAID_IN_FULL', 'CANCELLED', 'REFUNDED'],
+      default: 'ADVANCE_PAID',
       index: true,
     },
     paymentMethod: {
       type: String,
       default: 'DIRECT_ORDER',
+    },
+    advanceAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    pendingAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    paymentProofUrl: {
+      type: String,
+      trim: true,
+    },
+    paymentProofUploadedAt: {
+      type: Date,
+    },
+    invoiceNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    farmerCoordinates: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
+    distanceKm: {
+      type: Number,
+      default: 15,
+      min: 0,
+    },
+    sellerDetails: {
+      farmerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      fullName: { type: String },
+      farmName: { type: String },
+      phone: { type: String },
+      upiId: { type: String },
+      location: { type: mongoose.Schema.Types.Mixed },
+    },
+    buyerDetails: {
+      buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      fullName: { type: String },
+      phone: { type: String },
+      email: { type: String },
+      role: { type: String },
     },
     farmerPaymentInfo: [
       {
@@ -130,6 +178,8 @@ const OrderSchema = new mongoose.Schema(
         upiId: { type: String },
         upiQrCodeUrl: { type: String },
         amount: { type: Number },
+        advanceAmount: { type: Number },
+        pendingAmount: { type: Number },
       },
     ],
     deliveryAddress: {
@@ -144,6 +194,10 @@ const OrderSchema = new mongoose.Schema(
       state: { type: String, required: true },
       pincode: { type: String, required: true },
       landmark: { type: String },
+      coordinates: {
+        latitude: { type: Number },
+        longitude: { type: Number },
+      },
     },
     deliveryId: {
       type: mongoose.Schema.Types.ObjectId,

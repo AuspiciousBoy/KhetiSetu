@@ -13,12 +13,40 @@ const { ApiError } = require('../utils/response');
 const { queueEmail } = require('../integrations/emailService');
 const emailConfig = require('../config/emailConfig');
 
-// Standard delivery fee calculation in INR
-const calculateDeliveryFee = (distanceKm = 20, isB2B = false) => {
-  if (isB2B) {
-    return Math.max(500, Math.round(distanceKm * 25)); // Commercial freight
+// Haversine formula to compute great-circle distance between two geographic coordinates
+const calculateHaversineDistanceKm = (lat1, lon1, lat2, lon2) => {
+  if (
+    lat1 === undefined || lat1 === null ||
+    lon1 === undefined || lon1 === null ||
+    lat2 === undefined || lat2 === null ||
+    lon2 === undefined || lon2 === null ||
+    isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)
+  ) {
+    return 15; // default fallback distance in km
   }
-  return Math.max(40, Math.round(distanceKm * 3)); // Retail delivery
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = ((Number(lat2) - Number(lat1)) * Math.PI) / 180;
+  const dLon = ((Number(lon2) - Number(lon1)) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((Number(lat1) * Math.PI) / 180) *
+      Math.cos((Number(lat2) * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  return Math.max(1, Math.round(distance * 10) / 10); // Minimum 1 km, 1 decimal place
+};
+
+// Standard distance-based delivery fee calculation in INR
+const calculateDeliveryFee = (distanceKm = 15, isB2B = false) => {
+  const km = Math.max(1, Number(distanceKm) || 15);
+  if (isB2B) {
+    // Commercial freight: base ₹500 covers initial 20km + ₹25/km beyond 20km
+    return Math.max(500, Math.round(500 + Math.max(0, km - 20) * 25));
+  }
+  // Retail delivery: base ₹40 covers initial 5km + ₹6/km beyond 5km
+  return Math.max(40, Math.round(40 + Math.max(0, km - 5) * 6));
 };
 
 /**
@@ -31,6 +59,7 @@ const createOrder = async ({
   items,
   deliveryAddress,
   paymentMethod = 'DIRECT_ORDER',
+  paymentProofUrl,
   idempotencyKey,
   req,
 }) => {
@@ -125,48 +154,95 @@ const createOrder = async ({
 
   // Resolve unique farmers involved in this order to snapshot their payment information
   const farmerIds = [...new Set(products.map((p) => p.farmerId.toString()))];
-  const [farmers, farmerProfiles] = await Promise.all([
-    User.find({ _id: { $in: farmerIds } }).select('fullName'),
-    FarmerProfile.find({ userId: { $in: farmerIds } }).select('userId paymentSettings'),
+  const [farmers, farmerProfiles, buyerUser] = await Promise.all([
+    User.find({ _id: { $in: farmerIds } }).select('fullName phone email'),
+    FarmerProfile.find({ userId: { $in: farmerIds } }),
+    User.findById(buyerId).select('fullName phone email role'),
   ]);
 
-  const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f.fullName]));
-  const profileMap = new Map(farmerProfiles.map((fp) => [fp.userId.toString(), fp.paymentSettings]));
+  const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));
+  const profileMap = new Map(farmerProfiles.map((fp) => [fp.userId.toString(), fp]));
+
+  const primaryFarmerProfile = profileMap.get(primaryFarmerId.toString());
+  const primaryFarmerUser = farmerMap.get(primaryFarmerId.toString());
+
+  const fLat = primaryFarmerProfile?.location?.coordinates?.latitude;
+  const fLon = primaryFarmerProfile?.location?.coordinates?.longitude;
+  const bLat = deliveryAddress?.coordinates?.latitude;
+  const bLon = deliveryAddress?.coordinates?.longitude;
+
+  const distanceKm = calculateHaversineDistanceKm(fLat, fLon, bLat, bLon);
+  const deliveryFee = calculateDeliveryFee(distanceKm, isB2B);
+  const tax = Math.round(serverSubtotal * 0.05); // 5% agricultural processing / GST
+  const grandTotal = serverSubtotal + deliveryFee + tax;
+  const advanceAmount = Math.round(grandTotal * 0.40);
+  const pendingAmount = grandTotal - advanceAmount;
 
   const farmerPaymentInfo = farmerIds.map((fId) => {
-    const fSettings = profileMap.get(fId);
+    const fProfile = profileMap.get(fId);
+    const fUser = farmerMap.get(fId);
     const farmerItemsTotal = verifiedOrderItems
       .filter((item) => item.farmerId?.toString() === fId)
       .reduce((sum, item) => sum + item.lineTotal, 0);
 
+    const fAdv = Math.round(farmerItemsTotal * 0.40);
+
     return {
       farmerId: fId,
-      farmerName: farmerMap.get(fId) || 'Grower',
-      upiId: fSettings?.upiId || '',
-      upiQrCodeUrl: fSettings?.upiQrCodeUrl || '',
+      farmerName: fUser?.fullName || 'Grower',
+      upiId: fProfile?.paymentSettings?.upiId || '',
+      upiQrCodeUrl: fProfile?.paymentSettings?.upiQrCodeUrl || '',
       amount: farmerItemsTotal,
+      advanceAmount: fAdv,
+      pendingAmount: farmerItemsTotal - fAdv,
     };
   });
 
-  const deliveryFee = calculateDeliveryFee(15, isB2B);
-  const tax = Math.round(serverSubtotal * 0.05); // 5% agricultural processing / GST if applicable
-  const grandTotal = serverSubtotal + deliveryFee + tax;
-
   const orderId = `ORD-${Date.now().toString().slice(-6)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+  const invoiceNumber = `INV-${new Date().toISOString().slice(0, 7).replace('-', '')}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+
+  const buyerDetails = {
+    buyerId,
+    fullName: buyerUser?.fullName || deliveryAddress.fullName,
+    phone: buyerUser?.phone || deliveryAddress.phone,
+    email: buyerUser?.email || '',
+    role: buyerRole,
+  };
+
+  const sellerDetails = {
+    farmerId: primaryFarmerId,
+    fullName: primaryFarmerUser?.fullName || 'Grower',
+    farmName: primaryFarmerProfile?.farmName || `${primaryFarmerUser?.fullName || 'Grower'}'s Farm`,
+    phone: primaryFarmerUser?.phone || '',
+    upiId: primaryFarmerProfile?.paymentSettings?.upiId || '',
+    location: primaryFarmerProfile?.location || {},
+  };
 
   const order = await Order.create({
     orderId,
+    invoiceNumber,
     buyerId,
     buyerRole,
     farmerId: primaryFarmerId,
     items: verifiedOrderItems,
     farmerPaymentInfo,
+    sellerDetails,
+    buyerDetails,
+    farmerCoordinates: {
+      latitude: fLat || null,
+      longitude: fLon || null,
+    },
+    distanceKm,
     subtotal: serverSubtotal,
     deliveryFee,
     tax,
     total: grandTotal,
+    advanceAmount,
+    pendingAmount,
+    paymentProofUrl: paymentProofUrl || '',
+    paymentProofUploadedAt: paymentProofUrl ? new Date() : null,
     status: 'PLACED',
-    paymentStatus: 'CONFIRMED',
+    paymentStatus: paymentProofUrl ? 'ADVANCE_PAID' : 'CONFIRMED',
     paymentMethod,
     deliveryAddress,
     idempotencyKey,
@@ -179,12 +255,12 @@ const createOrder = async ({
     orderId: order._id,
     pickupAddress: {
       line1: 'Farm Gate Depot',
-      district: 'Pune',
-      state: 'Maharashtra',
+      district: primaryFarmerProfile?.location?.district || 'Pune',
+      state: primaryFarmerProfile?.location?.state || 'Maharashtra',
     },
     dropAddress: deliveryAddress,
     status: 'PLACED',
-    distanceKm: 15,
+    distanceKm,
     estimatedTransportCost: deliveryFee,
     estimatedDeliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days
     trackingEvents: [
@@ -477,6 +553,8 @@ const updateOrderStatus = async ({ orderId, status, note, location, actorId, act
 
   const isFulfillingFarmer =
     order.farmerId?.toString() === actorId.toString() ||
+    order.sellerDetails?.farmerId?.toString() === actorId.toString() ||
+    order.farmerPaymentInfo?.some((f) => f.farmerId?.toString() === actorId.toString()) ||
     order.items.some(
       (item) =>
         (item.productId && fProdIds.includes(item.productId.toString())) ||
@@ -571,6 +649,139 @@ const updateOrderStatus = async ({ orderId, status, note, location, actorId, act
   return order;
 };
 
+/**
+ * Preview order quote with live distance, delivery fee, GST, and 40% advance calculation
+ */
+const previewOrderQuote = async ({ items, deliveryAddress, coordinates, buyerRole = 'CONSUMER' }) => {
+  if (!items || !items.length) {
+    throw new ApiError(400, 'Quote requires at least one order item.', 'INVALID_ITEMS');
+  }
+
+  const productIds = items.map((i) => i.productId);
+  const products = await Product.find({ _id: { $in: productIds } });
+
+  if (products.length !== items.length) {
+    throw new ApiError(404, 'One or more selected products are invalid or unavailable.', 'PRODUCT_NOT_FOUND');
+  }
+
+  const isB2B = buyerRole === 'BUSINESS';
+  let serverSubtotal = 0;
+  const resolvedItems = [];
+
+  for (const requestedItem of items) {
+    const product = products.find((p) => p._id.toString() === requestedItem.productId.toString());
+    const qty = parseInt(requestedItem.quantity, 10);
+    if (isNaN(qty) || qty <= 0) {
+      throw new ApiError(400, `Invalid quantity (${requestedItem.quantity}) specified.`, 'INVALID_QTY');
+    }
+    const lineTotal = product.pricePerUnit * qty;
+    serverSubtotal += lineTotal;
+    resolvedItems.push({
+      productId: product._id,
+      title: product.title,
+      quantity: qty,
+      unit: product.unit,
+      unitPrice: product.pricePerUnit,
+      lineTotal,
+      farmerId: product.farmerId,
+    });
+  }
+
+  const farmerIds = [...new Set(products.map((p) => p.farmerId.toString()))];
+  const [farmers, farmerProfiles] = await Promise.all([
+    User.find({ _id: { $in: farmerIds } }).select('fullName phone email'),
+    FarmerProfile.find({ userId: { $in: farmerIds } }),
+  ]);
+
+  const farmerMap = new Map(farmers.map((f) => [f._id.toString(), f]));
+  const profileMap = new Map(farmerProfiles.map((fp) => [fp.userId.toString(), fp]));
+
+  const primaryFarmerId = products[0].farmerId;
+  const primaryFarmerProfile = profileMap.get(primaryFarmerId.toString());
+
+  const buyerCoords = coordinates || deliveryAddress?.coordinates || {};
+  const fLat = primaryFarmerProfile?.location?.coordinates?.latitude;
+  const fLon = primaryFarmerProfile?.location?.coordinates?.longitude;
+  const bLat = buyerCoords.latitude;
+  const bLon = buyerCoords.longitude;
+
+  const distanceKm = calculateHaversineDistanceKm(fLat, fLon, bLat, bLon);
+  const deliveryFee = calculateDeliveryFee(distanceKm, isB2B);
+  const tax = Math.round(serverSubtotal * 0.05); // 5% GST
+  const grandTotal = serverSubtotal + deliveryFee + tax;
+  const advanceAmount = Math.round(grandTotal * 0.40);
+  const pendingAmount = grandTotal - advanceAmount;
+
+  const farmerPaymentInfo = farmerIds.map((fId) => {
+    const fProfile = profileMap.get(fId);
+    const fUser = farmerMap.get(fId);
+    const farmerItemsTotal = resolvedItems
+      .filter((item) => item.farmerId?.toString() === fId)
+      .reduce((sum, item) => sum + item.lineTotal, 0);
+
+    const fAdv = Math.round(farmerItemsTotal * 0.40);
+
+    return {
+      farmerId: fId,
+      farmerName: fUser?.fullName || 'Grower',
+      farmName: fProfile?.farmName || `${fUser?.fullName || 'Grower'}'s Farm`,
+      upiId: fProfile?.paymentSettings?.upiId || '',
+      upiQrCodeUrl: fProfile?.paymentSettings?.upiQrCodeUrl || '',
+      isConfigured: Boolean(fProfile?.paymentSettings?.isConfigured),
+      amount: farmerItemsTotal,
+      advanceAmount: fAdv,
+      pendingAmount: farmerItemsTotal - fAdv,
+    };
+  });
+
+  return {
+    subtotal: serverSubtotal,
+    distanceKm,
+    deliveryFee,
+    tax,
+    total: grandTotal,
+    advanceAmount,
+    pendingAmount,
+    items: resolvedItems,
+    farmerPaymentInfo,
+    primaryFarmer: farmerPaymentInfo[0] || null,
+  };
+};
+
+/**
+ * Fetch authoritative order invoice
+ */
+const getOrderInvoice = async (orderIdentifier, userId, userRole) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(orderIdentifier);
+  const query = isObjectId
+    ? { $or: [{ _id: orderIdentifier }, { orderId: orderIdentifier }, { invoiceNumber: orderIdentifier }] }
+    : { $or: [{ orderId: orderIdentifier }, { invoiceNumber: orderIdentifier }] };
+
+  const order = await Order.findOne(query)
+    .populate('buyerId', 'fullName email phone role')
+    .populate('farmerId', 'fullName phone email')
+    .populate('deliveryId');
+
+  if (!order) {
+    throw new ApiError(404, 'Order not found.', 'NOT_FOUND');
+  }
+
+  // Authorization check
+  const isBuyer = order.buyerId?._id?.toString() === userId.toString();
+  const isFarmer =
+    order.farmerId?._id?.toString() === userId.toString() ||
+    order.sellerDetails?.farmerId?.toString() === userId.toString() ||
+    order.farmerPaymentInfo?.some((f) => f.farmerId?.toString() === userId.toString()) ||
+    order.items?.some((i) => i.farmerId?.toString() === userId.toString());
+  const isAdmin = ['ADMIN', 'LOGISTICS_OPERATOR'].includes(userRole);
+
+  if (!isBuyer && !isFarmer && !isAdmin) {
+    throw new ApiError(403, 'You do not have authorization to view this invoice.', 'FORBIDDEN');
+  }
+
+  return order;
+};
+
 module.exports = {
   createOrder,
   getOrdersForBuyer,
@@ -578,4 +789,7 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   calculateDeliveryFee,
+  calculateHaversineDistanceKm,
+  previewOrderQuote,
+  getOrderInvoice,
 };

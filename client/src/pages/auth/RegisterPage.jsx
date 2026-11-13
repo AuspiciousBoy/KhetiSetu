@@ -9,6 +9,8 @@ import {
   Mail,
   Phone,
   Lock,
+  Eye,
+  EyeOff,
   AlertCircle,
   ArrowRight,
 } from 'lucide-react';
@@ -29,6 +31,8 @@ const RegisterPage = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Role specific fields
   const [farmName, setFarmName] = useState('');
@@ -268,21 +272,51 @@ const RegisterPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t('auth.password')}
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               icon={<Lock className="w-4 h-4" />}
               placeholder="Min 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="p-1 rounded-md text-on-surface-variant/70 hover:text-primary transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              }
             />
             <Input
               label={t('auth.confirmPassword')}
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               required
               icon={<Lock className="w-4 h-4" />}
               placeholder="Re-enter password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="p-1 rounded-md text-on-surface-variant/70 hover:text-primary transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                  title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              }
             />
           </div>
 

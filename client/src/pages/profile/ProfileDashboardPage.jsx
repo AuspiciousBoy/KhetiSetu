@@ -30,6 +30,7 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
+import LocationPicker from '../../components/location/LocationPicker';
 
 const ProfileDashboardPage = () => {
   const { user: authUser, updateUser } = useAuth();
@@ -896,9 +897,43 @@ const ProfileDashboardPage = () => {
 
             {/* Farm Location Details */}
             <div className="pt-4 border-t border-surface-variant/60 flex flex-col gap-4">
-              <span className="text-xs uppercase font-bold text-secondary font-label-md">
-                Farm Gate Geographic Location
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase font-bold text-secondary font-label-md">
+                  Farm Gate Geographic Location
+                </span>
+                <span className="text-[11px] text-on-surface-variant">
+                  Detect GPS or Search on Interactive Map
+                </span>
+              </div>
+
+              <LocationPicker
+                initialLocation={{
+                  line1: farmForm.location.farmAddress,
+                  city: farmForm.location.city || farmForm.location.district,
+                  district: farmForm.location.district,
+                  state: farmForm.location.state,
+                  pincode: farmForm.location.pincode,
+                  latitude: Number(farmForm.location.coordinates?.latitude) || 18.5204,
+                  longitude: Number(farmForm.location.coordinates?.longitude) || 73.8567,
+                }}
+                showFullForm={false}
+                onLocationSelect={(loc) => {
+                  setFarmForm((prev) => ({
+                    ...prev,
+                    location: {
+                      ...prev.location,
+                      farmAddress: loc.address || prev.location.farmAddress,
+                      district: loc.district || prev.location.district,
+                      state: loc.state || prev.location.state,
+                      pincode: loc.pincode || prev.location.pincode,
+                      coordinates: {
+                        latitude: loc.latitude,
+                        longitude: loc.longitude,
+                      },
+                    },
+                  }));
+                }}
+              />
 
               <div>
                 <label className="font-semibold text-xs text-primary block mb-1">
@@ -1459,6 +1494,36 @@ const ProfileDashboardPage = () => {
                   </div>
                 </div>
               )}
+
+              <div className="pt-2 border-t border-surface-variant/40">
+                <label className="font-semibold text-primary block mb-1 text-xs">
+                  Pinpoint Location on Map / Use GPS
+                </label>
+                <LocationPicker
+                  initialLocation={{
+                    line1: addressForm.line1,
+                    city: addressForm.city,
+                    state: addressForm.state,
+                    pincode: addressForm.pincode,
+                    latitude: Number(addressForm.coordinates?.latitude) || 18.5204,
+                    longitude: Number(addressForm.coordinates?.longitude) || 73.8567,
+                  }}
+                  showFullForm={false}
+                  onLocationSelect={(loc) => {
+                    setAddressForm((prev) => ({
+                      ...prev,
+                      line1: loc.address || prev.line1,
+                      city: loc.city || prev.city,
+                      state: loc.state || prev.state,
+                      pincode: loc.pincode || prev.pincode,
+                      coordinates: {
+                        latitude: loc.latitude,
+                        longitude: loc.longitude,
+                      },
+                    }));
+                  }}
+                />
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>

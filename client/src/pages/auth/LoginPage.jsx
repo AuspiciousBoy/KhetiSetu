@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Sprout, AlertCircle, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Sprout, AlertCircle, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -15,6 +15,7 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -111,12 +112,27 @@ const LoginPage = () => {
               </Link>
             </div>
             <Input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               icon={<Lock className="w-4 h-4" />}
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="p-1 rounded-md text-on-surface-variant/70 hover:text-primary transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              }
             />
           </div>
 

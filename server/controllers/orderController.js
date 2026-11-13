@@ -85,10 +85,51 @@ const updateOrderStatus = async (req, res, next) => {
   }
 };
 
+const previewQuote = async (req, res, next) => {
+  try {
+    const quote = await orderService.previewOrderQuote({
+      items: req.body.items,
+      deliveryAddress: req.body.deliveryAddress,
+      coordinates: req.body.coordinates,
+      buyerRole: req.user.role,
+    });
+    return success(res, quote, 'Order quote calculated successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
+const uploadPaymentProof = async (req, res, next) => {
+  try {
+    if (!req.savedFile?.filename) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Valid payment screenshot (JPG, PNG, or WEBP under 5MB) is required.' },
+      });
+    }
+    const paymentProofUrl = `/uploads/${req.savedFile.filename}`;
+    return success(res, { paymentProofUrl }, 'Payment proof uploaded successfully', 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getOrderInvoice = async (req, res, next) => {
+  try {
+    const invoice = await orderService.getOrderInvoice(req.params.id, req.user.id, req.user.role);
+    return success(res, invoice, 'Order invoice retrieved successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createOrder,
   getBuyerOrders,
   getFarmerOrders,
   getOrderById,
   updateOrderStatus,
+  previewQuote,
+  uploadPaymentProof,
+  getOrderInvoice,
 };

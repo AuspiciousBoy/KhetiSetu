@@ -12,6 +12,15 @@ import {
   CheckCircle2,
   Phone,
   User as UserIcon,
+  Navigation,
+  Search,
+  Upload,
+  FileText,
+  Loader2,
+  ShieldCheck,
+  Truck,
+  ArrowRight,
+  ExternalLink,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
@@ -21,6 +30,8 @@ import ProgressRing from '../../components/ui/ProgressRing';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
+import LocationPicker from '../../components/location/LocationPicker';
+import InvoiceModal from '../../components/orders/InvoiceModal';
 
 const ProductDetailPage = () => {
   const { t } = useTranslation();
@@ -33,27 +44,36 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [ordering, setOrdering] = useState(false);
 
-  // Checkout Modal & Delivery Address State
+  // Checkout Modal State
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [addressesLoading, setAddressesLoading] = useState(false);
-  const [addressMode, setAddressMode] = useState('saved'); // 'saved' | 'new'
+  const [addressMode, setAddressMode] = useState('saved'); // 'saved' | 'current' | 'search'
   const [selectedAddressId, setSelectedAddressId] = useState('');
-  const [newAddress, setNewAddress] = useState({
+  const [deliveryAddress, setDeliveryAddress] = useState({
     fullName: '',
     phone: '',
     houseNo: '',
     streetArea: '',
     line1: '',
-    city: '',
-    district: '',
+    city: 'Pune',
+    district: 'Pune',
     state: 'Maharashtra',
-    pincode: '',
+    pincode: '411001',
     landmark: '',
+    coordinates: { latitude: 18.5204, longitude: 73.8567 },
   });
   const [saveToProfile, setSaveToProfile] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
+
+  // Quote & Payment State
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [paymentProofUrl, setPaymentProofUrl] = useState('');
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -82,14 +102,50 @@ const ProductDetailPage = () => {
         const defaultAddr = list.find((a) => a.isDefault) || list[0];
         setSelectedAddressId(defaultAddr._id);
         setAddressMode('saved');
+        applyAddress(defaultAddr);
       } else {
-        setAddressMode('new');
+        setAddressMode('search');
       }
     } catch (err) {
       console.error('Failed to load user addresses', err);
-      setAddressMode('new');
+      setAddressMode('search');
     } finally {
       setAddressesLoading(false);
+    }
+  };
+
+  const applyAddress = (addr) => {
+    const updated = {
+      fullName: addr.fullName || user?.fullName || '',
+      phone: addr.contactNumber || addr.phone || user?.phone || '',
+      houseNo: addr.houseNo || '',
+      streetArea: addr.streetArea || '',
+      line1: addr.line1 || addr.address || '',
+      city: addr.city || 'Pune',
+      district: addr.district || addr.city || 'Pune',
+      state: addr.state || 'Maharashtra',
+      pincode: addr.pincode || '411001',
+      landmark: addr.landmark || '',
+      coordinates: addr.coordinates || { latitude: 18.5204, longitude: 73.8567 },
+    };
+    setDeliveryAddress(updated);
+    fetchQuote(updated, updated.coordinates);
+  };
+
+  const fetchQuote = async (targetAddr, targetCoords) => {
+    if (!product) return;
+    try {
+      setQuoteLoading(true);
+      const res = await apiClient.post('/orders/preview-quote', {
+        items: [{ productId: product.id, quantity: Number(quantity) }],
+        deliveryAddress: targetAddr || deliveryAddress,
+        coordinates: targetCoords || targetAddr?.coordinates || deliveryAddress.coordinates,
+      });
+      setQuote(res.data.data);
+    } catch (err) {
+      console.warn('Failed to calculate preview quote:', err);
+    } finally {
+      setQuoteLoading(false);
     }
   };
 
@@ -99,7 +155,8 @@ const ProductDetailPage = () => {
       return;
     }
     setCheckoutError(null);
-    setNewAddress((prev) => ({
+    setPaymentProofUrl('');
+    setDeliveryAddress((prev) => ({
       ...prev,
       fullName: user?.fullName || '',
       phone: user?.phone || '',
@@ -115,118 +172,137 @@ const ProductDetailPage = () => {
     setTimeout(() => setCopiedUpi(false), 2500);
   };
 
+  const handleLocationPicked = (loc) => {
+    const updated = {
+      ...deliveryAddress,
+      line1: loc.address || loc.line1 || deliveryAddress.line1,
+      city: loc.city || deliveryAddress.city,
+      district: loc.district || deliveryAddress.district,
+      state: loc.state || deliveryAddress.state,
+      pincode: loc.pincode || deliveryAddress.pincode,
+      landmark: loc.landmark || deliveryAddress.landmark,
+      coordinates: {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      },
+    };
+    setDeliveryAddress(updated);
+    fetchQuote(updated, { latitude: loc.latitude, longitude: loc.longitude });
+  };
+
+  const handleUploadProof = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setCheckoutError('Payment proof must be a JPG, PNG, or WEBP image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCheckoutError('Payment screenshot must be under 5MB.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('paymentProof', file);
+
+    try {
+      setUploadingProof(true);
+      setCheckoutError(null);
+      const res = await apiClient.post('/orders/upload-proof', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setPaymentProofUrl(res.data.data.paymentProofUrl);
+    } catch (err) {
+      setCheckoutError(err.response?.data?.error?.message || 'Failed to upload payment proof.');
+    } finally {
+      setUploadingProof(false);
+    }
+  };
+
   const handleConfirmOrder = async () => {
     setCheckoutError(null);
 
-    let finalDeliveryAddress = null;
+    // Validation 1: Delivery Address Fields
+    if (!deliveryAddress.fullName?.trim()) {
+      setCheckoutError('Recipient full name is required.');
+      return;
+    }
+    if (!deliveryAddress.phone?.trim() || deliveryAddress.phone.trim().length < 10) {
+      setCheckoutError('Valid 10-digit contact number is required.');
+      return;
+    }
+    if (!deliveryAddress.line1?.trim()) {
+      setCheckoutError('Delivery address line 1 is required.');
+      return;
+    }
+    if (!deliveryAddress.city?.trim()) {
+      setCheckoutError('City is required.');
+      return;
+    }
+    if (!deliveryAddress.state?.trim()) {
+      setCheckoutError('State is required.');
+      return;
+    }
+    if (!deliveryAddress.pincode?.trim() || !/^\d{6}$/.test(deliveryAddress.pincode.trim())) {
+      setCheckoutError('Valid 6-digit postal pincode is required.');
+      return;
+    }
 
-    if (addressMode === 'saved') {
-      const chosen = savedAddresses.find((a) => a._id === selectedAddressId);
-      if (!chosen) {
-        setCheckoutError('Please select a delivery address or enter a new one.');
-        return;
-      }
-      finalDeliveryAddress = {
-        fullName: chosen.fullName || user?.fullName || 'Valued Buyer',
-        phone: chosen.contactNumber || chosen.phone || user?.phone || '+91 9876543210',
-        houseNo: chosen.houseNo || '',
-        streetArea: chosen.streetArea || '',
-        line1: chosen.line1 || 'Primary Farm Delivery',
-        line2: chosen.line2 || '',
-        city: chosen.city || 'Pune',
-        district: chosen.district || chosen.city || 'Pune',
-        state: chosen.state || 'Maharashtra',
-        pincode: chosen.pincode || '411001',
-        landmark: chosen.landmark || '',
-      };
-    } else {
-      // Validate new address fields
-      if (!newAddress.fullName.trim()) {
-        setCheckoutError('Recipient full name is required.');
-        return;
-      }
-      if (!newAddress.phone.trim() || newAddress.phone.trim().length < 10) {
-        setCheckoutError('Valid 10-digit contact number is required.');
-        return;
-      }
-      if (!newAddress.line1.trim()) {
-        setCheckoutError('Delivery address line 1 is required.');
-        return;
-      }
-      if (!newAddress.city.trim()) {
-        setCheckoutError('City is required.');
-        return;
-      }
-      if (!newAddress.state.trim()) {
-        setCheckoutError('State is required.');
-        return;
-      }
-      if (!newAddress.pincode.trim() || !/^\d{6}$/.test(newAddress.pincode.trim())) {
-        setCheckoutError('Valid 6-digit postal pincode is required.');
-        return;
-      }
+    // Validation 2: Payment Proof Screenshot Required
+    if (!paymentProofUrl) {
+      setCheckoutError('Please scan the farmer QR, pay the 40% advance, and upload the payment screenshot proof to proceed.');
+      return;
+    }
 
-      finalDeliveryAddress = {
-        fullName: newAddress.fullName.trim(),
-        phone: newAddress.phone.trim(),
-        houseNo: newAddress.houseNo.trim(),
-        streetArea: newAddress.streetArea.trim(),
-        line1: newAddress.line1.trim(),
-        city: newAddress.city.trim(),
-        district: newAddress.district.trim() || newAddress.city.trim(),
-        state: newAddress.state.trim(),
-        pincode: newAddress.pincode.trim(),
-        landmark: newAddress.landmark.trim(),
-      };
-
-      // If user checked "Save to profile", save asynchronously without blocking
-      if (saveToProfile) {
-        try {
-          await apiClient.post('/users/addresses', {
-            label: 'HOME',
-            fullName: newAddress.fullName.trim(),
-            contactNumber: newAddress.phone.trim(),
-            houseNo: newAddress.houseNo.trim(),
-            streetArea: newAddress.streetArea.trim(),
-            line1: newAddress.line1.trim(),
-            city: newAddress.city.trim(),
-            district: newAddress.district.trim() || newAddress.city.trim(),
-            state: newAddress.state.trim(),
-            pincode: newAddress.pincode.trim(),
-            landmark: newAddress.landmark.trim(),
-            isDefault: false,
-          });
-        } catch (saveErr) {
-          console.warn('Could not save address to profile:', saveErr);
-        }
+    // Optional: Save to user profile
+    if (saveToProfile) {
+      try {
+        await apiClient.post('/users/addresses', {
+          label: 'HOME',
+          fullName: deliveryAddress.fullName.trim(),
+          contactNumber: deliveryAddress.phone.trim(),
+          houseNo: deliveryAddress.houseNo?.trim() || '',
+          streetArea: deliveryAddress.streetArea?.trim() || '',
+          line1: deliveryAddress.line1.trim(),
+          city: deliveryAddress.city.trim(),
+          district: deliveryAddress.district?.trim() || deliveryAddress.city.trim(),
+          state: deliveryAddress.state.trim(),
+          pincode: deliveryAddress.pincode.trim(),
+          landmark: deliveryAddress.landmark?.trim() || '',
+          coordinates: deliveryAddress.coordinates,
+          isDefault: false,
+        });
+      } catch (saveErr) {
+        console.warn('Could not save address to profile:', saveErr);
       }
     }
 
     setOrdering(true);
     try {
-      await apiClient.post('/orders', {
+      const res = await apiClient.post('/orders', {
         items: [{ productId: product.id, quantity: Number(quantity) }],
-        deliveryAddress: finalDeliveryAddress,
+        deliveryAddress,
+        paymentProofUrl,
         paymentMethod: 'DIRECT_ORDER',
       });
 
+      setCompletedOrder(res.data.data);
       setCheckoutModalOpen(false);
-
-      // Redirect to role-appropriate orders page
-      const role = user?.role;
-      if (role === 'BUSINESS') {
-        navigate('/business/orders');
-      } else if (role === 'FARMER') {
-        navigate('/farmer/orders');
-      } else if (role === 'ADMIN') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/consumer/orders');
-      }
+      setInvoiceModalOpen(true);
     } catch (err) {
       setCheckoutError(err.response?.data?.error?.message || 'Order creation failed. Please try again.');
     } finally {
       setOrdering(false);
+    }
+  };
+
+  const handleCloseInvoice = () => {
+    setInvoiceModalOpen(false);
+    if (user?.role === 'BUSINESS') {
+      navigate('/business/orders');
+    } else {
+      navigate('/consumer/orders');
     }
   };
 
@@ -240,205 +316,155 @@ const ProductDetailPage = () => {
 
   if (!product) {
     return (
-      <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 text-center">
-        <p className="text-sm text-on-surface-variant">{t('productDetail.produceNotFound')}</p>
-        <Link to="/marketplace" className="text-xs text-primary font-bold underline mt-2 inline-block">
-          {t('productDetail.returnToMarketplace')}
+      <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 text-center">
+        <h2 className="text-xl font-display font-bold text-primary mb-2">Produce Not Found</h2>
+        <p className="text-sm text-on-surface-variant mb-6">The agricultural listing you requested is unavailable.</p>
+        <Link to="/marketplace">
+          <Button variant="primary">Browse Marketplace</Button>
         </Link>
       </div>
     );
   }
 
+  const primaryFarmer = quote?.primaryFarmer || product.farmer || {};
+  const distanceKm = quote?.distanceKm || 15;
+  const subtotal = quote?.subtotal || product.pricePerUnit * quantity;
+  const deliveryFee = quote?.deliveryFee || 40;
+  const tax = quote?.tax || Math.round(subtotal * 0.05);
+  const grandTotal = quote?.total || subtotal + deliveryFee + tax;
+  const advanceAmount = quote?.advanceAmount || Math.round(grandTotal * 0.40);
+  const pendingAmount = quote?.pendingAmount || grandTotal - advanceAmount;
+
   return (
-    <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 flex flex-col gap-10">
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-        <Link to="/marketplace" className="hover:text-primary">
-          {t('productDetail.breadcrumbMarketplace')}
-        </Link>
-        <span>/</span>
-        <span className="text-primary font-medium">{product.title}</span>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        {/* Left Column: Produce Image Gallery */}
-        <div className="lg:col-span-7 flex flex-col gap-4">
-          <div className="rounded-[24px] overflow-hidden border border-surface-variant soil-shadow h-96 sm:h-[480px]">
-            <img
-              src={
-                product.images?.[0] ||
-                'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=1200'
-              }
-              alt={product.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* AI Quality Verification Banner */}
-          {product.qualityAssessment && (
-            <Card className="bg-surface-container-low p-6 flex flex-col gap-4">
-              <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
-                <div className="flex items-center gap-3">
-                  <ProgressRing
-                    progress={Math.round((product.qualityAssessment.confidence || 0.9) * 100)}
-                    size={48}
-                    strokeWidth={5}
-                  />
-                  <div>
-                    <h4 className="font-display font-semibold text-primary text-sm">
-                      {t('productDetail.aiVerifiedGrade', { grade: product.qualityAssessment.classification.replace(/_/g, ' ') })}
-                    </h4>
-                    <p className="text-[11px] text-on-surface-variant">
-                      {t('productDetail.assessedOn', { date: new Date(product.qualityAssessment.assessedAt).toLocaleDateString() })}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="success">
-                  {t('productDetail.confidenceScore', { percent: Math.round((product.qualityAssessment.confidence || 0.9) * 100) })}
-                </Badge>
-              </div>
-
-              <div>
-                <span className="text-[10px] uppercase font-bold text-secondary block mb-1">
-                  {t('productDetail.morphologicalObservations')}
-                </span>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-on-surface">
-                  {product.qualityAssessment.observations?.map((obs, i) => (
-                    <li key={i} className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>{obs}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <p className="text-[10px] text-on-surface-variant italic border-t border-surface-variant/40 pt-2">
-                {product.qualityAssessment.disclaimer}
-              </p>
-            </Card>
-          )}
-        </div>
-
-        {/* Right Column: Purchasing & Batch Traceability Details */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          <Card className="p-8 flex flex-col gap-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="warning">{product.category}</Badge>
-                <span className="text-xs text-on-surface-variant">
-                  📍 {product.location?.district}, {product.location?.state}
-                </span>
-              </div>
-
-              <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary mb-2">
-                {product.title}
-              </h1>
-
-              <div className="flex items-baseline gap-2 mt-4">
-                <span className="font-display font-bold text-4xl text-primary">
-                  ₹{product.pricePerUnit}
-                </span>
-                <span className="text-sm text-on-surface-variant font-medium">
-                  / {product.unit} {t('marketplace.inclusiveHandling')}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-              {product.description}
-            </p>
-
-            {/* Farm-Gate Traceability Metadata Card */}
-            {product.batchTraceability && (
-              <div className="p-4 rounded-[16px] bg-surface-container border border-surface-variant/60 flex flex-col gap-2.5 text-xs">
-                <div className="flex items-center justify-between font-mono font-bold text-primary">
-                  <span>{t('productDetail.batchCodeLabel')}</span>
-                  <span>{product.batchTraceability.batchId}</span>
-                </div>
-                <div className="flex items-center justify-between text-on-surface">
-                  <span>{t('farmerDashboard.harvestDateCol')}:</span>
-                  <span>{new Date(product.batchTraceability.harvestDate).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center justify-between text-on-surface">
-                  <span>{t('productDetail.storageProtocolLabel')}</span>
-                  <span>{product.batchTraceability.storageMethod || t('productDetail.ventilatedFarmStorage')}</span>
-                </div>
-                <div className="flex items-center justify-between text-on-surface">
-                  <span>{t('productDetail.projectedShelfLifeLabel')}</span>
-                  <span className="font-semibold text-secondary">
-                    {product.batchTraceability.shelfLifeDays} {t('productDetail.days')}
-                  </span>
-                </div>
+    <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 sm:py-12">
+      {/* Product Display Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        {/* Left: Image Card */}
+        <div className="rounded-[24px] overflow-hidden border border-surface-variant bg-surface-container relative soil-shadow">
+          <div className="aspect-[4/3] w-full bg-surface-container flex items-center justify-center overflow-hidden">
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-center p-8">
+                <ShoppingBag className="w-16 h-16 text-on-surface-variant/40 mx-auto mb-2" />
+                <span className="text-xs text-on-surface-variant">Farm Fresh Produce</span>
               </div>
             )}
+          </div>
+          <div className="absolute top-4 left-4 flex gap-2">
+            <Badge variant="success">{product.cropName || 'Fresh Harvest'}</Badge>
+            {product.grade && <Badge variant="info">Grade {product.grade}</Badge>}
+          </div>
+        </div>
 
-            {/* Quantity Stepper & Buy Action */}
-            <div className="pt-4 border-t border-surface-variant/60 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-on-surface">{t('productDetail.orderQuantityLabel')}</span>
-                <div className="flex items-center gap-3 bg-surface-container rounded-full px-3 py-1 border border-surface-variant">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((prev) => Math.max(product.minOrderQuantity, prev - 1))}
-                    className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-primary hover:bg-surface-variant"
-                  >
-                    -
-                  </button>
-                  <span className="font-semibold text-sm text-primary w-8 text-center">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((prev) => Math.min(product.availableQuantity, prev + 1))}
-                    className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-primary hover:bg-surface-variant"
-                  >
-                    +
-                  </button>
-                </div>
+        {/* Right: Info & Pricing */}
+        <div className="flex flex-col gap-6">
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
+              Direct Farm Produce
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-primary mt-1">
+              {product.title}
+            </h1>
+            <p className="text-sm text-on-surface-variant mt-2 leading-relaxed">
+              {product.description || 'Harvested directly from certified farms. Verified freshness and trace origin recorded on KhetiSetu.'}
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-surface-container/60 border border-surface-variant/80 flex items-center justify-between">
+            <div>
+              <span className="text-[11px] uppercase font-semibold text-on-surface-variant block">Farm Gate Rate</span>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-3xl font-display font-bold text-primary">₹{product.pricePerUnit}</span>
+                <span className="text-xs text-on-surface-variant font-medium">/ {product.unit}</span>
               </div>
-
-              <div className="flex items-center justify-between text-xs text-on-surface-variant">
-                <span>{t('productDetail.subtotalEstimate')}</span>
-                <span className="font-display font-bold text-xl text-primary">
-                  ₹{product.pricePerUnit * quantity}
-                </span>
-              </div>
-
-              <Button
-                variant="primary"
-                size="lg"
-                loading={ordering}
-                onClick={openCheckout}
-                className="w-full mt-2"
-              >
-                <ShoppingBag className="w-5 h-5 shrink-0" />
-                {isAuthenticated ? t('productDetail.placeOrderBtn') : t('productDetail.signInToOrderBtn')}
-              </Button>
             </div>
-          </Card>
+            <div className="text-right">
+              <span className="text-[11px] uppercase font-semibold text-on-surface-variant block">Available Stock</span>
+              <span className="text-sm font-bold text-secondary">{product.availableQuantity} {product.unit}</span>
+            </div>
+          </div>
+
+          {/* Farmer Card */}
+          <div className="p-4 rounded-2xl bg-surface border border-surface-variant flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                {product.farmer?.fullName?.[0] || 'F'}
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-primary">{product.farmer?.fullName || 'Certified Farmer'}</p>
+                <p className="text-xs text-on-surface-variant flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-secondary" />
+                  <span>{product.originLocation?.district || 'Pune'}, {product.originLocation?.state || 'Maharashtra'}</span>
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline">Verified Grower</Badge>
+          </div>
+
+          {/* Quantity Selector & Order CTA */}
+          <div className="p-5 rounded-2xl bg-surface border border-surface-variant flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-primary">Order Quantity:</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(product.minOrderQuantity || 1, q - 1))}
+                  className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant font-bold text-primary flex items-center justify-center transition-colors"
+                >
+                  -
+                </button>
+                <span className="font-mono font-bold text-base text-primary px-2">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.min(product.availableQuantity || 9999, q + 1))}
+                  className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant font-bold text-primary flex items-center justify-center transition-colors"
+                >
+                  +
+                </button>
+                <span className="text-xs text-on-surface-variant">{product.unit}</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              size="lg"
+              onClick={openCheckout}
+              className="w-full flex items-center justify-center gap-2 py-3.5 shadow-md"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Direct Farm Checkout • ₹{product.pricePerUnit * quantity}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Direct Farm Order & Delivery Address Checkout Modal */}
+      {/* Production-Ready 40% Advance Payment & Location Checkout Modal */}
       {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-surface w-full max-w-2xl rounded-[24px] shadow-soil-lg border border-surface-variant p-6 sm:p-8 my-8 flex flex-col gap-6 relative">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-surface-variant/60 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-surface w-full max-w-2xl rounded-[24px] shadow-2xl border border-surface-variant p-5 sm:p-8 my-6 flex flex-col gap-5 relative">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
               <div>
-                <h3 className="font-display font-bold text-xl text-primary">
-                  {t('checkout.orderConfirmationTitle')}
+                <h3 className="font-display font-bold text-lg sm:text-xl text-primary flex items-center gap-2">
+                  <span>Farm Order & Advance Settlement</span>
+                  <Badge variant="warning">40% ADVANCE</Badge>
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">
-                  {product.title} • {quantity} {product.unit} • ₹{product.pricePerUnit * quantity}
+                  {product.title} • {quantity} {product.unit} • Subtotal ₹{product.pricePerUnit * quantity}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setCheckoutModalOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"
+                className="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -450,15 +476,16 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Section 1: Delivery Location */}
+            {/* STEP 1: Delivery Location with 3 Options */}
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-semibold text-sm text-primary flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="font-display font-semibold text-xs sm:text-sm text-primary flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-secondary" />
-                  {t('checkout.deliveryLocationTitle')}
+                  <span>1. Delivery Destination Location</span>
                 </h4>
-                {savedAddresses.length > 0 && (
-                  <div className="flex items-center gap-2 text-xs">
+
+                <div className="flex items-center gap-1.5 text-xs">
+                  {savedAddresses.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setAddressMode('saved')}
@@ -468,281 +495,268 @@ const ProductDetailPage = () => {
                           : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
                       }`}
                     >
-                      {t('checkout.selectSavedAddress')}
+                      Saved Address
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setAddressMode('new')}
-                      className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
-                        addressMode === 'new'
-                          ? 'bg-primary text-white'
-                          : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
-                      }`}
-                    >
-                      + {t('checkout.addNewAddress')}
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAddressMode('current')}
+                    className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
+                      addressMode === 'current'
+                        ? 'bg-primary text-white'
+                        : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
+                    }`}
+                  >
+                    Use GPS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddressMode('search')}
+                    className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
+                      addressMode === 'search'
+                        ? 'bg-primary text-white'
+                        : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
+                    }`}
+                  >
+                    Search on Map
+                  </button>
+                </div>
               </div>
 
-              {/* Mode: Saved Addresses */}
-              {addressMode === 'saved' && (
-                <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
-                  {addressesLoading ? (
-                    <Skeleton className="h-20 rounded-xl" count={2} />
-                  ) : savedAddresses.length === 0 ? (
-                    <p className="text-xs text-on-surface-variant italic py-2">
-                      {t('checkout.noSavedAddresses')}
-                    </p>
-                  ) : (
-                    savedAddresses.map((addr) => {
-                      const isSelected = selectedAddressId === addr._id;
-                      return (
+              {/* Mode: Saved Address list */}
+              {addressMode === 'saved' && savedAddresses.length > 0 && (
+                <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr._id;
+                    return (
+                      <div
+                        key={addr._id}
+                        onClick={() => {
+                          setSelectedAddressId(addr._id);
+                          applyAddress(addr);
+                        }}
+                        className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-2.5 ${
+                          isSelected
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-surface-variant bg-surface-container/40 hover:border-primary/40'
+                        }`}
+                      >
                         <div
-                          key={addr._id}
-                          onClick={() => setSelectedAddressId(addr._id)}
-                          className={`p-3.5 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-3 ${
-                            isSelected
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-surface-variant bg-surface-container/50 hover:border-primary/40'
+                          className={`w-3.5 h-3.5 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                            isSelected ? 'border-primary bg-primary' : 'border-outline'
                           }`}
                         >
-                          <div
-                            className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                              isSelected ? 'border-primary bg-primary' : 'border-outline'
-                            }`}
-                          >
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="info">{addr.label || 'ADDRESS'}</Badge>
-                              <span className="font-semibold text-primary">{addr.fullName}</span>
-                              {addr.isDefault && (
-                                <span className="text-[10px] text-secondary font-bold uppercase">
-                                  Default
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-on-surface-variant leading-relaxed">
-                              {[addr.houseNo, addr.streetArea, addr.line1, addr.landmark, addr.city, addr.state, addr.pincode]
-                                .filter(Boolean)
-                                .join(', ')}
-                            </p>
-                            <p className="text-on-surface-variant mt-1 text-[11px]">
-                              📞 {addr.contactNumber || addr.phone}
-                            </p>
-                          </div>
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </div>
-                      );
-                    })
-                  )}
+                        <div className="flex-1">
+                          <span className="font-semibold text-primary">{addr.fullName}</span> •{' '}
+                          <span className="text-on-surface-variant font-mono">{addr.contactNumber || addr.phone}</span>
+                          <p className="text-on-surface-variant line-clamp-1 mt-0.5">
+                            {[addr.houseNo, addr.streetArea, addr.line1, addr.city, addr.state, addr.pincode]
+                              .filter(Boolean)
+                              .join(', ')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Mode: Add New Address */}
-              {addressMode === 'new' && (
-                <div className="p-4 rounded-xl bg-surface-container/40 border border-surface-variant flex flex-col gap-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="block text-[11px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.fullNamePlaceholder')} *
-                      </label>
-                      <input
-                        type="text"
-                        value={newAddress.fullName}
-                        onChange={(e) => setNewAddress({ ...newAddress, fullName: e.target.value })}
-                        placeholder="e.g. Ramesh Kumar"
-                        className="w-full px-3 py-2 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.phonePlaceholder')} *
-                      </label>
-                      <input
-                        type="tel"
-                        value={newAddress.phone}
-                        onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                        placeholder="10-digit mobile"
-                        className="w-full px-3 py-2 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
+              {/* Mode: Interactive LocationPicker (Current GPS / Search on Map) */}
+              {(addressMode === 'current' || addressMode === 'search') && (
+                <LocationPicker
+                  initialLocation={deliveryAddress}
+                  showFullForm={true}
+                  onLocationSelect={handleLocationPicked}
+                />
+              )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="block text-[11px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.houseNoPlaceholder')}
-                      </label>
-                      <input
-                        type="text"
-                        value={newAddress.houseNo}
-                        onChange={(e) => setNewAddress({ ...newAddress, houseNo: e.target.value })}
-                        placeholder="Plot 42, Green Valley"
-                        className="w-full px-3 py-2 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.streetAreaPlaceholder')}
-                      </label>
-                      <input
-                        type="text"
-                        value={newAddress.streetArea}
-                        onChange={(e) => setNewAddress({ ...newAddress, streetArea: e.target.value })}
-                        placeholder="Near APMC Yard, Baramati"
-                        className="w-full px-3 py-2 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="text-xs">
-                    <label className="block text-[11px] font-medium text-on-surface-variant mb-1">
-                      {t('checkout.line1Placeholder')} *
-                    </label>
-                    <input
-                      type="text"
-                      value={newAddress.line1}
-                      onChange={(e) => setNewAddress({ ...newAddress, line1: e.target.value })}
-                      placeholder="Street address or delivery location"
-                      className="w-full px-3 py-2 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.cityPlaceholder')} *
-                      </label>
-                      <input
-                        type="text"
-                        value={newAddress.city}
-                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                        placeholder="City"
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.districtPlaceholder')}
-                      </label>
-                      <input
-                        type="text"
-                        value={newAddress.district}
-                        onChange={(e) => setNewAddress({ ...newAddress, district: e.target.value })}
-                        placeholder="District"
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.statePlaceholder')} *
-                      </label>
-                      <input
-                        type="text"
-                        value={newAddress.state}
-                        onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-                        placeholder="State"
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-medium text-on-surface-variant mb-1">
-                        {t('checkout.pincodePlaceholder')} *
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={newAddress.pincode}
-                        onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value.replace(/\D/g, '') })}
-                        placeholder="6 digits"
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-surface-variant bg-surface text-on-surface text-xs outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer pt-1">
-                    <input
-                      type="checkbox"
-                      checked={saveToProfile}
-                      onChange={(e) => setSaveToProfile(e.target.checked)}
-                      className="rounded text-primary focus:ring-primary w-4 h-4"
-                    />
-                    <span>{t('checkout.saveAddressToProfile')}</span>
+              {/* Recipient Contact fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                <div>
+                  <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-0.5">
+                    Recipient Name *
                   </label>
+                  <input
+                    type="text"
+                    required
+                    value={deliveryAddress.fullName}
+                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, fullName: e.target.value })}
+                    placeholder="Recipient person or business"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-variant bg-surface text-on-surface focus:outline-none focus:border-primary"
+                  />
                 </div>
-              )}
-            </div>
-
-            {/* Section 2: Farmer Direct UPI Payment Details */}
-            <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
-                  <QrCode className="w-4 h-4 text-secondary" />
-                  {t('checkout.farmerPaymentTitle')}
-                </h4>
-                <Badge variant="warning">DIRECT_ORDER</Badge>
+                <div>
+                  <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-0.5">
+                    Contact Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={deliveryAddress.phone}
+                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
+                    placeholder="10-digit mobile number"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-variant bg-surface text-on-surface font-mono focus:outline-none focus:border-primary"
+                  />
+                </div>
               </div>
 
-              {product.farmer?.payment?.isConfigured ? (
-                <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
-                  {product.farmer.payment.upiQrCodeUrl && (
-                    <div className="w-28 h-28 bg-white p-2 rounded-xl shadow-sm border border-surface-variant flex items-center justify-center shrink-0">
-                      <img
-                        src={product.farmer.payment.upiQrCodeUrl}
-                        alt="Farmer UPI QR"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex-1 flex flex-col gap-2 text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-on-surface-variant block">
-                        {t('checkout.upiId')}
-                      </span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-mono font-bold text-primary text-sm">
-                          {product.farmer.payment.upiId}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyUpi(product.farmer.payment.upiId)}
-                          className="px-2 py-0.5 rounded bg-surface-variant hover:bg-surface-variant/80 text-[10px] font-semibold text-primary flex items-center gap-1 transition-colors"
-                        >
-                          <Copy className="w-3 h-3" />
-                          {copiedUpi ? t('checkout.copied') : t('checkout.copyUpi')}
-                        </button>
-                      </div>
-                      {product.farmer.payment.accountHolderName && (
-                        <p className="text-[11px] text-on-surface-variant mt-0.5">
-                          {product.farmer.payment.accountHolderName} ({product.farmer.farmName || 'Grower'})
-                        </p>
-                      )}
-                    </div>
-
-                    <p className="text-[11px] text-secondary leading-relaxed font-medium">
-                      {t('checkout.scanQrCode')}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  {t('checkout.directOrderNote')}
-                </p>
-              )}
+              <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={saveToProfile}
+                  onChange={(e) => setSaveToProfile(e.target.checked)}
+                  className="rounded text-primary focus:ring-primary w-3.5 h-3.5"
+                />
+                <span className="text-[11px] text-on-surface-variant">Save this delivery location to my profile</span>
+              </label>
             </div>
 
-            {/* Total and Action Buttons */}
+            {/* STEP 2: Real-time Distance, Delivery Fee & 40% Advance Breakdown */}
+            <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-secondary" />
+                  <span>2. Distance-Based Delivery & Financial Breakdown</span>
+                </h4>
+                {quoteLoading && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Distance</span>
+                  <span className="font-mono font-bold text-primary text-sm">{distanceKm} km</span>
+                </div>
+                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Freight Charge</span>
+                  <span className="font-mono font-bold text-primary text-sm">₹{deliveryFee}</span>
+                </div>
+                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">GST (5%)</span>
+                  <span className="font-mono font-bold text-primary text-sm">₹{tax}</span>
+                </div>
+                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Grand Total</span>
+                  <span className="font-mono font-bold text-primary text-sm">₹{grandTotal}</span>
+                </div>
+              </div>
+
+              {/* 40% Advance Payment Highlight */}
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div>
+                  <span className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs block">
+                    40% Advance Payment Required: ₹{advanceAmount}
+                  </span>
+                  <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400 block">
+                    Remaining 60% (₹{pendingAmount}) is payable upon produce dispatch/delivery.
+                  </span>
+                </div>
+                <Badge variant="success">PAY ₹{advanceAmount} NOW</Badge>
+              </div>
+            </div>
+
+            {/* STEP 3: Farmer UPI QR & Payment Screenshot Proof Upload */}
+            <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-3 text-xs">
+              <div className="flex items-center justify-between">
+                <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
+                  <QrCode className="w-3.5 h-3.5 text-secondary" />
+                  <span>3. Scan Farmer QR & Pay 40% Advance</span>
+                </h4>
+                <span className="text-[10px] font-mono font-semibold text-secondary">
+                  Grower: {primaryFarmer?.farmerName || primaryFarmer?.fullName || 'Verified Farmer'}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
+                {primaryFarmer?.upiQrCodeUrl ? (
+                  <div className="w-28 h-28 bg-white p-1.5 rounded-xl border border-surface-variant shrink-0 flex items-center justify-center shadow-sm">
+                    <img
+                      src={primaryFarmer.upiQrCodeUrl}
+                      alt="Farmer UPI QR"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-28 h-28 bg-surface p-2 rounded-xl border border-dashed border-surface-variant shrink-0 flex flex-col items-center justify-center text-center text-on-surface-variant/60">
+                    <QrCode className="w-8 h-8 mb-1" />
+                    <span className="text-[9px]">Direct VPA Pay</span>
+                  </div>
+                )}
+
+                <div className="flex-1 flex flex-col gap-2 w-full">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Farmer UPI ID (VPA)</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="font-mono font-bold text-primary text-sm">
+                        {primaryFarmer?.upiId || 'farmer@khetisetu.upi'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyUpi(primaryFarmer?.upiId || 'farmer@khetisetu.upi')}
+                        className="px-2 py-0.5 rounded bg-surface-variant hover:bg-surface-variant/80 text-[10px] font-semibold text-primary flex items-center gap-1 transition-colors"
+                      >
+                        <Copy className="w-3 h-3" />
+                        {copiedUpi ? 'Copied' : 'Copy UPI'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Screenshot Upload File Control */}
+                  <div className="pt-2 border-t border-surface-variant/50">
+                    <label className="block text-[10px] font-bold text-on-surface uppercase mb-1">
+                      Upload 40% Payment Screenshot *
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <label className="flex-1 cursor-pointer">
+                        <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-colors">
+                          {uploadingProof ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
+                          <span>{uploadingProof ? 'Uploading Proof...' : paymentProofUrl ? 'Replace Screenshot' : 'Choose Payment Screenshot'}</span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          className="hidden"
+                          onChange={handleUploadProof}
+                          disabled={uploadingProof}
+                        />
+                      </label>
+                    </div>
+
+                    {paymentProofUrl && (
+                      <div className="mt-2 p-2 rounded-lg bg-surface border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="font-medium text-[11px]">Payment proof uploaded successfully</span>
+                        </div>
+                        <a
+                          href={paymentProofUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] underline font-semibold flex items-center gap-0.5"
+                        >
+                          <span>Preview</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Controls */}
             <div className="pt-3 border-t border-surface-variant/60 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div>
-                <span className="text-[10px] uppercase font-bold text-on-surface-variant block">
-                  {t('checkout.orderTotal')}
+                <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Advance Required Now</span>
+                <span className="font-display font-bold text-2xl text-emerald-700 dark:text-emerald-400">
+                  ₹{advanceAmount}
                 </span>
-                <span className="font-display font-bold text-2xl text-primary">
-                  ₹{product.pricePerUnit * quantity}
-                </span>
+                <span className="text-[10px] text-on-surface-variant ml-1 font-mono">(Total: ₹{grandTotal})</span>
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -751,26 +765,34 @@ const ProductDetailPage = () => {
                   variant="ghost"
                   size="md"
                   onClick={() => setCheckoutModalOpen(false)}
-                  className="flex-1 sm:flex-initial"
+                  className="flex-1 sm:flex-initial text-xs"
                 >
-                  {t('common.cancel')}
+                  Cancel
                 </Button>
                 <Button
                   type="button"
                   variant="primary"
                   size="md"
                   loading={ordering}
+                  disabled={!paymentProofUrl || ordering}
                   onClick={handleConfirmOrder}
-                  className="flex-1 sm:flex-initial"
+                  className="flex-1 sm:flex-initial text-xs flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  {t('checkout.confirmOrder')}
+                  <span>Submit Advance & Confirm Order</span>
                 </Button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Printable Invoice Modal Displayed After Successful Order Confirmation */}
+      <InvoiceModal
+        order={completedOrder}
+        isOpen={invoiceModalOpen}
+        onClose={handleCloseInvoice}
+      />
     </div>
   );
 };

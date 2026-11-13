@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package } from 'lucide-react';
+import { Package, FileText } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useTranslation } from '../../i18n/LanguageContext';
+import InvoiceModal from '../../components/orders/InvoiceModal';
 
 const BusinessDashboardPage = () => {
   const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
   useEffect(() => {
     const fetchBusinessOrders = async () => {
@@ -124,11 +126,22 @@ const BusinessDashboardPage = () => {
                       <Badge variant="success">{ord.status}</Badge>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <Link to={`/business/orders/${ord._id}`}>
-                        <Button variant="ghost" size="sm">
-                          {t('businessDashboard.trackFreight')}
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedInvoiceOrder(ord)}
+                          className="flex items-center gap-1 text-xs py-1"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-primary" />
+                          <span>Invoice</span>
                         </Button>
-                      </Link>
+                        <Link to={`/business/orders/${ord._id}`}>
+                          <Button variant="ghost" size="sm">
+                            {t('businessDashboard.trackFreight')}
+                          </Button>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -137,6 +150,13 @@ const BusinessDashboardPage = () => {
           </div>
         )}
       </Card>
+
+      {/* Invoice Modal */}
+      <InvoiceModal
+        order={selectedInvoiceOrder}
+        isOpen={Boolean(selectedInvoiceOrder)}
+        onClose={() => setSelectedInvoiceOrder(null)}
+      />
     </div>
   );
 };

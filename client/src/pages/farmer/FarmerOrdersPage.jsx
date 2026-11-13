@@ -18,6 +18,8 @@ import {
   ExternalLink,
   ShieldCheck,
   Calendar,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
@@ -40,6 +42,7 @@ const FarmerOrdersPage = () => {
   const [dispatchModalOrder, setDispatchModalOrder] = useState(null);
   const [dispatchLocation, setDispatchLocation] = useState('Farm Gate Depot');
   const [dispatchNote, setDispatchNote] = useState('');
+  const [proofPreviewUrl, setProofPreviewUrl] = useState(null);
 
   const fetchFarmerOrders = async () => {
     try {
@@ -488,18 +491,59 @@ const FarmerOrdersPage = () => {
                 </div>
 
                 {/* Order Footer & Action Controls */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-surface-variant/60">
-                  <div>
-                    <span className="text-xs text-on-surface-variant">
-                      {t('farmerOrders.amountCol')}:{' '}
-                    </span>
-                    <span className="font-display font-bold text-xl text-primary font-mono">
-                      ₹{orderTotal?.toLocaleString('en-IN')}
-                    </span>
-                    <span className="text-[11px] text-emerald-800 ml-2 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      ✓ {t('farmerOrders.confirmedPayment')}
-                    </span>
+                <div className="flex flex-col gap-3 pt-4 border-t border-surface-variant/60">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-surface-container/40 p-3 rounded-xl border border-surface-variant/60">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-on-surface-variant font-medium">Produce Subtotal:</span>
+                        <span className="font-mono font-bold text-xs text-primary">₹{order.subtotal?.toLocaleString('en-IN') || orderTotal?.toLocaleString('en-IN')}</span>
+                        <span className="text-on-surface-variant/40">•</span>
+                        <span className="text-xs text-on-surface-variant font-medium">Delivery ({order.distanceKm || 15} km):</span>
+                        <span className="font-mono font-bold text-xs text-primary">₹{order.deliveryFee || 0}</span>
+                        <span className="text-on-surface-variant/40">•</span>
+                        <span className="text-xs text-on-surface-variant font-medium">GST (5%):</span>
+                        <span className="font-mono font-bold text-xs text-primary">₹{order.tax || 0}</span>
+                      </div>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <span className="font-display font-bold text-base text-primary font-mono">
+                          Total: ₹{order.total?.toLocaleString('en-IN') || orderTotal?.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-300 font-mono">
+                          40% Advance Paid: ₹{(order.advanceAmount || Math.round((order.total || orderTotal) * 0.40)).toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[11px] text-amber-800 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-300 font-mono">
+                          60% Due: ₹{(order.pendingAmount || ((order.total || orderTotal) - Math.round((order.total || orderTotal) * 0.40))).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Payment Screenshot Thumbnail & Preview Button */}
+                    {order.paymentProofUrl ? (
+                      <div className="flex items-center gap-2 bg-surface p-1.5 rounded-lg border border-surface-variant">
+                        <img
+                          src={order.paymentProofUrl}
+                          alt="Proof Thumbnail"
+                          onClick={() => setProofPreviewUrl(order.paymentProofUrl)}
+                          className="w-10 h-10 object-cover rounded cursor-pointer border border-surface-variant hover:opacity-80 transition-opacity"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setProofPreviewUrl(order.paymentProofUrl)}
+                          className="text-xs text-secondary hover:underline font-semibold flex items-center gap-1"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          <span>View Proof</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <Badge variant="warning">DIRECT_ORDER</Badge>
+                    )}
                   </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] text-on-surface-variant font-medium">
+                      Order Placed: {new Date(order.createdAt).toLocaleString('en-IN')}
+                    </span>
 
                   {/* Status Progression Controls for Farmer */}
                   <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
@@ -565,7 +609,8 @@ const FarmerOrdersPage = () => {
                     </Link>
                   </div>
                 </div>
-              </Card>
+              </div>
+            </Card>
             );
           })}
         </div>
@@ -650,6 +695,53 @@ const FarmerOrdersPage = () => {
                 className="bg-emerald-800 hover:bg-emerald-900 text-white"
               >
                 {t('farmerOrders.confirmDispatchBtn')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Payment Proof Screenshot Fullscreen Preview Modal */}
+      {proofPreviewUrl && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl max-w-lg w-full p-5 border border-surface-variant flex flex-col gap-4 relative shadow-2xl">
+            <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
+              <span className="font-display font-bold text-sm text-primary flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4 text-secondary" />
+                <span>Buyer 40% Advance Payment Proof Screenshot</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setProofPreviewUrl(null)}
+                className="w-7 h-7 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="rounded-xl overflow-hidden bg-black/90 flex items-center justify-center max-h-[70vh]">
+              <img
+                src={proofPreviewUrl}
+                alt="Payment Proof Full"
+                className="w-full h-auto max-h-[70vh] object-contain"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs pt-1">
+              <a
+                href={proofPreviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary hover:underline inline-flex items-center gap-1 font-semibold"
+              >
+                <span>Open Original Image</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setProofPreviewUrl(null)}
+              >
+                Close Preview
               </Button>
             </div>
           </div>

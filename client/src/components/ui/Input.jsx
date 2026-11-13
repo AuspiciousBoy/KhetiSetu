@@ -8,6 +8,7 @@ const Input = forwardRef(
       error,
       helperText,
       icon,
+      rightElement,
       className = '',
       id,
       type = 'text',
@@ -38,10 +39,17 @@ const Input = forwardRef(
             ref={ref}
             type={type}
             className={`w-full bg-surface-container text-on-surface placeholder:text-on-surface-variant/60 rounded-[12px] py-3 text-sm transition-all duration-200 border border-transparent focus:border-primary focus:bg-surface-bright focus:outline-none focus:ring-1 focus:ring-primary ${
-              icon ? 'pl-11 pr-4' : 'px-4'
-            } ${error ? 'border-error focus:border-error focus:ring-error' : ''} ${className}`}
+              icon ? 'pl-11' : 'pl-4'
+            } ${rightElement ? 'pr-11' : 'pr-4'} ${
+              error ? 'border-error focus:border-error focus:ring-error' : ''
+            } ${className}`}
             {...props}
           />
+          {rightElement && (
+            <div className="absolute right-3.5 flex items-center">
+              {rightElement}
+            </div>
+          )}
         </div>
         {error && (
           <p className="text-xs text-error font-medium flex items-center gap-1.5 mt-0.5">
