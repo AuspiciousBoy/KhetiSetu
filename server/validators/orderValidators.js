@@ -8,12 +8,15 @@ const orderItemSchema = z.object({
 const deliveryAddressSchema = z.object({
   fullName: z.string().min(2, 'Recipient full name is required'),
   phone: z.string().min(10, 'Recipient contact phone is required'),
+  houseNo: z.string().optional(),
+  streetArea: z.string().optional(),
   line1: z.string().min(3, 'Address line 1 is required'),
   line2: z.string().optional(),
   city: z.string().min(2, 'City is required'),
   district: z.string().optional(),
   state: z.string().min(2, 'State is required'),
   pincode: z.string().min(6, 'Valid 6-digit PIN code is required'),
+  landmark: z.string().optional(),
 });
 
 const createOrderSchema = z.object({

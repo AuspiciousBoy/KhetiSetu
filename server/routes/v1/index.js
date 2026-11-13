@@ -11,8 +11,10 @@ const aiRoutes = require('./aiRoutes');
 const logisticsRoutes = require('./logisticsRoutes');
 const adminRoutes = require('./adminRoutes');
 const notificationRoutes = require('./notificationRoutes');
+const userRoutes = require('./userRoutes');
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/farmer', farmerRoutes);
 router.use('/marketplace', marketplaceRoutes);
 router.use('/orders', orderRoutes);

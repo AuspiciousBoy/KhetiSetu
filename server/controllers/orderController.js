@@ -68,9 +68,27 @@ const getOrderById = async (req, res, next) => {
   }
 };
 
+const updateOrderStatus = async (req, res, next) => {
+  try {
+    const order = await orderService.updateOrderStatus({
+      orderId: req.params.id,
+      status: req.body.status,
+      note: req.body.note,
+      location: req.body.location,
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      req,
+    });
+    return success(res, order, `Order status transitioned to ${order.status} successfully`);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createOrder,
   getBuyerOrders,
   getFarmerOrders,
   getOrderById,
+  updateOrderStatus,
 };

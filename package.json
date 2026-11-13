@@ -5,11 +5,11 @@
   "private": true,
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js",
+    "dev": "node --watch server/server.js",
     "client": "npm --prefix client run dev",
     "client:build": "npm --prefix client run build",
     "build": "npm --prefix client run build",
-    "server": "node server/server.js",
+    "server": "node --watch server/server.js",
     "seed": "node server/jobs/seedData.js",
     "seed:admin": "node server/jobs/seedAdmin.js",
     "test": "node tests/runTests.js"

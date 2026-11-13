@@ -16,14 +16,24 @@ const FarmerProfileSchema = new mongoose.Schema(
       maxlength: 120,
     },
     location: {
-      state: { type: String, required: true, trim: true },
-      district: { type: String, required: true, trim: true },
+      farmAddress: { type: String, trim: true },
       village: { type: String, trim: true },
+      city: { type: String, trim: true },
+      district: { type: String, required: true, trim: true },
+      state: { type: String, required: true, trim: true },
       pincode: { type: String, trim: true },
+      landmark: { type: String, trim: true },
       coordinates: {
         latitude: { type: Number },
         longitude: { type: Number },
       },
+    },
+    paymentSettings: {
+      upiId: { type: String, trim: true },
+      upiQrCodeUrl: { type: String, trim: true },
+      accountHolderName: { type: String, trim: true },
+      isConfigured: { type: Boolean, default: false },
+      updatedAt: { type: Date },
     },
     landSizeAcres: {
       type: Number,

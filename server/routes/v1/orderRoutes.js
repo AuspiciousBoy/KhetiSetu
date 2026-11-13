@@ -27,4 +27,8 @@ router.get('/farmer-orders', authorize('FARMER', 'ADMIN'), orderController.getFa
 // Get single order with Object-Level Authorization
 router.get('/:id', orderController.getOrderById);
 
+// Update order status (Farmer, Admin, Logistics Operator)
+router.patch('/:id/status', authorize('FARMER', 'ADMIN', 'LOGISTICS_OPERATOR'), orderController.updateOrderStatus);
+router.put('/:id/status', authorize('FARMER', 'ADMIN', 'LOGISTICS_OPERATOR'), orderController.updateOrderStatus);
+
 module.exports = router;

@@ -34,6 +34,12 @@ const formatProductDTO = (product, farmerProfile = null, batch = null, quality =
           district: farmerProfile.location.district,
           rating: farmerProfile.rating,
           isVerified: farmerProfile.isVerified,
+          payment: {
+            upiId: farmerProfile.paymentSettings?.upiId || '',
+            upiQrCodeUrl: farmerProfile.paymentSettings?.upiQrCodeUrl || '',
+            accountHolderName: farmerProfile.paymentSettings?.accountHolderName || farmerProfile.farmName,
+            isConfigured: Boolean(farmerProfile.paymentSettings?.upiId || farmerProfile.paymentSettings?.upiQrCodeUrl),
+          },
         }
       : undefined,
     batchTraceability: batch

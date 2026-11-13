@@ -24,6 +24,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import FarmerDashboardPage from './pages/farmer/FarmerDashboardPage';
 import BatchesPage from './pages/farmer/BatchesPage';
 import ListingsPage from './pages/farmer/ListingsPage';
+import FarmerOrdersPage from './pages/farmer/FarmerOrdersPage';
 
 // Consumer Pages
 import ConsumerDashboardPage from './pages/consumer/ConsumerDashboardPage';
@@ -34,6 +35,19 @@ import BusinessDashboardPage from './pages/business/BusinessDashboardPage';
 
 // Admin Pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+
+// Profile Dashboard
+import ProfileDashboardPage from './pages/profile/ProfileDashboardPage';
+
+// Smart redirect for /orders based on user role
+import { useAuth } from './context/AuthContext';
+const OrdersRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'BUSINESS') return <Navigate to="/business/orders" replace />;
+  if (user?.role === 'FARMER') return <Navigate to="/farmer/orders" replace />;
+  if (user?.role === 'ADMIN') return <Navigate to="/admin/logistics" replace />;
+  return <Navigate to="/consumer/orders" replace />;
+};
 
 function App() {
   return (
@@ -66,7 +80,8 @@ function App() {
             <Route path="/farmer/dashboard" element={<FarmerDashboardPage />} />
             <Route path="/farmer/batches" element={<BatchesPage />} />
             <Route path="/farmer/listings" element={<ListingsPage />} />
-            <Route path="/farmer/orders" element={<ConsumerDashboardPage />} />
+            <Route path="/farmer/orders" element={<FarmerOrdersPage />} />
+            <Route path="/farmer/orders/:id" element={<OrderTrackingPage />} />
             <Route path="/farmer/market" element={<MarketIntelligencePage />} />
             <Route path="/farmer/weather" element={<WeatherIntelligencePage />} />
             <Route path="/farmer/ai" element={<KhetiAIPage />} />
@@ -117,6 +132,20 @@ function App() {
             <Route path="/admin/products" element={<AdminDashboardPage />} />
             <Route path="/admin/logistics" element={<AdminDashboardPage />} />
             <Route path="/admin/audit" element={<AdminDashboardPage />} />
+          </Route>
+
+          {/* Universal Orders Redirect */}
+          <Route path="/orders" element={<ProtectedRoute><OrdersRedirect /></ProtectedRoute>} />
+
+          {/* Protected Profile Dashboard for all authenticated roles */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/profile" element={<ProfileDashboardPage />} />
           </Route>
 
           {/* Fallback */}

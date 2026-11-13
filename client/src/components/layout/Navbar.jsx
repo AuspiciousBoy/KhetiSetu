@@ -156,6 +156,13 @@ const Navbar = () => {
                     <LayoutDashboard className="w-3.5 h-3.5 text-secondary" />
                     {t('nav.dashboard')}
                   </Link>
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 px-3 py-2 text-xs text-on-surface hover:bg-surface-container rounded-[8px]"
+                  >
+                    <User className="w-3.5 h-3.5 text-secondary" />
+                    {t('nav.profile')}
+                  </Link>
                   <button
                     onClick={logout}
                     className="w-full flex items-center gap-2 text-left px-3 py-2 text-xs text-error hover:bg-error-container/30 rounded-[8px]"

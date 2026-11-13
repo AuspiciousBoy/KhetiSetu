@@ -134,19 +134,23 @@ const Sidebar = () => {
           <LanguageSwitcher className="w-full" compact />
         </div>
 
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-9 h-9 rounded-full bg-emerald-800 text-emerald-200 font-bold flex items-center justify-center text-xs shrink-0">
+        <Link
+          to="/profile"
+          className="flex items-center gap-3 px-2 py-1.5 rounded-[12px] hover:bg-white/10 transition-colors group cursor-pointer"
+          title={t('nav.profile') || 'View Profile'}
+        >
+          <div className="w-9 h-9 rounded-full bg-emerald-800 group-hover:bg-emerald-700 text-emerald-200 font-bold flex items-center justify-center text-xs shrink-0 transition-colors">
             {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
           </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-semibold text-white truncate">
+          <div className="overflow-hidden flex-1 min-w-0">
+            <p className="text-xs font-semibold text-white group-hover:text-emerald-300 truncate transition-colors">
               {user?.fullName || t('common.farmerRole')}
             </p>
             <p className="text-[10px] text-emerald-400/70 truncate font-mono">
               {user?.email || 'authenticated'}
             </p>
           </div>
-        </div>
+        </Link>
 
         <button
           onClick={logout}

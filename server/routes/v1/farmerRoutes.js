@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const farmerController = require('../../controllers/farmerController');
+const userController = require('../../controllers/userController');
 const authenticate = require('../../middleware/authenticate');
 const authorize = require('../../middleware/authorize');
 const validate = require('../../middleware/validate');
@@ -14,6 +15,19 @@ router.use(authenticate, authorize('FARMER', 'ADMIN'));
 // Profile
 router.get('/profile', farmerController.getProfile);
 router.put('/profile', farmerController.updateProfile);
+
+// Payment Settings (UPI & QR)
+router.get('/payment', userController.getFarmerPayment);
+router.put('/payment', userController.updateFarmerPayment);
+router.post(
+  '/payment/qr',
+  fileUploadLimiter,
+  upload.single('qrImage'),
+  verifyAndSaveFile,
+  userController.uploadFarmerQr
+);
+router.delete('/payment/qr', userController.deleteFarmerQr);
+router.put('/location', userController.updateFarmerLocation);
 
 // Batches
 router.post('/batches', validate(createBatchSchema), farmerController.createBatch);

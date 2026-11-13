@@ -11,6 +11,11 @@ const OrderItemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ProduceBatch',
     },
+    farmerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
     title: {
       type: String,
       required: true,
@@ -118,15 +123,27 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       default: 'DIRECT_ORDER',
     },
+    farmerPaymentInfo: [
+      {
+        farmerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        farmerName: { type: String },
+        upiId: { type: String },
+        upiQrCodeUrl: { type: String },
+        amount: { type: Number },
+      },
+    ],
     deliveryAddress: {
       fullName: { type: String, required: true },
       phone: { type: String, required: true },
+      houseNo: { type: String },
+      streetArea: { type: String },
       line1: { type: String, required: true },
       line2: { type: String },
       city: { type: String, required: true },
       district: { type: String },
       state: { type: String, required: true },
       pincode: { type: String, required: true },
+      landmark: { type: String },
     },
     deliveryId: {
       type: mongoose.Schema.Types.ObjectId,

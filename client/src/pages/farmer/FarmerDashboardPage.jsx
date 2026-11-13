@@ -21,21 +21,24 @@ const FarmerDashboardPage = () => {
   const { t } = useTranslation();
   const [analytics, setAnalytics] = useState(null);
   const [batches, setBatches] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [analyticsRes, batchesRes, weatherRes] = await Promise.all([
+        const [analyticsRes, batchesRes, weatherRes, ordersRes] = await Promise.all([
           apiClient.get('/farmer/analytics'),
           apiClient.get('/farmer/batches?limit=5'),
           apiClient.get('/weather?district=Pune'),
+          apiClient.get('/orders/farmer-orders?limit=5'),
         ]);
 
         setAnalytics(analyticsRes.data.data);
         setBatches(batchesRes.data.data);
         setWeather(weatherRes.data.data);
+        setOrders(ordersRes.data.data || []);
       } catch (err) {
         console.error('Failed to load farmer dashboard metrics', err);
       } finally {
@@ -143,24 +146,26 @@ const FarmerDashboardPage = () => {
           </div>
         </Card>
 
-        <Card className="flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
-              {t('farmerDashboard.fulfillmentOrders')}
-            </span>
-            <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-secondary">
-              <Truck className="w-4 h-4 text-secondary" />
+        <Link to="/farmer/orders" className="block group">
+          <Card className="flex flex-col justify-between h-full group-hover:border-secondary transition-colors cursor-pointer">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-md">
+                {t('farmerDashboard.fulfillmentOrders')}
+              </span>
+              <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+                <Truck className="w-4 h-4 text-inherit" />
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="font-display font-bold text-3xl text-primary font-mono">
-              {analytics?.totalOrdersCount || 0}
+            <div>
+              <div className="font-display font-bold text-3xl text-primary font-mono">
+                {analytics?.totalOrdersCount || 0}
+              </div>
+              <p className="text-[11px] text-on-surface-variant mt-1">
+                {t('farmerDashboard.pendingDispatch', { count: analytics?.pendingOrdersCount || 0 })}
+              </p>
             </div>
-            <p className="text-[11px] text-on-surface-variant mt-1">
-              {t('farmerDashboard.pendingDispatch', { count: analytics?.pendingOrdersCount || 0 })}
-            </p>
-          </div>
-        </Card>
+          </Card>
+        </Link>
       </div>
 
       {/* Middle Row: Weather Advisory Card + AI Quality Promotion */}
@@ -226,6 +231,110 @@ const FarmerDashboardPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Recent Fulfillment Orders Table */}
+      <Card className="p-8">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
+          <div>
+            <h3 className="font-display font-semibold text-xl text-primary">
+              {t('farmerDashboard.recentOrdersTitle')}
+            </h3>
+            <p className="text-xs text-on-surface-variant mt-0.5">
+              {t('farmerDashboard.recentOrdersSubtitle')}
+            </p>
+          </div>
+          <Link to="/farmer/orders" className="text-xs font-semibold text-secondary hover:underline">
+            {t('farmerDashboard.viewAllOrders')}
+          </Link>
+        </div>
+
+        {orders.length === 0 ? (
+          <p className="text-sm text-on-surface-variant py-8 text-center">
+            {t('farmerDashboard.noOrdersOnDashboard')}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-surface-variant text-on-surface-variant uppercase tracking-wider font-semibold">
+                  <th className="py-3 px-4">{t('farmerOrders.orderIdCol')}</th>
+                  <th className="py-3 px-4">{t('farmerOrders.buyerCol')}</th>
+                  <th className="py-3 px-4">{t('farmerOrders.itemsCol')}</th>
+                  <th className="py-3 px-4">{t('farmerOrders.destinationCol')}</th>
+                  <th className="py-3 px-4">{t('farmerOrders.amountCol')}</th>
+                  <th className="py-3 px-4">{t('farmerOrders.statusCol')}</th>
+                  <th className="py-3 px-4 text-right">{t('farmerOrders.actionCol')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-variant/50">
+                {orders.map((ord) => {
+                  const isB2B =
+                    ord.buyerRole === 'BUSINESS' ||
+                    ord.buyerId?.role === 'BUSINESS' ||
+                    Boolean(ord.businessProfile);
+                  const buyerDisplayName =
+                    ord.businessProfile?.businessName ||
+                    ord.buyerId?.fullName ||
+                    ord.deliveryAddress?.fullName ||
+                    'Buyer';
+                  const orderVal =
+                    ord.farmerSubtotal !== undefined ? ord.farmerSubtotal : ord.total;
+
+                  return (
+                    <tr key={ord._id} className="hover:bg-surface-container/50 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-primary">
+                        {ord.orderId}
+                      </td>
+                      <td className="py-3.5 px-4 font-medium text-on-surface">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-primary">{buyerDisplayName}</span>
+                          {isB2B && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-bold">
+                              B2B
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-on-surface-variant">
+                        {ord.items?.[0]?.title}
+                        {ord.items?.length > 1 && ` +${ord.items.length - 1} more`}
+                      </td>
+                      <td className="py-3.5 px-4 text-on-surface-variant">
+                        {ord.deliveryAddress?.city}, {ord.deliveryAddress?.state}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-primary">
+                        ₹{orderVal?.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <Badge
+                          variant={
+                            ord.status === 'DELIVERED'
+                              ? 'success'
+                              : ord.status === 'CANCELLED'
+                              ? 'error'
+                              : ord.status === 'PLACED'
+                              ? 'warning'
+                              : 'default'
+                          }
+                        >
+                          {ord.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <Link to="/farmer/orders">
+                          <Button variant="ghost" size="sm">
+                            {t('farmerDashboard.detailsBtn')}
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       {/* Recent Batches Table */}
       <Card className="p-8">
