@@ -10,7 +10,77 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
   if (!isOpen || !order) return null;
 
   const handlePrint = () => {
-    window.print();
+    const invoiceEl = document.getElementById('khetisetu-invoice');
+    if (!invoiceEl) {
+      window.print();
+      return;
+    }
+
+    // Isolate invoice in an invisible print iframe so the surrounding website is NEVER in the print preview
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = '0';
+    document.body.appendChild(printFrame);
+
+    const doc = printFrame.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${order.invoiceNumber || 'KhetiSetu-Invoice'}</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 12mm 15mm;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              color: #111827;
+              background: #ffffff;
+              font-size: 11px;
+              line-height: 1.45;
+              padding: 0;
+            }
+            /* Neutralize dark-mode and custom theme classes for crisp paper contrast */
+            .text-primary, h1, h2, h3, h4, th, strong { color: #08241a !important; }
+            .text-on-surface-variant { color: #4b5563 !important; }
+            .text-on-surface { color: #111827 !important; }
+            .bg-surface, .bg-surface-container { background: #ffffff !important; }
+            .border, .border-b, .border-t { border-color: #e5e7eb !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th { background: #f3f4f6 !important; padding: 6px 8px !important; text-align: left; font-size: 10px; border-bottom: 1px solid #d1d5db !important; }
+            td { padding: 8px !important; border-bottom: 1px solid #e5e7eb !important; font-size: 11px; }
+            .print\\:hidden, button { display: none !important; }
+            a { text-decoration: none; color: inherit; }
+          </style>
+        </head>
+        <body>
+          ${invoiceEl.innerHTML}
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+      setTimeout(() => {
+        if (document.body.contains(printFrame)) {
+          document.body.removeChild(printFrame);
+        }
+      }, 1000);
+    }, 250);
   };
 
   const invoiceNumber = order.invoiceNumber || `INV-${order.orderId || 'DIRECT'}`;

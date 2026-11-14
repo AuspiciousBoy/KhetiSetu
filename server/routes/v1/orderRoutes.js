@@ -23,7 +23,12 @@ router.post(
   '/upload-proof',
   authorize('CONSUMER', 'BUSINESS', 'ADMIN', 'FARMER'),
   fileUploadLimiter,
-  upload.single('paymentProof'),
+  upload.fields([
+    { name: 'paymentProof', maxCount: 1 },
+    { name: 'proof', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+    { name: 'image', maxCount: 1 },
+  ]),
   verifyAndSaveFile,
   orderController.uploadPaymentProof
 );

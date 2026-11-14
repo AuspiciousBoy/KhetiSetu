@@ -9,6 +9,7 @@ const createOrder = async (req, res, next) => {
       items: req.body.items,
       deliveryAddress: req.body.deliveryAddress,
       paymentMethod: req.body.paymentMethod,
+      paymentProofUrl: req.body.paymentProofUrl,
       idempotencyKey: req.headers['idempotency-key'] || req.body.idempotencyKey,
       req,
     });
@@ -101,13 +102,14 @@ const previewQuote = async (req, res, next) => {
 
 const uploadPaymentProof = async (req, res, next) => {
   try {
-    if (!req.savedFile?.filename) {
+    const saved = req.savedFile || (req.file?.filename ? req.file : null);
+    if (!saved) {
       return res.status(400).json({
         success: false,
         error: { message: 'Valid payment screenshot (JPG, PNG, or WEBP under 5MB) is required.' },
       });
     }
-    const paymentProofUrl = `/uploads/${req.savedFile.filename}`;
+    const paymentProofUrl = saved.path || `/uploads/${saved.filename}`;
     return success(res, { paymentProofUrl }, 'Payment proof uploaded successfully', 201);
   } catch (err) {
     next(err);

@@ -75,3 +75,45 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #727974;
 }
+
+/* Print optimization: Hide entire website background, header, and dashboard when printing invoices */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide the rest of the website */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Only make the tax invoice area visible */
+  #khetisetu-invoice,
+  #khetisetu-invoice * {
+    visibility: visible;
+  }
+
+  #khetisetu-invoice {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10mm 15mm !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+}

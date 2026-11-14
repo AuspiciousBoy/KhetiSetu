@@ -85,15 +85,24 @@ const upload = multer({
  * Middleware to verify magic bytes and securely save the validated file with a random UUID
  */
 const verifyAndSaveFile = async (req, res, next) => {
-  if (!req.file && (!req.files || req.files.length === 0)) {
+  // Normalize multer file inputs: handles single (req.file), array (req.files[]), or fields (req.files = { fieldName: [file] })
+  let filesToProcess = [];
+  if (req.file) {
+    filesToProcess = [req.file];
+  } else if (Array.isArray(req.files)) {
+    filesToProcess = req.files;
+  } else if (req.files && typeof req.files === 'object') {
+    filesToProcess = Object.values(req.files).flat();
+  }
+
+  if (filesToProcess.length === 0) {
     return next();
   }
 
-  const files = req.files || [req.file];
   const savedFiles = [];
 
   try {
-    for (const file of files) {
+    for (const file of filesToProcess) {
       const detectedExt = validateMagicBytes(file.buffer);
 
       if (!detectedExt) {
@@ -121,12 +130,8 @@ const verifyAndSaveFile = async (req, res, next) => {
       });
     }
 
-    if (req.file) {
-      req.savedFile = savedFiles[0];
-    }
-    if (req.files) {
-      req.savedFiles = savedFiles;
-    }
+    req.savedFiles = savedFiles;
+    req.savedFile = savedFiles[0] || null;
 
     next();
   } catch (err) {
