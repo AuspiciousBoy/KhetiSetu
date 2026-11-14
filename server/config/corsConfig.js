@@ -3,12 +3,10 @@ const logger = require('../utils/logger');
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser agents (cURL, mobile apps, postman) in development if origin is undefined
+    // Allow non-browser agents (server-to-server, mobile apps, health checks, Render probes)
+    // even in production — these don't send an Origin header.
     if (!origin) {
-      if (!isProd) {
-        return callback(null, true);
-      }
-      return callback(new Error('Origin header required in production'), false);
+      return callback(null, true);
     }
 
     if (CORS_ORIGINS.includes(origin)) {

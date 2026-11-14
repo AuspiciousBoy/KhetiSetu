@@ -15,8 +15,14 @@ export const clearAccessToken = () => {
   inMemoryAccessToken = null;
 };
 
+// Resolve API base URL: use VITE_API_URL env var when deployed to a separate domain (e.g. Vercel → Render),
+// otherwise fall back to same-origin relative path for local dev and single-port production.
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : '/api/v1';
+
 const apiClient = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL,
   withCredentials: true, // Send HttpOnly refreshToken cookie with requests
   timeout: 30000,
   headers: {
@@ -77,7 +83,7 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshResponse = await axios.post(
-          '/api/v1/auth/refresh',
+          `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
