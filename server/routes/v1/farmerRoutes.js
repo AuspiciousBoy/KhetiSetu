@@ -45,6 +45,13 @@ router.post(
 );
 
 // Listings
+router.post(
+  ['/listings/upload-image', '/listings/upload'],
+  fileUploadLimiter,
+  upload.single('productImage'),
+  verifyAndSaveFile,
+  farmerController.uploadListingImage
+);
 router.post('/listings', validate(createListingSchema), farmerController.createListing);
 
 // Analytics

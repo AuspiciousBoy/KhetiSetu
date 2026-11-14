@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, FileText } from 'lucide-react';
+import { Package, FileText, XCircle, AlertTriangle, AlertCircle, X } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -15,24 +15,83 @@ const BusinessDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
-  useEffect(() => {
-    const fetchBusinessOrders = async () => {
-      try {
-        setLoading(true);
-        const res = await apiClient.get('/orders/my-orders');
-        setOrders(res.data.data);
-      } catch (err) {
-        console.error('Failed to load business procurement', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Cancel & Refund Modal State
+  const [cancellingOrder, setCancellingOrder] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [submittingCancel, setSubmittingCancel] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
+  const fetchBusinessOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get('/orders/my-orders');
+      setOrders(res.data.data);
+    } catch (err) {
+      console.error('Failed to load business procurement', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBusinessOrders();
   }, []);
 
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleCancelOrder = async (e) => {
+    e.preventDefault();
+    if (!cancellingOrder) return;
+    if (!cancelReason.trim()) {
+      setCancelError('Please type the reason for cancelling this consignment.');
+      return;
+    }
+
+    try {
+      setSubmittingCancel(true);
+      setCancelError(null);
+      await apiClient.post(`/orders/${cancellingOrder._id}/cancel`, {
+        reason: cancelReason.trim(),
+      });
+
+      setOrders((prev) =>
+        prev.map((ord) =>
+          ord._id === cancellingOrder._id
+            ? {
+                ...ord,
+                status: 'CANCELLED',
+                refundStatus: 'REFUND_REQUESTED',
+                cancelledReason: cancelReason.trim(),
+                cancelledBy: 'BUYER',
+              }
+            : ord
+        )
+      );
+
+      showToast(`Consignment #${cancellingOrder.orderId} cancelled and refund requested successfully.`);
+      setCancellingOrder(null);
+      setCancelReason('');
+    } catch (err) {
+      console.error('Failed to cancel consignment', err);
+      setCancelError(err.response?.data?.error?.message || 'Failed to cancel consignment.');
+    } finally {
+      setSubmittingCancel(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-10">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 right-6 z-50 bg-primary text-white text-xs px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-2">
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-secondary font-label-md">
@@ -123,10 +182,50 @@ const BusinessDashboardPage = () => {
                     <td className="py-3.5 px-4">{ord.items?.[0]?.title}</td>
                     <td className="py-3.5 px-4 font-bold text-primary">₹{ord.total}</td>
                     <td className="py-3.5 px-4">
-                      <Badge variant="success">{ord.status}</Badge>
+                      <div className="flex flex-col gap-1 items-start">
+                        <Badge
+                          variant={
+                            ord.status === 'DELIVERED'
+                              ? 'success'
+                              : ord.status === 'CANCELLED'
+                              ? 'error'
+                              : 'warning'
+                          }
+                        >
+                          {ord.status}
+                        </Badge>
+                        {ord.refundStatus === 'REFUND_REQUESTED' && (
+                          <span className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded font-medium">
+                            Refund Req
+                          </span>
+                        )}
+                        {ord.cancelledReason && (
+                          <span
+                            className="text-[10px] text-on-surface-variant line-clamp-1 italic max-w-[120px]"
+                            title={ord.cancelledReason}
+                          >
+                            {ord.cancelledReason}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {['PLACED', 'CONFIRMED'].includes(ord.status) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCancellingOrder(ord);
+                              setCancelReason('');
+                              setCancelError(null);
+                            }}
+                            className="flex items-center gap-1 text-xs py-1 text-error border-error/30 hover:bg-error/10 hover:border-error"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Cancel</span>
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -150,6 +249,80 @@ const BusinessDashboardPage = () => {
           </div>
         )}
       </Card>
+
+      {/* Cancel Consignment & Request Refund Modal */}
+      {cancellingOrder && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-surface rounded-2xl max-w-md w-full p-6 border border-surface-variant shadow-2xl flex flex-col gap-4 relative">
+            <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
+              <div className="flex items-center gap-2 text-primary font-display font-bold text-base sm:text-lg">
+                <AlertTriangle className="w-5 h-5 text-error" />
+                <span>Cancel Bulk Consignment</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCancellingOrder(null)}
+                className="w-7 h-7 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-xs text-error flex flex-col gap-1">
+              <p className="font-semibold">Consignment #{cancellingOrder.orderId}</p>
+              <p className="text-[11px] text-on-surface-variant">
+                You are requesting cancellation for this wholesale lot. Pre-paid advance will be queued for commercial ledger refund.
+              </p>
+            </div>
+
+            {cancelError && (
+              <div className="p-2.5 rounded-xl bg-error/10 border border-error/30 text-error text-xs flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{cancelError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleCancelOrder} className="flex flex-col gap-4 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-primary uppercase mb-1">
+                  Type Reason for Cancellation *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="e.g. Warehouse logistics shift, procurement specs adjustment, delivery schedule conflict, etc."
+                  className="w-full p-3 rounded-xl border border-surface-variant bg-surface text-on-surface text-xs focus:outline-none focus:border-error"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface-variant/60">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCancellingOrder(null)}
+                  disabled={submittingCancel}
+                >
+                  Keep Consignment
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  loading={submittingCancel}
+                  disabled={submittingCancel || !cancelReason.trim()}
+                  className="bg-error hover:bg-error/90 text-white flex items-center gap-1.5"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>Confirm Cancellation & Refund</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Invoice Modal */}
       <InvoiceModal

@@ -20,6 +20,8 @@ import {
   Calendar,
   Image as ImageIcon,
   X,
+  XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
@@ -43,6 +45,13 @@ const FarmerOrdersPage = () => {
   const [dispatchLocation, setDispatchLocation] = useState('Farm Gate Depot');
   const [dispatchNote, setDispatchNote] = useState('');
   const [proofPreviewUrl, setProofPreviewUrl] = useState(null);
+  const [previewingOrder, setPreviewingOrder] = useState(null);
+
+  // Decline Order Modal State
+  const [declineModalOrder, setDeclineModalOrder] = useState(null);
+  const [declineReason, setDeclineReason] = useState('Payment screenshot is fake / altered');
+  const [customDeclineText, setCustomDeclineText] = useState('');
+  const [declining, setDeclining] = useState(false);
 
   const fetchFarmerOrders = async () => {
     try {
@@ -105,6 +114,47 @@ const FarmerOrdersPage = () => {
       alert(err.response?.data?.error?.message || t('farmerOrders.statusUpdateFailed'));
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const handleDeclineOrder = async () => {
+    if (!declineModalOrder) return;
+    const finalReason =
+      declineReason === 'OTHER'
+        ? customDeclineText.trim() || 'Declined by farmer'
+        : declineReason;
+
+    setDeclining(true);
+    try {
+      await apiClient.patch(`/orders/${declineModalOrder._id}/status`, {
+        status: 'CANCELLED',
+        location: 'Farm Gate',
+        note: `Declined by farmer: ${finalReason}`,
+      });
+
+      // Update local state immediately
+      setOrders((prev) =>
+        prev.map((ord) => {
+          if (ord._id === declineModalOrder._id || ord.orderId === declineModalOrder.orderId) {
+            return {
+              ...ord,
+              status: 'CANCELLED',
+              paymentStatus: 'PAYMENT_REJECTED',
+              cancelledReason: `Declined by farmer: ${finalReason}`,
+            };
+          }
+          return ord;
+        })
+      );
+
+      showToast('Order declined and stock restored to inventory');
+      setDeclineModalOrder(null);
+      setCustomDeclineText('');
+    } catch (err) {
+      console.error('Failed to decline order', err);
+      alert(err.response?.data?.error?.message || 'Failed to decline order');
+    } finally {
+      setDeclining(false);
     }
   };
 
@@ -466,13 +516,9 @@ const FarmerOrdersPage = () => {
                               {item.title}
                             </td>
                             <td className="py-3 px-3 font-mono text-on-surface-variant">
-                              {item.batchId ? (
-                                <span className="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-primary">
-                                  {typeof item.batchId === 'object' ? item.batchId.batchId || 'BATCH' : 'BATCH'}
-                                </span>
-                              ) : (
-                                'Direct'
-                              )}
+                              <span className="bg-surface-container px-2 py-0.5 rounded text-[10px] font-bold text-primary border border-surface-variant/60">
+                                {item.batchCode || (typeof item.batchId === 'object' && item.batchId?.batchId) || (item.batchId ? `BATCH-${String(item.batchId).slice(-6).toUpperCase()}` : 'DIRECT-HARVEST')}
+                              </span>
                             </td>
                             <td className="py-3 px-3 font-bold text-on-surface font-mono">
                               {item.quantity} {item.unit}
@@ -517,47 +563,92 @@ const FarmerOrdersPage = () => {
                       </div>
                     </div>
 
-                    {/* Payment Screenshot Thumbnail & Preview Button */}
+                    {/* Payment Screenshot Proof Preview Status */}
                     {order.paymentProofUrl ? (
-                      <div className="flex items-center gap-2 bg-surface p-1.5 rounded-lg border border-surface-variant">
+                      <div className="flex items-center gap-2 bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 px-2.5 rounded-xl border border-emerald-500/30">
                         <img
                           src={order.paymentProofUrl}
                           alt="Proof Thumbnail"
-                          onClick={() => setProofPreviewUrl(order.paymentProofUrl)}
-                          className="w-10 h-10 object-cover rounded cursor-pointer border border-surface-variant hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            setProofPreviewUrl(order.paymentProofUrl);
+                            setPreviewingOrder(order);
+                          }}
+                          className="w-9 h-9 object-cover rounded-lg cursor-pointer border border-emerald-500/40 hover:opacity-80 transition-opacity shrink-0"
                         />
                         <button
                           type="button"
-                          onClick={() => setProofPreviewUrl(order.paymentProofUrl)}
-                          className="text-xs text-secondary hover:underline font-semibold flex items-center gap-1"
+                          onClick={() => {
+                            setProofPreviewUrl(order.paymentProofUrl);
+                            setPreviewingOrder(order);
+                          }}
+                          className="text-xs text-emerald-800 dark:text-emerald-300 hover:underline font-bold flex items-center gap-1"
                         >
-                          <ImageIcon className="w-3.5 h-3.5" />
+                          <ImageIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>View Proof</span>
                         </button>
                       </div>
                     ) : (
-                      <Badge variant="warning">DIRECT_ORDER</Badge>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-container border border-surface-variant text-[11px] text-on-surface-variant">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <span>No Payment Screenshot Attached</span>
+                      </div>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
                     <span className="text-[11px] text-on-surface-variant font-medium">
                       Order Placed: {new Date(order.createdAt).toLocaleString('en-IN')}
                     </span>
 
                   {/* Status Progression Controls for Farmer */}
                   <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto justify-end">
-                    {order.status === 'PLACED' && (
+                    {/* Always visible View Proof button when screenshot exists */}
+                    {order.paymentProofUrl && (
                       <Button
-                        variant="primary"
+                        type="button"
+                        variant="outline"
                         size="sm"
-                        disabled={actionLoadingId === order._id}
-                        onClick={() => handleUpdateStatus(order._id, 'CONFIRMED')}
-                        className="flex items-center gap-1.5"
+                        onClick={() => {
+                          setProofPreviewUrl(order.paymentProofUrl);
+                          setPreviewingOrder(order);
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-primary border-primary/40 hover:bg-primary/10"
                       >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>{t('farmerOrders.confirmOrderBtn')}</span>
+                        <ImageIcon className="w-3.5 h-3.5 text-secondary" />
+                        <span>View Proof</span>
                       </Button>
+                    )}
+
+                    {order.status === 'PLACED' && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          disabled={actionLoadingId === order._id}
+                          onClick={() => handleUpdateStatus(order._id, 'CONFIRMED')}
+                          className="flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>{t('farmerOrders.confirmOrderBtn')}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={actionLoadingId === order._id}
+                          onClick={() => setDeclineModalOrder(order)}
+                          className="flex items-center gap-1.5 text-error border-error/40 hover:bg-error/10 hover:border-error"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Decline Order</span>
+                        </Button>
+                      </div>
+                    )}
+
+                    {order.status === 'CANCELLED' && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-error font-medium bg-error/10 px-2.5 py-1 rounded-lg border border-error/20">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{order.cancelledReason || 'Order Cancelled'}</span>
+                      </div>
                     )}
 
                     {order.status === 'CONFIRMED' && (
@@ -726,7 +817,7 @@ const FarmerOrdersPage = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs pt-1">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs pt-1 border-t border-surface-variant/60">
               <a
                 href={proofPreviewUrl}
                 target="_blank"
@@ -736,12 +827,139 @@ const FarmerOrdersPage = () => {
                 <span>Open Original Image</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                {previewingOrder && previewingOrder.status === 'PLACED' && (
+                  <>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        const targetId = previewingOrder._id;
+                        setProofPreviewUrl(null);
+                        setPreviewingOrder(null);
+                        handleUpdateStatus(targetId, 'CONFIRMED');
+                      }}
+                      className="flex items-center gap-1 text-xs"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>Verify & Accept</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const target = previewingOrder;
+                        setProofPreviewUrl(null);
+                        setPreviewingOrder(null);
+                        setDeclineModalOrder(target);
+                      }}
+                      className="flex items-center gap-1 text-xs text-error border-error/40 hover:bg-error/10"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Decline</span>
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setProofPreviewUrl(null);
+                    setPreviewingOrder(null);
+                  }}
+                >
+                  Close Preview
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Farmer Decline / Reject Order Modal */}
+      {declineModalOrder && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl max-w-md w-full p-6 border border-surface-variant flex flex-col gap-4 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
+              <div className="flex items-center gap-2 text-error font-display font-bold text-base sm:text-lg">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <span>Decline Order #{declineModalOrder.orderId}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeclineModalOrder(null)}
+                className="w-7 h-7 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-xs text-error">
+              <p className="font-semibold mb-0.5">Fake or unverified payment protection</p>
+              <p className="text-[11px] leading-relaxed text-on-surface-variant">
+                Declining this order will mark payment as rejected and immediately release reserved stock back to your available inventory.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 text-xs">
+              <label className="font-bold text-primary block">Select Decline Reason:</label>
+              {[
+                'Payment screenshot is fake / altered',
+                'Advance payment was not received in UPI/bank account',
+                'Unreadable / blurry proof screenshot',
+                'Produce stock unavailable or compromised',
+                'OTHER',
+              ].map((reasonKey) => (
+                <label
+                  key={reasonKey}
+                  className="flex items-center gap-2 p-2 rounded-lg border border-surface-variant/60 hover:bg-surface-container/50 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="declineReason"
+                    value={reasonKey}
+                    checked={declineReason === reasonKey}
+                    onChange={(e) => setDeclineReason(e.target.value)}
+                    className="text-primary focus:ring-primary"
+                  />
+                  <span className="font-medium text-primary">
+                    {reasonKey === 'OTHER' ? 'Type custom reason...' : reasonKey}
+                  </span>
+                </label>
+              ))}
+
+              {declineReason === 'OTHER' && (
+                <textarea
+                  required
+                  rows={2}
+                  value={customDeclineText}
+                  onChange={(e) => setCustomDeclineText(e.target.value)}
+                  placeholder="Type specific reason for declining this order..."
+                  className="w-full p-2.5 text-xs rounded-xl border border-surface-variant bg-surface text-on-surface focus:outline-none focus:border-error"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface-variant/60">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDeclineModalOrder(null)}
+                disabled={declining}
+              >
+                Cancel
+              </Button>
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => setProofPreviewUrl(null)}
+                loading={declining}
+                disabled={declining || (declineReason === 'OTHER' && !customDeclineText.trim())}
+                onClick={handleDeclineOrder}
+                className="bg-error hover:bg-error/90 text-white flex items-center gap-1.5"
               >
-                Close Preview
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Confirm Decline</span>
               </Button>
             </div>
           </div>

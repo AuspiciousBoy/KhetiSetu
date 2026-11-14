@@ -43,10 +43,10 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
   const pendingAmount = order.pendingAmount || total - advanceAmount;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200 print:p-0 print:bg-white print:static">
-      <div className="bg-surface text-on-surface w-full max-w-3xl rounded-[24px] shadow-2xl border border-surface-variant my-6 overflow-hidden flex flex-col relative print:border-0 print:shadow-none print:w-full print:max-w-none print:rounded-none">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200 print:p-0 print:bg-white print:static print:overflow-visible">
+      <div className="bg-surface text-on-surface w-full max-w-3xl max-h-[90vh] my-auto rounded-[24px] shadow-2xl border border-surface-variant overflow-hidden flex flex-col relative print:border-0 print:shadow-none print:w-full print:max-w-none print:max-h-none print:rounded-none print:overflow-visible">
         {/* Top Control Bar (Hidden during printing) */}
-        <div className="bg-surface-container px-6 py-3.5 border-b border-surface-variant flex items-center justify-between print:hidden">
+        <div className="bg-surface-container px-6 py-3.5 border-b border-surface-variant flex items-center justify-between shrink-0 print:hidden">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
             <span className="font-semibold text-xs text-primary">KhetiSetu Official Tax Invoice</span>
@@ -75,8 +75,8 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Printable A4 Content Area */}
-        <div id="khetisetu-invoice" className="p-6 sm:p-10 bg-surface flex flex-col gap-6 text-xs text-on-surface print:p-8">
+        {/* Printable A4 Content Area (Scrollable within modal, unconstrained in print) */}
+        <div id="khetisetu-invoice" className="p-6 sm:p-10 bg-surface flex flex-col gap-6 text-xs text-on-surface overflow-y-auto min-h-0 flex-1 overscroll-contain print:p-8 print:overflow-visible">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-surface-variant/80 pb-6 gap-4">
             <div>

@@ -105,14 +105,22 @@ const ProductDetailPage = () => {
         applyAddress(defaultAddr);
       } else {
         setAddressMode('search');
+        fetchQuote(deliveryAddress, deliveryAddress.coordinates);
       }
     } catch (err) {
       console.error('Failed to load user addresses', err);
       setAddressMode('search');
+      fetchQuote(deliveryAddress, deliveryAddress.coordinates);
     } finally {
       setAddressesLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (product) {
+      fetchQuote(deliveryAddress, deliveryAddress.coordinates);
+    }
+  }, [product?.id, quantity]);
 
   const applyAddress = (addr) => {
     const updated = {
@@ -326,7 +334,7 @@ const ProductDetailPage = () => {
     );
   }
 
-  const primaryFarmer = quote?.primaryFarmer || product.farmer || {};
+  const primaryFarmer = quote?.primaryFarmer || quote?.farmerPaymentInfo?.[0] || product.farmer || {};
   const distanceKm = quote?.distanceKm || 15;
   const subtotal = quote?.subtotal || product.pricePerUnit * quantity;
   const deliveryFee = quote?.deliveryFee || 40;
@@ -335,6 +343,36 @@ const ProductDetailPage = () => {
   const advanceAmount = quote?.advanceAmount || Math.round(grandTotal * 0.40);
   const pendingAmount = quote?.pendingAmount || grandTotal - advanceAmount;
 
+  // Resolve Farmer Profile and Payment Information
+  const farmerDisplayName =
+    primaryFarmer?.farmerName ||
+    primaryFarmer?.fullName ||
+    product.farmer?.fullName ||
+    product.farmer?.farmName ||
+    'Verified Farmer';
+  const farmerFarmName =
+    primaryFarmer?.farmName ||
+    product.farmer?.farmName ||
+    `${farmerDisplayName}'s Farm`;
+  const farmerUpiId =
+    primaryFarmer?.upiId ||
+    primaryFarmer?.payment?.upiId ||
+    product.farmer?.payment?.upiId ||
+    product.farmer?.upiId ||
+    '';
+  const farmerQrUrl =
+    primaryFarmer?.upiQrCodeUrl ||
+    primaryFarmer?.payment?.upiQrCodeUrl ||
+    product.farmer?.payment?.upiQrCodeUrl ||
+    product.farmer?.upiQrCodeUrl ||
+    '';
+  const farmerLocationText = [
+    product.farmer?.village || product.farmer?.location?.village,
+    product.farmer?.city || product.farmer?.location?.city,
+    product.farmer?.district || product.farmer?.location?.district || product.location?.district,
+    product.farmer?.state || product.farmer?.location?.state || product.location?.state,
+  ].filter(Boolean).join(', ') || product.farmer?.farmAddress || product.farmer?.location?.farmAddress || 'Maharashtra';
+
   return (
     <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 sm:py-12">
       {/* Product Display Details */}
@@ -342,9 +380,9 @@ const ProductDetailPage = () => {
         {/* Left: Image Card */}
         <div className="rounded-[24px] overflow-hidden border border-surface-variant bg-surface-container relative soil-shadow">
           <div className="aspect-[4/3] w-full bg-surface-container flex items-center justify-center overflow-hidden">
-            {product.imageUrl ? (
+            {product.imageUrl || product.images?.[0] ? (
               <img
-                src={product.imageUrl}
+                src={product.imageUrl || product.images[0]}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -392,18 +430,27 @@ const ProductDetailPage = () => {
           {/* Farmer Card */}
           <div className="p-4 rounded-2xl bg-surface border border-surface-variant flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                {product.farmer?.fullName?.[0] || 'F'}
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-base">
+                {(product.farmer?.fullName || product.farmer?.farmName || 'F')[0]?.toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold text-sm text-primary">{product.farmer?.fullName || 'Certified Farmer'}</p>
-                <p className="text-xs text-on-surface-variant flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-secondary" />
-                  <span>{product.originLocation?.district || 'Pune'}, {product.originLocation?.state || 'Maharashtra'}</span>
+                <p className="font-semibold text-sm text-primary">
+                  {product.farmer?.fullName || product.farmer?.farmName || 'Certified Farmer'}
+                </p>
+                {product.farmer?.farmName && product.farmer.farmName !== product.farmer.fullName && (
+                  <p className="text-[11px] text-secondary font-medium -mt-0.5">
+                    {product.farmer.farmName}
+                  </p>
+                )}
+                <p className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-secondary shrink-0" />
+                  <span>{farmerLocationText}</span>
                 </p>
               </div>
             </div>
-            <Badge variant="outline">Verified Grower</Badge>
+            <Badge variant="outline">
+              {product.farmer?.isVerified ? 'Verified Grower' : 'Certified Farmer'}
+            </Badge>
           </div>
 
           {/* Quantity Selector & Order CTA */}
@@ -446,12 +493,12 @@ const ProductDetailPage = () => {
 
       {/* Production-Ready 40% Advance Payment & Location Checkout Modal */}
       {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-surface w-full max-w-2xl rounded-[24px] shadow-2xl border border-surface-variant p-5 sm:p-8 my-6 flex flex-col gap-5 relative">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-surface w-full max-w-2xl max-h-[90vh] my-auto rounded-[24px] shadow-2xl border border-surface-variant flex flex-col relative overflow-hidden">
+            {/* Modal Header (Fixed at top) */}
+            <div className="p-4 sm:p-6 pb-3 border-b border-surface-variant/60 flex items-center justify-between shrink-0 bg-surface">
               <div>
-                <h3 className="font-display font-bold text-lg sm:text-xl text-primary flex items-center gap-2">
+                <h3 className="font-display font-bold text-base sm:text-xl text-primary flex items-center gap-2">
                   <span>Farm Order & Advance Settlement</span>
                   <Badge variant="warning">40% ADVANCE</Badge>
                 </h3>
@@ -463,294 +510,304 @@ const ProductDetailPage = () => {
                 type="button"
                 onClick={() => setCheckoutModalOpen(false)}
                 className="w-8 h-8 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant transition-colors"
+                aria-label="Close checkout modal"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Error Notification */}
-            {checkoutError && (
-              <div className="p-3 rounded-xl bg-error/10 border border-error/30 text-error text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{checkoutError}</span>
-              </div>
-            )}
+            {/* Scrollable Modal Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto min-h-0 flex-1 flex flex-col gap-5 overscroll-contain">
+              {/* Error Notification */}
+              {checkoutError && (
+                <div className="p-3 rounded-xl bg-error/10 border border-error/30 text-error text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{checkoutError}</span>
+                </div>
+              )}
 
-            {/* STEP 1: Delivery Location with 3 Options */}
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h4 className="font-display font-semibold text-xs sm:text-sm text-primary flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-secondary" />
-                  <span>1. Delivery Destination Location</span>
-                </h4>
+              {/* STEP 1: Delivery Location with 3 Options */}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="font-display font-semibold text-xs sm:text-sm text-primary flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-secondary" />
+                    <span>1. Delivery Destination Location</span>
+                  </h4>
 
-                <div className="flex items-center gap-1.5 text-xs">
-                  {savedAddresses.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs">
+                    {savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setAddressMode('saved')}
+                        className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
+                          addressMode === 'saved'
+                            ? 'bg-primary text-white'
+                            : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
+                        }`}
+                      >
+                        Saved Address
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => setAddressMode('saved')}
+                      onClick={() => setAddressMode('current')}
                       className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
-                        addressMode === 'saved'
+                        addressMode === 'current'
                           ? 'bg-primary text-white'
                           : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
                       }`}
                     >
-                      Saved Address
+                      Use GPS
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setAddressMode('current')}
-                    className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
-                      addressMode === 'current'
-                        ? 'bg-primary text-white'
-                        : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
-                    }`}
-                  >
-                    Use GPS
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAddressMode('search')}
-                    className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
-                      addressMode === 'search'
-                        ? 'bg-primary text-white'
-                        : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
-                    }`}
-                  >
-                    Search on Map
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddressMode('search')}
+                      className={`px-2.5 py-1 rounded-full font-medium transition-colors ${
+                        addressMode === 'search'
+                          ? 'bg-primary text-white'
+                          : 'bg-surface-variant text-on-surface-variant hover:bg-surface-variant/80'
+                      }`}
+                    >
+                      Search on Map
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Mode: Saved Address list */}
-              {addressMode === 'saved' && savedAddresses.length > 0 && (
-                <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
-                  {savedAddresses.map((addr) => {
-                    const isSelected = selectedAddressId === addr._id;
-                    return (
-                      <div
-                        key={addr._id}
-                        onClick={() => {
-                          setSelectedAddressId(addr._id);
-                          applyAddress(addr);
-                        }}
-                        className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-2.5 ${
-                          isSelected
-                            ? 'border-primary bg-primary/5 shadow-sm'
-                            : 'border-surface-variant bg-surface-container/40 hover:border-primary/40'
-                        }`}
-                      >
+                {/* Mode: Saved Address list */}
+                {addressMode === 'saved' && savedAddresses.length > 0 && (
+                  <div className="flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                    {savedAddresses.map((addr) => {
+                      const isSelected = selectedAddressId === addr._id;
+                      return (
                         <div
-                          className={`w-3.5 h-3.5 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                            isSelected ? 'border-primary bg-primary' : 'border-outline'
+                          key={addr._id}
+                          onClick={() => {
+                            setSelectedAddressId(addr._id);
+                            applyAddress(addr);
+                          }}
+                          className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-2.5 ${
+                            isSelected
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-surface-variant bg-surface-container/40 hover:border-primary/40'
                           }`}
                         >
-                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          <div
+                            className={`w-3.5 h-3.5 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                              isSelected ? 'border-primary bg-primary' : 'border-outline'
+                            }`}
+                          >
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                          <div className="flex-1">
+                            <span className="font-semibold text-primary">{addr.fullName}</span> •{' '}
+                            <span className="text-on-surface-variant font-mono">{addr.contactNumber || addr.phone}</span>
+                            <p className="text-on-surface-variant line-clamp-1 mt-0.5">
+                              {[addr.houseNo, addr.streetArea, addr.line1, addr.city, addr.state, addr.pincode]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <span className="font-semibold text-primary">{addr.fullName}</span> •{' '}
-                          <span className="text-on-surface-variant font-mono">{addr.contactNumber || addr.phone}</span>
-                          <p className="text-on-surface-variant line-clamp-1 mt-0.5">
-                            {[addr.houseNo, addr.streetArea, addr.line1, addr.city, addr.state, addr.pincode]
-                              .filter(Boolean)
-                              .join(', ')}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Mode: Interactive LocationPicker (Current GPS / Search on Map) */}
-              {(addressMode === 'current' || addressMode === 'search') && (
-                <LocationPicker
-                  initialLocation={deliveryAddress}
-                  showFullForm={true}
-                  onLocationSelect={handleLocationPicked}
-                />
-              )}
-
-              {/* Recipient Contact fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
-                <div>
-                  <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-0.5">
-                    Recipient Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={deliveryAddress.fullName}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, fullName: e.target.value })}
-                    placeholder="Recipient person or business"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-variant bg-surface text-on-surface focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-0.5">
-                    Contact Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={deliveryAddress.phone}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
-                    placeholder="10-digit mobile number"
-                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-variant bg-surface text-on-surface font-mono focus:outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer pt-0.5">
-                <input
-                  type="checkbox"
-                  checked={saveToProfile}
-                  onChange={(e) => setSaveToProfile(e.target.checked)}
-                  className="rounded text-primary focus:ring-primary w-3.5 h-3.5"
-                />
-                <span className="text-[11px] text-on-surface-variant">Save this delivery location to my profile</span>
-              </label>
-            </div>
-
-            {/* STEP 2: Real-time Distance, Delivery Fee & 40% Advance Breakdown */}
-            <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-2.5 text-xs">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
-                  <Truck className="w-3.5 h-3.5 text-secondary" />
-                  <span>2. Distance-Based Delivery & Financial Breakdown</span>
-                </h4>
-                {quoteLoading && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
-                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Distance</span>
-                  <span className="font-mono font-bold text-primary text-sm">{distanceKm} km</span>
-                </div>
-                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
-                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Freight Charge</span>
-                  <span className="font-mono font-bold text-primary text-sm">₹{deliveryFee}</span>
-                </div>
-                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
-                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">GST (5%)</span>
-                  <span className="font-mono font-bold text-primary text-sm">₹{tax}</span>
-                </div>
-                <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
-                  <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Grand Total</span>
-                  <span className="font-mono font-bold text-primary text-sm">₹{grandTotal}</span>
-                </div>
-              </div>
-
-              {/* 40% Advance Payment Highlight */}
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-2">
-                <div>
-                  <span className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs block">
-                    40% Advance Payment Required: ₹{advanceAmount}
-                  </span>
-                  <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400 block">
-                    Remaining 60% (₹{pendingAmount}) is payable upon produce dispatch/delivery.
-                  </span>
-                </div>
-                <Badge variant="success">PAY ₹{advanceAmount} NOW</Badge>
-              </div>
-            </div>
-
-            {/* STEP 3: Farmer UPI QR & Payment Screenshot Proof Upload */}
-            <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-3 text-xs">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
-                  <QrCode className="w-3.5 h-3.5 text-secondary" />
-                  <span>3. Scan Farmer QR & Pay 40% Advance</span>
-                </h4>
-                <span className="text-[10px] font-mono font-semibold text-secondary">
-                  Grower: {primaryFarmer?.farmerName || primaryFarmer?.fullName || 'Verified Farmer'}
-                </span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
-                {primaryFarmer?.upiQrCodeUrl ? (
-                  <div className="w-28 h-28 bg-white p-1.5 rounded-xl border border-surface-variant shrink-0 flex items-center justify-center shadow-sm">
-                    <img
-                      src={primaryFarmer.upiQrCodeUrl}
-                      alt="Farmer UPI QR"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-28 h-28 bg-surface p-2 rounded-xl border border-dashed border-surface-variant shrink-0 flex flex-col items-center justify-center text-center text-on-surface-variant/60">
-                    <QrCode className="w-8 h-8 mb-1" />
-                    <span className="text-[9px]">Direct VPA Pay</span>
+                      );
+                    })}
                   </div>
                 )}
 
-                <div className="flex-1 flex flex-col gap-2 w-full">
+                {/* Mode: Interactive LocationPicker (Current GPS / Search on Map) */}
+                {(addressMode === 'current' || addressMode === 'search') && (
+                  <LocationPicker
+                    initialLocation={deliveryAddress}
+                    showFullForm={true}
+                    onLocationSelect={handleLocationPicked}
+                  />
+                )}
+
+                {/* Recipient Contact fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Farmer UPI ID (VPA)</span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="font-mono font-bold text-primary text-sm">
-                        {primaryFarmer?.upiId || 'farmer@khetisetu.upi'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyUpi(primaryFarmer?.upiId || 'farmer@khetisetu.upi')}
-                        className="px-2 py-0.5 rounded bg-surface-variant hover:bg-surface-variant/80 text-[10px] font-semibold text-primary flex items-center gap-1 transition-colors"
-                      >
-                        <Copy className="w-3 h-3" />
-                        {copiedUpi ? 'Copied' : 'Copy UPI'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Screenshot Upload File Control */}
-                  <div className="pt-2 border-t border-surface-variant/50">
-                    <label className="block text-[10px] font-bold text-on-surface uppercase mb-1">
-                      Upload 40% Payment Screenshot *
+                    <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-0.5">
+                      Recipient Name *
                     </label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex-1 cursor-pointer">
-                        <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-colors">
-                          {uploadingProof ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Upload className="w-3.5 h-3.5" />
-                          )}
-                          <span>{uploadingProof ? 'Uploading Proof...' : paymentProofUrl ? 'Replace Screenshot' : 'Choose Payment Screenshot'}</span>
+                    <input
+                      type="text"
+                      required
+                      value={deliveryAddress.fullName}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, fullName: e.target.value })}
+                      placeholder="Recipient person or business"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-variant bg-surface text-on-surface focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-0.5">
+                      Contact Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={deliveryAddress.phone}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })}
+                      placeholder="10-digit mobile number"
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-variant bg-surface text-on-surface font-mono focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer pt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={saveToProfile}
+                    onChange={(e) => setSaveToProfile(e.target.checked)}
+                    className="rounded text-primary focus:ring-primary w-3.5 h-3.5"
+                  />
+                  <span className="text-[11px] text-on-surface-variant">Save this delivery location to my profile</span>
+                </label>
+              </div>
+
+              {/* STEP 2: Real-time Distance, Delivery Fee & 40% Advance Breakdown */}
+              <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-secondary" />
+                    <span>2. Distance-Based Delivery & Financial Breakdown</span>
+                  </h4>
+                  {quoteLoading && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                    <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Distance</span>
+                    <span className="font-mono font-bold text-primary text-sm">{distanceKm} km</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                    <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Freight Charge</span>
+                    <span className="font-mono font-bold text-primary text-sm">₹{deliveryFee}</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                    <span className="text-[10px] uppercase font-bold text-on-surface-variant block">GST (5%)</span>
+                    <span className="font-mono font-bold text-primary text-sm">₹{tax}</span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-surface border border-surface-variant/60">
+                    <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Grand Total</span>
+                    <span className="font-mono font-bold text-primary text-sm">₹{grandTotal}</span>
+                  </div>
+                </div>
+
+                {/* 40% Advance Payment Highlight */}
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-2">
+                  <div>
+                    <span className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs block">
+                      40% Advance Payment Required: ₹{advanceAmount}
+                    </span>
+                    <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400 block">
+                      Remaining 60% (₹{pendingAmount}) is payable upon produce dispatch/delivery.
+                    </span>
+                  </div>
+                  <Badge variant="success">PAY ₹{advanceAmount} NOW</Badge>
+                </div>
+              </div>
+
+              {/* STEP 3: Farmer UPI QR & Payment Screenshot Proof Upload */}
+              <div className="p-4 rounded-xl bg-surface-container border border-surface-variant/80 flex flex-col gap-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-display font-semibold text-xs text-primary flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5 text-secondary" />
+                    <span>3. Scan Farmer QR & Pay 40% Advance</span>
+                  </h4>
+                  <span className="text-[10px] font-mono font-semibold text-secondary">
+                    Grower: {farmerDisplayName}
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
+                  {farmerQrUrl ? (
+                    <div className="w-28 sm:w-32 h-28 sm:h-32 bg-white p-2 rounded-xl border border-surface-variant shrink-0 flex items-center justify-center shadow-sm">
+                      <img
+                        src={farmerQrUrl}
+                        alt={`${farmerDisplayName} UPI QR Code`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-28 sm:w-32 h-28 sm:h-32 bg-surface p-2 rounded-xl border border-dashed border-surface-variant shrink-0 flex flex-col items-center justify-center text-center text-on-surface-variant/60">
+                      <QrCode className="w-8 h-8 mb-1 text-primary/40" />
+                      <span className="text-[9px] font-medium">Direct UPI Transfer</span>
+                    </div>
+                  )}
+
+                  <div className="flex-1 flex flex-col gap-2 w-full">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Farmer UPI ID (VPA)</span>
+                      {farmerUpiId ? (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="font-mono font-bold text-primary text-sm bg-surface px-2.5 py-1 rounded-lg border border-surface-variant/60 select-all">
+                            {farmerUpiId}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyUpi(farmerUpiId)}
+                            className="px-2.5 py-1 rounded-lg bg-surface-variant hover:bg-surface-variant/80 text-[10px] font-semibold text-primary flex items-center gap-1 transition-colors"
+                          >
+                            <Copy className="w-3 h-3" />
+                            {copiedUpi ? 'Copied' : 'Copy UPI'}
+                          </button>
                         </div>
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          className="hidden"
-                          onChange={handleUploadProof}
-                          disabled={uploadingProof}
-                        />
-                      </label>
+                      ) : (
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
+                          UPI ID not configured by grower. Direct settlement on delivery.
+                        </p>
+                      )}
                     </div>
 
-                    {paymentProofUrl && (
-                      <div className="mt-2 p-2 rounded-lg bg-surface border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="font-medium text-[11px]">Payment proof uploaded successfully</span>
-                        </div>
-                        <a
-                          href={paymentProofUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] underline font-semibold flex items-center gap-0.5"
-                        >
-                          <span>Preview</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
+                    {/* Screenshot Upload File Control */}
+                    <div className="pt-2 border-t border-surface-variant/50">
+                      <label className="block text-[10px] font-bold text-on-surface uppercase mb-1">
+                        Upload 40% Payment Screenshot *
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <label className="flex-1 cursor-pointer">
+                          <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-primary/50 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold transition-colors">
+                            {uploadingProof ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="w-3.5 h-3.5" />
+                            )}
+                            <span>{uploadingProof ? 'Uploading Proof...' : paymentProofUrl ? 'Replace Screenshot' : 'Choose Payment Screenshot'}</span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                            onChange={handleUploadProof}
+                            disabled={uploadingProof}
+                          />
+                        </label>
                       </div>
-                    )}
+
+                      {paymentProofUrl && (
+                        <div className="mt-2 p-2 rounded-lg bg-surface border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="font-medium text-[11px]">Payment proof uploaded successfully</span>
+                          </div>
+                          <a
+                            href={paymentProofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] underline font-semibold flex items-center gap-0.5"
+                          >
+                            <span>Preview</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Footer Controls */}
-            <div className="pt-3 border-t border-surface-variant/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Modal Footer Controls (Fixed at bottom) */}
+            <div className="p-4 sm:p-6 pt-3 border-t border-surface-variant/60 bg-surface shrink-0 rounded-b-[24px] flex flex-col sm:flex-row items-center justify-between gap-3">
               <div>
                 <span className="text-[10px] uppercase font-bold text-on-surface-variant block">Advance Required Now</span>
                 <span className="font-display font-bold text-2xl text-emerald-700 dark:text-emerald-400">

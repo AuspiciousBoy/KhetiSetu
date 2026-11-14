@@ -90,6 +90,11 @@ const createOrder = async ({
   let serverSubtotal = 0;
   const verifiedOrderItems = [];
 
+  // Look up produce batches to snapshot explicit human-readable batch codes
+  const batchObjectIds = products.map((p) => p.batchId).filter(Boolean);
+  const produceBatches = await ProduceBatch.find({ _id: { $in: batchObjectIds } });
+  const batchMap = new Map(produceBatches.map((b) => [b._id.toString(), b]));
+
   for (const requestedItem of items) {
     const product = products.find((p) => p._id.toString() === requestedItem.productId.toString());
     const qty = parseInt(requestedItem.quantity, 10);
@@ -139,9 +144,13 @@ const createOrder = async ({
     const lineTotal = product.pricePerUnit * qty;
     serverSubtotal += lineTotal;
 
+    const batch = product.batchId ? batchMap.get(product.batchId.toString()) : null;
+    const resolvedBatchCode = batch?.batchId || (product.batchId ? `BATCH-${product.batchId.toString().slice(-6).toUpperCase()}` : 'HARVEST-LOT');
+
     verifiedOrderItems.push({
       productId: product._id,
       batchId: product.batchId,
+      batchCode: resolvedBatchCode,
       farmerId: product.farmerId,
       title: product.title,
       cropName: product.title,
@@ -400,6 +409,7 @@ const getOrdersForFarmer = async (farmerId, { page = 1, limit = 10, status }) =>
     Order.find(query)
       .populate('buyerId', 'fullName email phone role')
       .populate('deliveryId')
+      .populate('items.batchId', 'batchId cropName')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -445,6 +455,19 @@ const getOrdersForFarmer = async (farmerId, { page = 1, limit = 10, status }) =>
       const matchesBatch = item.batchId && fBatchIdStrs.has(item.batchId.toString());
       return matchesProd || matchesBatch;
     });
+
+    // Ensure human-readable batch code is populated on each item
+    for (const item of relevantItems) {
+      if (!item.batchCode) {
+        if (typeof item.batchId === 'object' && item.batchId?.batchId) {
+          item.batchCode = item.batchId.batchId;
+        } else if (item.batchId) {
+          item.batchCode = `BATCH-${item.batchId.toString().slice(-6).toUpperCase()}`;
+        } else {
+          item.batchCode = 'HARVEST-LOT';
+        }
+      }
+    }
 
     order.items = relevantItems;
     order.farmerSubtotal = relevantItems.reduce((acc, item) => acc + (item.lineTotal || 0), 0);
@@ -581,6 +604,31 @@ const updateOrderStatus = async ({ orderId, status, note, location, actorId, act
   }
 
   order.status = status;
+
+  if (status === 'CANCELLED') {
+    order.cancelledReason = note || 'Declined / cancelled by farmer';
+    order.cancelledBy = actorRole === 'ADMIN' ? 'ADMIN' : 'FARMER';
+    order.cancelledAt = new Date();
+    if (actorRole === 'FARMER') {
+      order.paymentStatus = 'PAYMENT_REJECTED';
+    }
+    // Restore inventory back to product and batch
+    for (const item of order.items) {
+      if (item.productId) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { availableQuantity: item.quantity },
+          $set: { status: 'ACTIVE' },
+        });
+      }
+      if (item.batchId) {
+        await ProduceBatch.findByIdAndUpdate(item.batchId, {
+          $inc: { availableQuantity: item.quantity },
+          $set: { listingStatus: 'LISTED_FULL' },
+        });
+      }
+    }
+  }
+
   await order.save();
 
   // Sync state to Delivery
@@ -782,12 +830,103 @@ const getOrderInvoice = async (orderIdentifier, userId, userRole) => {
   return order;
 };
 
+/**
+ * Cancel order by buyer (Consumer or Business) with custom reason and refund request
+ */
+const cancelBuyerOrder = async ({ orderId, buyerId, reason, req }) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(orderId);
+  const query = isObjectId ? { _id: orderId } : { orderId };
+
+  const order = await Order.findOne(query).populate('deliveryId');
+  if (!order) {
+    throw new ApiError(404, 'Order not found.', 'NOT_FOUND');
+  }
+
+  // Ensure buyer owns this order
+  if (order.buyerId?.toString() !== buyerId.toString()) {
+    throw new ApiError(403, 'You are not authorized to cancel this order.', 'FORBIDDEN');
+  }
+
+  if (['CANCELLED', 'DELIVERED'].includes(order.status)) {
+    throw new ApiError(400, `Order is already in ${order.status} state.`, 'INVALID_STATUS');
+  }
+
+  if (['PACKED', 'ASSIGNED', 'OUT_FOR_DELIVERY'].includes(order.status)) {
+    throw new ApiError(
+      400,
+      'Order has already been packed/dispatched by the farmer and cannot be cancelled directly.',
+      'DISPATCHED'
+    );
+  }
+
+  const customReason = reason?.trim() || 'Cancellation requested by buyer';
+
+  order.status = 'CANCELLED';
+  order.cancelledReason = customReason;
+  order.cancelledBy = 'BUYER';
+  order.cancelledAt = new Date();
+  order.refundStatus = 'REFUND_REQUESTED';
+  order.refundReason = customReason;
+  order.refundRequestedAt = new Date();
+
+  await order.save();
+
+  // Restore inventory back to product and batch
+  for (const item of order.items) {
+    if (item.productId) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { availableQuantity: item.quantity },
+        $set: { status: 'ACTIVE' },
+      });
+    }
+    if (item.batchId) {
+      await ProduceBatch.findByIdAndUpdate(item.batchId, {
+        $inc: { availableQuantity: item.quantity },
+        $set: { listingStatus: 'LISTED_FULL' },
+      });
+    }
+  }
+
+  // Sync state to Delivery
+  if (order.deliveryId) {
+    let delivery = await Delivery.findById(order.deliveryId);
+    if (!delivery && mongoose.Types.ObjectId.isValid(order.deliveryId)) {
+      delivery = await Delivery.findOne({ orderId: order._id });
+    }
+    if (delivery) {
+      delivery.status = 'CANCELLED';
+      delivery.trackingEvents.push({
+        status: 'CANCELLED',
+        location: delivery.dropAddress?.city || 'Buyer Location',
+        note: `Order cancelled by buyer. Reason: ${customReason}. Refund requested.`,
+        updatedBy: buyerId,
+        timestamp: new Date(),
+      });
+      await delivery.save();
+    }
+  }
+
+  await logAuditEvent({
+    req,
+    actorId: buyerId,
+    actorRole: 'BUYER',
+    action: 'BUYER_ORDER_CANCELLED',
+    resource: 'Order',
+    resourceId: order._id,
+    result: 'SUCCESS',
+    metadata: { orderId: order.orderId, reason: customReason },
+  });
+
+  return order;
+};
+
 module.exports = {
   createOrder,
   getOrdersForBuyer,
   getOrdersForFarmer,
   getOrderById,
   updateOrderStatus,
+  cancelBuyerOrder,
   calculateDeliveryFee,
   calculateHaversineDistanceKm,
   previewOrderQuote,

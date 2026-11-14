@@ -11,6 +11,10 @@ const OrderItemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ProduceBatch',
     },
+    batchCode: {
+      type: String,
+      trim: true,
+    },
     farmerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -116,7 +120,15 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['PENDING_VERIFICATION', 'ADVANCE_PAID', 'CONFIRMED', 'PAID_IN_FULL', 'CANCELLED', 'REFUNDED'],
+      enum: [
+        'PENDING_VERIFICATION',
+        'ADVANCE_PAID',
+        'CONFIRMED',
+        'PAID_IN_FULL',
+        'CANCELLED',
+        'REFUNDED',
+        'PAYMENT_REJECTED',
+      ],
       default: 'ADVANCE_PAID',
       index: true,
     },
@@ -211,6 +223,24 @@ const OrderSchema = new mongoose.Schema(
     },
     cancelledReason: {
       type: String,
+    },
+    cancelledBy: {
+      type: String,
+      enum: ['BUYER', 'FARMER', 'ADMIN', 'SYSTEM'],
+    },
+    cancelledAt: {
+      type: Date,
+    },
+    refundStatus: {
+      type: String,
+      enum: ['NONE', 'REFUND_REQUESTED', 'REFUND_PROCESSED', 'REFUND_REJECTED'],
+      default: 'NONE',
+    },
+    refundReason: {
+      type: String,
+    },
+    refundRequestedAt: {
+      type: Date,
     },
   },
   {

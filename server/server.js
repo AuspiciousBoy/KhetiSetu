@@ -100,7 +100,7 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// 10. Mount API Version 1
+// 10. Mount API Version 1 (Includes /orders/:id/cancel, /farmer/listings/upload-image, /users/profile, /farmer/payment)
 app.use('/api/v1', v1Router);
 
 // 11. Serve Static Frontend (Production / Unified Single-Port Mode)

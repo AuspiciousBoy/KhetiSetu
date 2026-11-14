@@ -27,6 +27,7 @@ const createListingSchema = z.object({
   isB2C: z.boolean().default(true),
   isB2B: z.boolean().default(false),
   images: z.array(z.string()).optional(),
+  imageUrl: z.string().optional(),
 });
 
 module.exports = {

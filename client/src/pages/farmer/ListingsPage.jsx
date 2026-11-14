@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Store } from 'lucide-react';
+import { PlusCircle, Store, Upload, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -25,6 +25,9 @@ const ListingsPage = () => {
   const [minOrderQuantity, setMinOrderQuantity] = useState(2);
   const [isB2C, setIsB2C] = useState(true);
   const [isB2B, setIsB2B] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchListingsAndBatches = async () => {
@@ -50,6 +53,37 @@ const ListingsPage = () => {
     fetchListingsAndBatches();
   }, []);
 
+  const handleUploadProductImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setImageError('Please select a JPG, PNG, or WEBP image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Image file must be under 5MB.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('productImage', file);
+
+    try {
+      setUploadingImage(true);
+      setImageError(null);
+      const res = await apiClient.post('/farmer/listings/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setImageUrl(res.data.data.imageUrl);
+    } catch (err) {
+      console.error('Failed to upload produce photo', err);
+      setImageError(err.response?.data?.error?.message || 'Failed to upload produce image.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleCreateListing = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -64,11 +98,15 @@ const ListingsPage = () => {
         minOrderQuantity: Number(minOrderQuantity),
         isB2C,
         isB2B,
+        imageUrl: imageUrl || undefined,
+        images: imageUrl ? [imageUrl] : undefined,
       });
 
       setIsModalOpen(false);
       setTitle('');
       setDescription('');
+      setImageUrl('');
+      setImageError(null);
       fetchListingsAndBatches();
     } catch (err) {
       alert(err.response?.data?.error?.message || 'Failed to publish listing');
@@ -126,7 +164,7 @@ const ListingsPage = () => {
               <div>
                 <div className="h-44 -mx-6 -mt-6 mb-4 overflow-hidden relative">
                   <img
-                    src={item.images?.[0] || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600'}
+                    src={item.imageUrl || item.images?.[0] || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600'}
                     alt={item.title}
                     className="w-full h-full object-cover"
                   />
@@ -264,7 +302,46 @@ const ListingsPage = () => {
             </div>
           </div>
 
-          <Button type="submit" variant="primary" size="lg" loading={submitting} className="mt-4">
+          {/* Produce Photograph Upload */}
+          <div className="flex flex-col gap-2 text-left">
+            <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md flex items-center justify-between">
+              <span>Produce Photo (Visible to Buyers)</span>
+              {uploadingImage && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
+            </label>
+
+            {imageUrl ? (
+              <div className="relative rounded-xl overflow-hidden border border-surface-variant bg-surface-container h-36 flex items-center justify-center">
+                <img src={imageUrl} alt="Uploaded produce" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl('')}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition-colors"
+                  title="Remove image"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="border-2 border-dashed border-surface-variant hover:border-primary/60 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer bg-surface-container/30 hover:bg-surface-container/60 transition-colors">
+                <Upload className="w-6 h-6 text-primary/60 mb-1" />
+                <span className="text-xs font-semibold text-primary">Upload Produce Photograph</span>
+                <span className="text-[10px] text-on-surface-variant mt-0.5">JPG, PNG, or WEBP up to 5MB</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleUploadProductImage}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {imageError && (
+              <span className="text-[11px] text-error font-medium">{imageError}</span>
+            )}
+          </div>
+
+          <Button type="submit" variant="primary" size="lg" loading={submitting} disabled={uploadingImage} className="mt-4">
             {t('listingsPage.publishLiveBtn')}
           </Button>
         </form>

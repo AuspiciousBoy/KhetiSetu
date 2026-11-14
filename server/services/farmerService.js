@@ -280,7 +280,11 @@ const createListing = async (farmerId, listingData, req) => {
     minOrderQuantity: listingData.minOrderQuantity || 1,
     maxOrderQuantity: listingData.maxOrderQuantity || listingData.availableQuantity,
     availableQuantity: listingData.availableQuantity,
-    images: listingData.images && listingData.images.length ? listingData.images : ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800'],
+    images: listingData.imageUrl
+      ? [listingData.imageUrl]
+      : listingData.images && listingData.images.length
+      ? listingData.images
+      : ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800'],
     qualityGrade: batch.qualityGrade !== 'PENDING_ASSESSMENT' ? batch.qualityGrade : 'UNRATED',
     isB2C: listingData.isB2C !== undefined ? listingData.isB2C : true,
     isB2B: listingData.isB2B !== undefined ? listingData.isB2B : false,

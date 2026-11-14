@@ -3,11 +3,18 @@ const FarmerProfile = require('../models/FarmerProfile');
 const ProduceBatch = require('../models/ProduceBatch');
 const QualityAssessment = require('../models/QualityAssessment');
 const Review = require('../models/Review');
+const User = require('../models/User');
 
 /**
  * Sanitize public product payload for consumers and businesses
  */
-const formatProductDTO = (product, farmerProfile = null, batch = null, quality = null) => {
+const formatProductDTO = (product, farmerProfile = null, batch = null, quality = null, farmerUser = null) => {
+  const farmerName = farmerUser?.fullName || farmerProfile?.farmName || 'Certified Farmer';
+  const farmName = farmerProfile?.farmName || (farmerUser?.fullName ? `${farmerUser.fullName}'s Farm` : 'Certified Farm');
+  const upiId = farmerProfile?.paymentSettings?.upiId || '';
+  const upiQrCodeUrl = farmerProfile?.paymentSettings?.upiQrCodeUrl || '';
+  const isPaymentConfigured = Boolean(farmerProfile?.paymentSettings?.isConfigured && upiId);
+
   return {
     id: product._id,
     title: product.title,
@@ -18,7 +25,8 @@ const formatProductDTO = (product, farmerProfile = null, batch = null, quality =
     minOrderQuantity: product.minOrderQuantity,
     maxOrderQuantity: product.maxOrderQuantity,
     availableQuantity: product.availableQuantity,
-    images: product.images,
+    images: product.images || [],
+    imageUrl: product.images?.[0] || product.imageUrl || '',
     qualityGrade: product.qualityGrade,
     isB2C: product.isB2C,
     isB2B: product.isB2B,
@@ -26,22 +34,39 @@ const formatProductDTO = (product, farmerProfile = null, batch = null, quality =
     location: product.location,
     rating: product.rating,
     reviewsCount: product.reviewsCount,
-    farmer: farmerProfile
-      ? {
-          id: farmerProfile.userId,
-          farmName: farmerProfile.farmName,
-          state: farmerProfile.location.state,
-          district: farmerProfile.location.district,
-          rating: farmerProfile.rating,
-          isVerified: farmerProfile.isVerified,
-          payment: {
-            upiId: farmerProfile.paymentSettings?.upiId || '',
-            upiQrCodeUrl: farmerProfile.paymentSettings?.upiQrCodeUrl || '',
-            accountHolderName: farmerProfile.paymentSettings?.accountHolderName || farmerProfile.farmName,
-            isConfigured: Boolean(farmerProfile.paymentSettings?.upiId || farmerProfile.paymentSettings?.upiQrCodeUrl),
-          },
-        }
-      : undefined,
+    farmer: {
+      id: farmerUser?._id || farmerProfile?.userId || product.farmerId,
+      fullName: farmerName,
+      farmName: farmName,
+      phone: farmerUser?.phone || '',
+      email: farmerUser?.email || '',
+      location: farmerProfile?.location || {
+        farmAddress: '',
+        village: '',
+        city: '',
+        district: product.location?.district || 'General',
+        state: product.location?.state || 'Maharashtra',
+        pincode: '',
+        coordinates: null,
+      },
+      village: farmerProfile?.location?.village || '',
+      city: farmerProfile?.location?.city || '',
+      district: farmerProfile?.location?.district || product.location?.district || 'General',
+      state: farmerProfile?.location?.state || product.location?.state || 'Maharashtra',
+      pincode: farmerProfile?.location?.pincode || '',
+      farmAddress: farmerProfile?.location?.farmAddress || '',
+      coordinates: farmerProfile?.location?.coordinates || null,
+      rating: farmerProfile?.rating || product.rating || 4.8,
+      isVerified: Boolean(farmerProfile?.isVerified),
+      upiId,
+      upiQrCodeUrl,
+      payment: {
+        upiId,
+        upiQrCodeUrl,
+        accountHolderName: farmerProfile?.paymentSettings?.accountHolderName || farmerName,
+        isConfigured: isPaymentConfigured,
+      },
+    },
     batchTraceability: batch
       ? {
           batchId: batch.batchId,
@@ -62,6 +87,7 @@ const formatProductDTO = (product, farmerProfile = null, batch = null, quality =
         }
       : undefined,
     createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
   };
 };
 
@@ -117,7 +143,7 @@ const listProducts = async ({
 
   const [products, total] = await Promise.all([
     Product.find(query)
-      .populate('farmerId', 'fullName email')
+      .populate('farmerId', 'fullName email phone')
       .populate('batchId', 'batchId cropName harvestDate shelfLifeDays storageInformation')
       .sort(sortOption)
       .skip(skip)
@@ -125,7 +151,15 @@ const listProducts = async ({
     Product.countDocuments(query),
   ]);
 
-  const items = products.map((prod) => formatProductDTO(prod, null, prod.batchId));
+  const farmerIds = products.map((p) => p.farmerId?._id || p.farmerId).filter(Boolean);
+  const profiles = await FarmerProfile.find({ userId: { $in: farmerIds } });
+  const profileMap = new Map(profiles.map((fp) => [fp.userId.toString(), fp]));
+
+  const items = products.map((prod) => {
+    const fId = (prod.farmerId?._id || prod.farmerId)?.toString();
+    const fProfile = profileMap.get(fId);
+    return formatProductDTO(prod, fProfile, prod.batchId, null, prod.farmerId);
+  });
 
   return { items, total, page: parsedPage, limit: parsedLimit };
 };
@@ -143,7 +177,8 @@ const getProductById = async (productId) => {
   product.viewsCount = (product.viewsCount || 0) + 1;
   await product.save();
 
-  const [farmerProfile, batch, reviews] = await Promise.all([
+  const [farmerUser, farmerProfile, batch, reviews] = await Promise.all([
+    User.findById(product.farmerId).select('fullName phone email'),
     FarmerProfile.findOne({ userId: product.farmerId }),
     ProduceBatch.findById(product.batchId),
     Review.find({ productId: product._id }).sort({ createdAt: -1 }).limit(10),
@@ -154,7 +189,7 @@ const getProductById = async (productId) => {
     quality = await QualityAssessment.findById(batch.qualityAssessmentId);
   }
 
-  const dto = formatProductDTO(product, farmerProfile, batch, quality);
+  const dto = formatProductDTO(product, farmerProfile, batch, quality, farmerUser);
   dto.reviews = reviews;
   return dto;
 };

@@ -123,12 +123,28 @@ const getOrderInvoice = async (req, res, next) => {
   }
 };
 
+const cancelOrder = async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const order = await orderService.cancelBuyerOrder({
+      orderId: req.params.id,
+      buyerId: req.user.id,
+      reason,
+      req,
+    });
+    return success(res, order, 'Order cancelled and refund requested successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createOrder,
   getBuyerOrders,
   getFarmerOrders,
   getOrderById,
   updateOrderStatus,
+  cancelOrder,
   previewQuote,
   uploadPaymentProof,
   getOrderInvoice,

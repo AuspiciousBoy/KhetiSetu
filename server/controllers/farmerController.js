@@ -81,6 +81,19 @@ const assessQuality = async (req, res, next) => {
   }
 };
 
+const uploadListingImage = async (req, res, next) => {
+  try {
+    const saved = req.savedFile || (req.file?.filename ? req.file : null);
+    if (!saved) {
+      throw new ApiError(400, 'Product produce image (JPG, PNG, or WEBP under 5MB) is required.', 'FILE_REQUIRED');
+    }
+    const imageUrl = saved.path || `/uploads/${saved.filename}`;
+    return success(res, { imageUrl }, 'Produce image uploaded successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 const createListing = async (req, res, next) => {
   try {
     const product = await farmerService.createListing(req.user.id, req.body, req);
@@ -106,6 +119,7 @@ module.exports = {
   getBatches,
   getBatchById,
   assessQuality,
+  uploadListingImage,
   createListing,
   getAnalytics,
 };

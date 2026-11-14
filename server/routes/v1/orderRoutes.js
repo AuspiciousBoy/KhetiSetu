@@ -46,6 +46,10 @@ router.get('/farmer-orders', authorize('FARMER', 'ADMIN'), orderController.getFa
 // Get single order invoice
 router.get('/:id/invoice', orderController.getOrderInvoice);
 
+// Cancel order (Buyer: Consumer or Business)
+router.post('/:id/cancel', authorize('CONSUMER', 'BUSINESS', 'ADMIN', 'FARMER'), orderController.cancelOrder);
+router.post('/cancel/:id', authorize('CONSUMER', 'BUSINESS', 'ADMIN', 'FARMER'), orderController.cancelOrder);
+
 // Get single order with Object-Level Authorization
 router.get('/:id', orderController.getOrderById);
 

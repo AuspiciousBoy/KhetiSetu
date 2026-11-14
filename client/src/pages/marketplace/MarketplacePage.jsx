@@ -151,6 +151,7 @@ const MarketplacePage = () => {
                 <div className="h-52 -mx-6 -mt-6 mb-4 overflow-hidden relative">
                   <img
                     src={
+                      item.imageUrl ||
                       item.images?.[0] ||
                       'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800'
                     }
