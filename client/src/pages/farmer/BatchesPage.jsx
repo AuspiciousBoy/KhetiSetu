@@ -51,11 +51,20 @@ const BatchesPage = () => {
     e.preventDefault();
     setSubmittingBatch(true);
     try {
+      let formattedDate = harvestDate;
+      if (typeof harvestDate === 'string' && harvestDate.includes('-')) {
+        const parts = harvestDate.split('-');
+        if (parts[0].length === 2 && parts[2].length === 4) {
+          // Convert DD-MM-YYYY to standard ISO YYYY-MM-DD
+          formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+
       await apiClient.post('/farmer/batches', {
         cropName,
         quantity: Number(quantity),
         unit,
-        harvestDate,
+        harvestDate: formattedDate,
         notes,
       });
       setIsNewBatchOpen(false);

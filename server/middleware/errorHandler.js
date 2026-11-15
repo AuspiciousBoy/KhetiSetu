@@ -17,13 +17,15 @@ const errorHandler = (err, req, res, next) => {
 
   // Handle specific known error types
   if (err.name === 'ValidationError') {
+    const errorDetails = Object.values(err.errors || {}).map((e) => e.message);
+    const primaryMsg = errorDetails[0] || 'Invalid input parameters provided';
     return res.status(400).json({
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Invalid input parameters provided',
+        message: primaryMsg,
         requestId,
-        details: isProd ? undefined : Object.values(err.errors || {}).map((e) => e.message),
+        details: errorDetails,
       },
     });
   }

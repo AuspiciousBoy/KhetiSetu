@@ -57,16 +57,62 @@ const updateProfile = async (farmerId, updateData, req) => {
 };
 
 /**
+ * Helper to parse dates from various formats (ISO, YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY)
+ */
+const parseFlexibleDate = (val) => {
+  if (!val) return new Date();
+  if (val instanceof Date && !isNaN(val.getTime())) return val;
+  const directDate = new Date(val);
+  if (!isNaN(directDate.getTime())) return directDate;
+
+  if (typeof val === 'string') {
+    const parts = val.trim().split(/[-/]/);
+    if (parts.length === 3) {
+      // Format: DD-MM-YYYY or DD/MM/YYYY
+      if (parts[2].length === 4) {
+        const parsed = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+        if (!isNaN(parsed.getTime())) return parsed;
+      }
+      // Format: YYYY-MM-DD
+      if (parts[0].length === 4) {
+        const parsed = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        if (!isNaN(parsed.getTime())) return parsed;
+      }
+    }
+  }
+  return new Date();
+};
+
+/**
  * Create a new produce batch
  */
 const createBatch = async (farmerId, batchData, req) => {
   const farmerProfile = await getProfile(farmerId);
-  const crop = await Crop.findOne({ name: new RegExp(`^${batchData.cropName}$`, 'i') });
+
+  // Find crop in catalog, or auto-create a standard catalog entry if not yet populated
+  let crop = await Crop.findOne({ name: new RegExp(`^${batchData.cropName}$`, 'i') });
+  if (!crop) {
+    try {
+      crop = await Crop.create({
+        name: batchData.cropName,
+        category: 'VEGETABLE',
+        unit: batchData.unit || 'kg',
+        standardPriceRange: { min: 10, max: 80 },
+        typicalShelfLifeDays: batchData.shelfLifeDays || 10,
+      });
+    } catch {
+      crop = await Crop.findOne({ name: new RegExp(`^${batchData.cropName}$`, 'i') });
+    }
+  }
 
   // Generate unique batch code: e.g. BATCH-TOM-2026-X9F2
   const shortCrop = (batchData.cropName || 'CRP').substring(0, 3).toUpperCase();
   const randomSuffix = crypto.randomBytes(2).toString('hex').toUpperCase();
   const batchId = `BATCH-${shortCrop}-${new Date().getFullYear()}-${randomSuffix}`;
+
+  const originState = farmerProfile?.location?.state || 'Maharashtra';
+  const originDistrict = farmerProfile?.location?.district || 'Pune';
+  const originVillage = farmerProfile?.location?.village || '';
 
   const batch = await ProduceBatch.create({
     batchId,
@@ -76,18 +122,18 @@ const createBatch = async (farmerId, batchData, req) => {
     quantity: batchData.quantity,
     availableQuantity: batchData.quantity,
     unit: batchData.unit || 'kg',
-    harvestDate: batchData.harvestDate || new Date(),
+    harvestDate: parseFlexibleDate(batchData.harvestDate),
     storageInformation: batchData.storageInformation || {
       method: 'Ventilated Farm Storage',
       location: 'Primary Barn',
     },
     shelfLifeDays: batchData.shelfLifeDays || (crop?.typicalShelfLifeDays || 10),
     originLocation: {
-      state: farmerProfile.location.state,
-      district: farmerProfile.location.district,
-      village: farmerProfile.location.village || '',
+      state: originState,
+      district: originDistrict,
+      village: originVillage,
     },
-    notes: batchData.notes,
+    notes: batchData.notes || '',
   });
 
   await logAuditEvent({
@@ -273,7 +319,7 @@ const createListing = async (farmerId, listingData, req) => {
     batchId: batch._id,
     farmerId,
     title: listingData.title || `Farm Fresh ${batch.cropName} (${batch.batchId})`,
-    description: listingData.description || `Directly harvested from ${farmerProfile.farmName}. High quality, clean and graded produce.`,
+    description: listingData.description || `Directly harvested from ${farmerProfile?.farmName || 'Verified Farm'}. High quality, clean and graded produce.`,
     category: crop ? crop.category : 'VEGETABLE',
     pricePerUnit: listingData.pricePerUnit,
     unit: batch.unit,
@@ -290,8 +336,8 @@ const createListing = async (farmerId, listingData, req) => {
     isB2B: listingData.isB2B !== undefined ? listingData.isB2B : false,
     status: 'ACTIVE',
     location: {
-      state: farmerProfile.location.state,
-      district: farmerProfile.location.district,
+      state: farmerProfile?.location?.state || 'Maharashtra',
+      district: farmerProfile?.location?.district || 'Pune',
     },
   });
 

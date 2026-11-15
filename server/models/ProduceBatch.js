@@ -18,7 +18,7 @@ const ProduceBatchSchema = new mongoose.Schema(
     cropId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Crop',
-      required: true,
+      required: false,
       index: true,
     },
     cropName: {
