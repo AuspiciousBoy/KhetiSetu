@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "KhetiSetu – An AI-Assisted Digital Agricultural Ecosystem for Farm-to-Market Connectivity",
   "private": true,
-  "workspaces": [
-    "server",
-    "client"
-  ],
   "scripts": {
     "start": "node server/server.js",
     "dev": "node --watch-path=server server/server.js",
