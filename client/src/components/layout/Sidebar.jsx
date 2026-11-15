@@ -47,7 +47,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
           { name: t('sidebar.overview'), path: '/business/dashboard', Icon: LayoutDashboard },
           { name: t('sidebar.procurement'), path: '/marketplace?type=b2b', Icon: Package },
           { name: t('sidebar.orders'), path: '/business/orders', Icon: ShoppingBag },
-          { name: t('sidebar.marketIntel'), path: '/farmer/market', Icon: TrendingUp },
+          { name: t('sidebar.marketIntel'), path: '/business/market', Icon: TrendingUp },
         ];
       case 'ADMIN':
         return [

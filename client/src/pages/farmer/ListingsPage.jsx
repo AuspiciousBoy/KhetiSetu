@@ -27,6 +27,7 @@ const ListingsPage = () => {
   const [isB2C, setIsB2C] = useState(true);
   const [isB2B, setIsB2B] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
+  const [localPreviewUrl, setLocalPreviewUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +67,8 @@ const ListingsPage = () => {
       setImageError('Image file must be under 5MB.');
       return;
     }
+
+    setLocalPreviewUrl(URL.createObjectURL(file));
 
     const formData = new FormData();
     formData.append('productImage', file);
@@ -107,6 +110,7 @@ const ListingsPage = () => {
       setTitle('');
       setDescription('');
       setImageUrl('');
+      setLocalPreviewUrl('');
       setImageError(null);
       fetchListingsAndBatches();
     } catch (err) {
@@ -310,12 +314,23 @@ const ListingsPage = () => {
               {uploadingImage && <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />}
             </label>
 
-            {imageUrl ? (
+            {imageUrl || localPreviewUrl ? (
               <div className="relative rounded-xl overflow-hidden border border-surface-variant bg-surface-container h-36 flex items-center justify-center">
-                <img src={getMediaUrl(imageUrl)} alt="Uploaded produce" className="w-full h-full object-cover" />
+                <img
+                  src={localPreviewUrl || getMediaUrl(imageUrl)}
+                  alt="Uploaded produce"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                  }}
+                />
                 <button
                   type="button"
-                  onClick={() => setImageUrl('')}
+                  onClick={() => {
+                    setImageUrl('');
+                    setLocalPreviewUrl('');
+                  }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition-colors"
                   title="Remove image"
                 >

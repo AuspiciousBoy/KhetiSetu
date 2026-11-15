@@ -58,6 +58,12 @@ router.post('/cancel/:id', authorize('CONSUMER', 'BUSINESS', 'ADMIN', 'FARMER'),
 // Get single order with Object-Level Authorization
 router.get('/:id', orderController.getOrderById);
 
+// Process / complete refund (Farmer or Admin)
+router.post('/:id/refund', authorize('FARMER', 'ADMIN'), orderController.processRefund);
+
+// Request refund (Buyer or Admin)
+router.post('/:id/request-refund', authorize('CONSUMER', 'BUSINESS', 'ADMIN'), orderController.requestRefund);
+
 // Update order status (Farmer, Admin, Logistics Operator)
 router.patch('/:id/status', authorize('FARMER', 'ADMIN', 'LOGISTICS_OPERATOR'), orderController.updateOrderStatus);
 router.put('/:id/status', authorize('FARMER', 'ADMIN', 'LOGISTICS_OPERATOR'), orderController.updateOrderStatus);

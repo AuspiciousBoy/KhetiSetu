@@ -326,6 +326,11 @@ const createListing = async (farmerId, listingData, req) => {
     minOrderQuantity: listingData.minOrderQuantity || 1,
     maxOrderQuantity: listingData.maxOrderQuantity || listingData.availableQuantity,
     availableQuantity: listingData.availableQuantity,
+    imageUrl: listingData.imageUrl
+      ? listingData.imageUrl
+      : listingData.images && listingData.images.length
+      ? listingData.images[0]
+      : 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800',
     images: listingData.imageUrl
       ? [listingData.imageUrl]
       : listingData.images && listingData.images.length

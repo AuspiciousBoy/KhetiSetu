@@ -18,11 +18,12 @@ export const getMediaUrl = (url, fallback = '') => {
     return str;
   }
 
-  const rawBase = import.meta.env.VITE_API_URL || '';
-  const baseUrl = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
+  // Strip any accidental /api/v1 or /api or trailing slashes from VITE_API_URL
+  const rawEnvUrl = (import.meta.env.VITE_API_URL || '').trim();
+  const rootBase = rawEnvUrl.replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
   const cleanPath = str.startsWith('/') ? str : `/${str}`;
 
-  return baseUrl ? `${baseUrl}${cleanPath}` : cleanPath;
+  return rootBase ? `${rootBase}${cleanPath}` : cleanPath;
 };
 
 export default getMediaUrl;

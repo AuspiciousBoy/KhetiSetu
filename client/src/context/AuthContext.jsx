@@ -4,24 +4,56 @@ import apiClient, { setAccessToken, clearAccessToken } from '../services/apiClie
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // Pre-hydrate from localStorage on initial render to prevent flash of unauthenticated state
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('khetisetu_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize session on page mount by attempting silent refresh with the HttpOnly cookie
+  // Initialize session on page mount by attempting silent refresh with cookie + fallback storage token
   const initializeAuth = useCallback(async () => {
+    const storedUser = localStorage.getItem('khetisetu_user');
+    const storedRefreshToken = localStorage.getItem('khetisetu_refresh_token');
+
+    // If there is no stored session whatsoever, finish loading immediately
+    if (!storedUser && !storedRefreshToken) {
+      setUser(null);
+      clearAccessToken();
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await apiClient.post('/auth/refresh', {}, { timeout: 3000 });
-      const { user: userData, accessToken } = response.data?.data || {};
+      const response = await apiClient.post(
+        '/auth/refresh',
+        { refreshToken: storedRefreshToken },
+        { timeout: 20000 }
+      );
+      const { user: userData, accessToken, refreshToken: newRefreshToken } = response.data?.data || {};
       if (accessToken && userData) {
         setAccessToken(accessToken);
         setUser(userData);
-      } else {
-        setUser(null);
+        localStorage.setItem('khetisetu_user', JSON.stringify(userData));
+        if (newRefreshToken) {
+          localStorage.setItem('khetisetu_refresh_token', newRefreshToken);
+        }
       }
     } catch (err) {
-      // User is unauthenticated / no active refresh cookie
-      setUser(null);
-      clearAccessToken();
+      // Only clear if server explicitly rejected the token (401/403)
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setUser(null);
+        clearAccessToken();
+        localStorage.removeItem('khetisetu_user');
+        localStorage.removeItem('khetisetu_refresh_token');
+      } else {
+        // Cold start or network timeout: retain hydrated session
+        console.warn('Silent refresh delayed or server waking up, retaining hydrated session:', err.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -33,17 +65,25 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await apiClient.post('/auth/login', { email, password });
-    const { user: userData, accessToken } = response.data.data;
+    const { user: userData, accessToken, refreshToken } = response.data.data;
     setAccessToken(accessToken);
     setUser(userData);
+    localStorage.setItem('khetisetu_user', JSON.stringify(userData));
+    if (refreshToken) {
+      localStorage.setItem('khetisetu_refresh_token', refreshToken);
+    }
     return userData;
   };
 
   const register = async (formData) => {
     const response = await apiClient.post('/auth/register', formData);
-    const { user: userData, accessToken } = response.data.data;
+    const { user: userData, accessToken, refreshToken } = response.data.data;
     setAccessToken(accessToken);
     setUser(userData);
+    localStorage.setItem('khetisetu_user', JSON.stringify(userData));
+    if (refreshToken) {
+      localStorage.setItem('khetisetu_refresh_token', refreshToken);
+    }
     return userData;
   };
 
@@ -54,12 +94,21 @@ export const AuthProvider = ({ children }) => {
       // Ignore logout request failures
     } finally {
       clearAccessToken();
+      localStorage.removeItem('khetisetu_user');
+      localStorage.removeItem('khetisetu_refresh_token');
       setUser(null);
     }
   };
 
   const updateUser = (updatedFields) => {
-    setUser((prev) => (prev ? { ...prev, ...updatedFields } : null));
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updatedFields };
+      try {
+        localStorage.setItem('khetisetu_user', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
   };
 
   return (

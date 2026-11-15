@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, FileText, XCircle, AlertTriangle, AlertCircle, X } from 'lucide-react';
+import { Package, FileText, XCircle, AlertTriangle, AlertCircle, X, RotateCcw } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -80,6 +80,22 @@ const BusinessDashboardPage = () => {
       setCancelError(err.response?.data?.error?.message || 'Failed to cancel consignment.');
     } finally {
       setSubmittingCancel(false);
+    }
+  };
+
+  const handleRequestRefund = async (orderId) => {
+    try {
+      await apiClient.post(`/orders/${orderId}/request-refund`);
+      setOrders((prev) =>
+        prev.map((ord) =>
+          ord._id === orderId
+            ? { ...ord, refundStatus: 'REFUND_REQUESTED', refundRequestedAt: new Date() }
+            : ord
+        )
+      );
+      showToast('Advance refund request submitted successfully.');
+    } catch (err) {
+      alert(err.response?.data?.error?.message || 'Failed to submit refund request.');
     }
   };
 
@@ -194,11 +210,15 @@ const BusinessDashboardPage = () => {
                         >
                           {ord.status}
                         </Badge>
-                        {ord.refundStatus === 'REFUND_REQUESTED' && (
+                        {ord.refundStatus === 'REFUND_PROCESSED' || ord.paymentStatus === 'REFUNDED' ? (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-1.5 py-0.5 rounded font-medium">
+                            Refund Done
+                          </span>
+                        ) : ord.refundStatus === 'REFUND_REQUESTED' ? (
                           <span className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded font-medium">
                             Refund Req
                           </span>
-                        )}
+                        ) : null}
                         {ord.cancelledReason && (
                           <span
                             className="text-[10px] text-on-surface-variant line-clamp-1 italic max-w-[120px]"
@@ -224,6 +244,17 @@ const BusinessDashboardPage = () => {
                           >
                             <XCircle className="w-3.5 h-3.5" />
                             <span>Cancel</span>
+                          </Button>
+                        )}
+                        {ord.status === 'CANCELLED' && ord.refundStatus === 'NONE' && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleRequestRefund(ord._id)}
+                            className="flex items-center gap-1 text-xs py-1 bg-amber-700 hover:bg-amber-800 text-white"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Refund</span>
                           </Button>
                         )}
                         <Button

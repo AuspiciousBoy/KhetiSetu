@@ -5,7 +5,7 @@ const { isProd } = require('../config/env');
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: isProd,
-  sameSite: isProd ? 'strict' : 'lax',
+  sameSite: isProd ? 'none' : 'lax', // 'none' required for cross-domain cookie (Vercel -> Render)
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -24,6 +24,7 @@ const register = async (req, res, next) => {
       {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
         verificationToken: result.verificationToken,
       },
       'Registration successful. Welcome to KhetiSetu!',
@@ -49,6 +50,7 @@ const login = async (req, res, next) => {
       {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
       'Login successful'
     );
@@ -74,6 +76,7 @@ const refresh = async (req, res, next) => {
       {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
       'Token refreshed successfully'
     );

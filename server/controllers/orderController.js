@@ -140,6 +140,34 @@ const cancelOrder = async (req, res, next) => {
   }
 };
 
+const processRefund = async (req, res, next) => {
+  try {
+    const order = await orderService.processOrderRefund({
+      orderId: req.params.id,
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      req,
+    });
+    return success(res, order, 'Refund processed and recorded successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
+const requestRefund = async (req, res, next) => {
+  try {
+    const order = await orderService.requestOrderRefund({
+      orderId: req.params.id,
+      buyerId: req.user.id,
+      reason: req.body.reason,
+      req,
+    });
+    return success(res, order, 'Refund requested successfully');
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createOrder,
   getBuyerOrders,
@@ -147,6 +175,8 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   cancelOrder,
+  processRefund,
+  requestRefund,
   previewQuote,
   uploadPaymentProof,
   getOrderInvoice,

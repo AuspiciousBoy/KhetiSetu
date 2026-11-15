@@ -156,6 +156,10 @@ const MarketplacePage = () => {
                     }
                     alt={item.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                    }}
                   />
                   <div className="absolute top-3 right-3 flex gap-1.5">
                     <Badge

@@ -22,6 +22,7 @@ import {
   X,
   XCircle,
   AlertTriangle,
+  RotateCcw,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
@@ -156,6 +157,35 @@ const FarmerOrdersPage = () => {
       alert(err.response?.data?.error?.message || 'Failed to decline order');
     } finally {
       setDeclining(false);
+    }
+  };
+
+  const handleProcessRefund = async (orderId) => {
+    if (!window.confirm('Confirm that you have returned the 40% advance payment to the buyer and want to record this refund as completed?')) {
+      return;
+    }
+    setActionLoadingId(orderId);
+    try {
+      await apiClient.post(`/orders/${orderId}/refund`);
+      setOrders((prev) =>
+        prev.map((ord) => {
+          if (ord._id === orderId || ord.orderId === orderId) {
+            return {
+              ...ord,
+              refundStatus: 'REFUND_PROCESSED',
+              paymentStatus: 'REFUNDED',
+              refundProcessedAt: new Date(),
+            };
+          }
+          return ord;
+        })
+      );
+      showToast('Advance payment refund successfully processed and recorded.');
+    } catch (err) {
+      console.error('Failed to process refund', err);
+      alert(err.response?.data?.error?.message || 'Failed to process refund');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -574,6 +604,12 @@ const FarmerOrdersPage = () => {
                             setProofPreviewUrl(order.paymentProofUrl);
                             setPreviewingOrder(order);
                           }}
+                          onError={(e) => {
+                            const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                            if (raw && !e.currentTarget.src.startsWith(raw)) {
+                              e.currentTarget.src = `${raw}${order.paymentProofUrl.startsWith('/') ? '' : '/'}${order.paymentProofUrl}`;
+                            }
+                          }}
                           className="w-9 h-9 object-cover rounded-lg cursor-pointer border border-emerald-500/40 hover:opacity-80 transition-opacity shrink-0"
                         />
                         <button
@@ -646,9 +682,29 @@ const FarmerOrdersPage = () => {
                     )}
 
                     {order.status === 'CANCELLED' && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-error font-medium bg-error/10 px-2.5 py-1 rounded-lg border border-error/20">
-                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{order.cancelledReason || 'Order Cancelled'}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 text-[11px] text-error font-medium bg-error/10 px-2.5 py-1 rounded-lg border border-error/20">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{order.cancelledReason || 'Order Cancelled'}</span>
+                        </div>
+
+                        {order.refundStatus === 'REFUND_PROCESSED' || order.paymentStatus === 'REFUNDED' ? (
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Refund Processed (₹{(order.advanceAmount || Math.round((order.total || 0) * 0.40)).toLocaleString('en-IN')})</span>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={actionLoadingId === order._id}
+                            onClick={() => handleProcessRefund(order._id)}
+                            className="flex items-center gap-1.5 text-xs bg-amber-700 hover:bg-amber-800 text-white"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Process Refund (₹{(order.advanceAmount || Math.round((order.total || 0) * 0.40)).toLocaleString('en-IN')})</span>
+                          </Button>
+                        )}
                       </div>
                     )}
 
@@ -815,6 +871,12 @@ const FarmerOrdersPage = () => {
                 src={getMediaUrl(proofPreviewUrl)}
                 alt="Payment Proof Full"
                 className="w-full h-auto max-h-[70vh] object-contain"
+                onError={(e) => {
+                  const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                  if (raw && !e.currentTarget.src.startsWith(raw) && proofPreviewUrl) {
+                    e.currentTarget.src = `${raw}${proofPreviewUrl.startsWith('/') ? '' : '/'}${proofPreviewUrl}`;
+                  }
+                }}
               />
             </div>
 

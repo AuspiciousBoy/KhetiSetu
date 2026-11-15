@@ -71,7 +71,7 @@ function App() {
           <Route
             element={
               <ProtectedRoute>
-                <RoleRoute allowedRoles={['FARMER', 'ADMIN']}>
+                <RoleRoute allowedRoles={['FARMER', 'BUSINESS', 'ADMIN']}>
                   <DashboardLayout />
                 </RoleRoute>
               </ProtectedRoute>
@@ -115,6 +115,7 @@ function App() {
             <Route path="/business/dashboard" element={<BusinessDashboardPage />} />
             <Route path="/business/orders" element={<BusinessDashboardPage />} />
             <Route path="/business/orders/:id" element={<OrderTrackingPage />} />
+            <Route path="/business/market" element={<MarketIntelligencePage />} />
           </Route>
 
           {/* Protected Admin Console */}

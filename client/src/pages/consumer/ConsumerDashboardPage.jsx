@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, FileText, XCircle, AlertTriangle, AlertCircle, X } from 'lucide-react';
+import { Truck, FileText, XCircle, AlertTriangle, AlertCircle, X, CheckCircle, RotateCcw } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -80,6 +80,22 @@ const ConsumerDashboardPage = () => {
       setCancelError(err.response?.data?.error?.message || 'Failed to cancel order.');
     } finally {
       setSubmittingCancel(false);
+    }
+  };
+
+  const handleRequestRefund = async (orderId) => {
+    try {
+      await apiClient.post(`/orders/${orderId}/request-refund`);
+      setOrders((prev) =>
+        prev.map((ord) =>
+          ord._id === orderId
+            ? { ...ord, refundStatus: 'REFUND_REQUESTED', refundRequestedAt: new Date() }
+            : ord
+        )
+      );
+      showToast('Advance payment refund request recorded successfully.');
+    } catch (err) {
+      alert(err.response?.data?.error?.message || 'Failed to submit refund request.');
     }
   };
 
@@ -172,19 +188,38 @@ const ConsumerDashboardPage = () => {
 
               {/* Cancellation Reason & Refund Notice */}
               {order.status === 'CANCELLED' && (
-                <div className="text-xs text-on-surface-variant bg-surface-container/60 p-3 rounded-xl border border-surface-variant/60 flex flex-col gap-1">
-                  <div className="flex items-center gap-1.5 text-error font-medium">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                    <span>Order Cancelled</span>
+                <div className="text-xs text-on-surface-variant bg-surface-container/60 p-3.5 rounded-xl border border-surface-variant/60 flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-error font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Order Cancelled</span>
+                    </div>
+
+                    {order.refundStatus === 'REFUND_PROCESSED' || order.paymentStatus === 'REFUNDED' ? (
+                      <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded border border-emerald-300">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Refund Processed (₹{(order.advanceAmount || Math.round((order.total || 0) * 0.40)).toLocaleString('en-IN')})</span>
+                      </div>
+                    ) : order.refundStatus === 'REFUND_REQUESTED' ? (
+                      <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-300">
+                        Refund Processing (₹{(order.advanceAmount || Math.round((order.total || 0) * 0.40)).toLocaleString('en-IN')})
+                      </span>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleRequestRefund(order._id)}
+                        className="flex items-center gap-1 text-xs py-1 px-2.5 bg-amber-700 hover:bg-amber-800 text-white"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Request Refund</span>
+                      </Button>
+                    )}
                   </div>
+
                   {order.cancelledReason && (
                     <p className="text-[11px] text-on-surface italic">
                       Reason: "{order.cancelledReason}"
-                    </p>
-                  )}
-                  {order.refundStatus === 'REFUND_REQUESTED' && (
-                    <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">
-                      Refund request recorded. 40% advance payment will be processed by farm-gate settlement.
                     </p>
                   )}
                 </div>
@@ -216,6 +251,18 @@ const ConsumerDashboardPage = () => {
                     >
                       <XCircle className="w-3.5 h-3.5" />
                       <span>Cancel & Refund</span>
+                    </Button>
+                  )}
+
+                  {order.status === 'CANCELLED' && order.refundStatus === 'NONE' && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleRequestRefund(order._id)}
+                      className="flex items-center gap-1.5 text-xs py-1 bg-amber-700 hover:bg-amber-800 text-white"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Request Refund</span>
                     </Button>
                   )}
 

@@ -72,6 +72,7 @@ const ProductDetailPage = () => {
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [paymentProofUrl, setPaymentProofUrl] = useState('');
+  const [localProofPreviewUrl, setLocalProofPreviewUrl] = useState('');
   const [uploadingProof, setUploadingProof] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
@@ -211,6 +212,8 @@ const ProductDetailPage = () => {
       setCheckoutError('Payment screenshot must be under 5MB.');
       return;
     }
+
+    setLocalProofPreviewUrl(URL.createObjectURL(file));
 
     const formData = new FormData();
     formData.append('paymentProof', file);
@@ -386,6 +389,10 @@ const ProductDetailPage = () => {
                 src={getMediaUrl(product.imageUrl || product.images[0])}
                 alt={product.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                }}
               />
             ) : (
               <div className="text-center p-8">
@@ -784,17 +791,24 @@ const ProductDetailPage = () => {
                         </label>
                       </div>
 
-                      {paymentProofUrl && (
-                        <div className="mt-2 p-2 rounded-lg bg-surface border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400">
+                      {(paymentProofUrl || localProofPreviewUrl) && (
+                        <div className="mt-2 p-2 rounded-lg bg-surface border border-emerald-500/30 flex items-center justify-between gap-2 text-xs text-emerald-700 dark:text-emerald-400">
                           <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="font-medium text-[11px]">Payment proof uploaded successfully</span>
+                            <img
+                              src={localProofPreviewUrl || getMediaUrl(paymentProofUrl)}
+                              alt="Proof preview"
+                              className="w-8 h-8 rounded object-cover border border-emerald-500/40 shrink-0"
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-[11px]">Payment proof attached</span>
+                              <span className="text-[10px] text-on-surface-variant">40% advance receipt</span>
+                            </div>
                           </div>
                           <a
-                            href={getMediaUrl(paymentProofUrl)}
+                            href={localProofPreviewUrl || getMediaUrl(paymentProofUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] underline font-semibold flex items-center gap-0.5"
+                            className="text-[11px] underline font-semibold flex items-center gap-0.5 ml-auto text-primary"
                           >
                             <span>Preview</span>
                             <ExternalLink className="w-2.5 h-2.5" />

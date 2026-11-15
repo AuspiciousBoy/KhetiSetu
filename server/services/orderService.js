@@ -920,6 +920,67 @@ const cancelBuyerOrder = async ({ orderId, buyerId, reason, req }) => {
   return order;
 };
 
+/**
+ * Process / complete refund for a cancelled order (Farmer or Admin)
+ */
+const processOrderRefund = async ({ orderId, actorId, actorRole, req }) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(orderId);
+  const query = isObjectId ? { _id: orderId } : { orderId };
+
+  const order = await Order.findOne(query);
+  if (!order) {
+    throw new ApiError(404, 'Order not found.', 'NOT_FOUND');
+  }
+
+  // Update order refund fields
+  order.refundStatus = 'REFUND_PROCESSED';
+  order.paymentStatus = 'REFUNDED';
+  order.refundProcessedAt = new Date();
+  order.refundProcessedBy = actorId;
+
+  await order.save();
+
+  await logAuditEvent({
+    req,
+    actorId,
+    actorRole,
+    action: 'ORDER_REFUND_PROCESSED',
+    resource: 'Order',
+    resourceId: order._id,
+    result: 'SUCCESS',
+    metadata: {
+      orderId: order.orderId,
+      refundAmount: order.advanceAmount || Math.round((order.total || 0) * 0.40),
+    },
+  });
+
+  return order;
+};
+
+/**
+ * Buyer submits refund request for cancelled order
+ */
+const requestOrderRefund = async ({ orderId, buyerId, reason, req }) => {
+  const isObjectId = mongoose.Types.ObjectId.isValid(orderId);
+  const query = isObjectId ? { _id: orderId, buyerId } : { orderId, buyerId };
+
+  const order = await Order.findOne(query);
+  if (!order) {
+    throw new ApiError(404, 'Order not found or unauthorized.', 'NOT_FOUND');
+  }
+
+  if (order.status !== 'CANCELLED') {
+    throw new ApiError(400, 'Refund can only be requested for cancelled orders.', 'INVALID_STATE');
+  }
+
+  order.refundStatus = 'REFUND_REQUESTED';
+  order.refundReason = reason || order.cancelledReason || 'Buyer requested advance refund for cancelled order.';
+  order.refundRequestedAt = new Date();
+
+  await order.save();
+  return order;
+};
+
 module.exports = {
   createOrder,
   getOrdersForBuyer,
@@ -927,6 +988,8 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   cancelBuyerOrder,
+  processOrderRefund,
+  requestOrderRefund,
   calculateDeliveryFee,
   calculateHaversineDistanceKm,
   previewOrderQuote,

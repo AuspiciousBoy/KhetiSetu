@@ -62,7 +62,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 
 // 8. Static Uploads (Serving produce photos, farmer QR codes, and payment proofs)
 app.use(
-  '/uploads',
+  ['/uploads', '/api/v1/uploads', '/api/uploads'],
   (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
