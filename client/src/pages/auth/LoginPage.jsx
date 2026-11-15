@@ -62,8 +62,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 bg-background">
-      <Card className="w-full max-w-md p-8 sm:p-10 border border-surface-variant bg-surface soil-shadow">
+    <div className="min-h-[85vh] flex items-center justify-center p-3 sm:p-6 bg-background">
+      <Card className="w-full max-w-md p-5 sm:p-8 md:p-10 border border-surface-variant bg-surface soil-shadow">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">

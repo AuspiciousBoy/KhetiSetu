@@ -333,8 +333,8 @@ const LocationPicker = ({
 
       {/* Editable Address & Coordinates Fields */}
       {showFullForm && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs pt-1">
+          <div className="col-span-1 sm:col-span-2 md:col-span-2">
             <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">
               Address / Line 1 *
             </label>

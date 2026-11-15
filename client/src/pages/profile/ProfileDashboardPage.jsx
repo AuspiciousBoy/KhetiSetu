@@ -580,7 +580,7 @@ const ProfileDashboardPage = () => {
 
       {/* TAB CONTENT 1: PERSONAL INFORMATION */}
       {activeTab === 'personal' && (
-        <Card className="p-8 flex flex-col gap-6">
+        <Card className="p-4 sm:p-8 flex flex-col gap-6">
           <div>
             <h3 className="font-display font-semibold text-lg text-primary">
               {t('profile.personalTab')}
@@ -652,7 +652,7 @@ const ProfileDashboardPage = () => {
 
       {/* TAB CONTENT 2: B2B BUSINESS PROFILE */}
       {activeTab === 'business' && isBusiness && (
-        <Card className="p-8 flex flex-col gap-6">
+        <Card className="p-4 sm:p-8 flex flex-col gap-6">
           <div>
             <h3 className="font-display font-semibold text-lg text-primary">
               {t('profile.businessTab')}
@@ -809,7 +809,7 @@ const ProfileDashboardPage = () => {
 
       {/* TAB CONTENT 3: FARMER FARM & LOCATION */}
       {activeTab === 'farm' && isFarmer && (
-        <Card className="p-8 flex flex-col gap-6">
+        <Card className="p-4 sm:p-8 flex flex-col gap-6">
           <div>
             <h3 className="font-display font-semibold text-lg text-primary">
               {t('profile.farmTab')}
@@ -1080,7 +1080,7 @@ const ProfileDashboardPage = () => {
 
       {/* TAB CONTENT 4: SAVED ADDRESSES (CONSUMER & BUSINESS) */}
       {activeTab === 'addresses' && (isConsumer || isBusiness) && (
-        <Card className="p-8 flex flex-col gap-6">
+        <Card className="p-4 sm:p-8 flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h3 className="font-display font-semibold text-lg text-primary">
@@ -1218,7 +1218,7 @@ const ProfileDashboardPage = () => {
 
       {/* TAB CONTENT 5: FARMER UPI PAYMENT SETTINGS */}
       {activeTab === 'payment' && isFarmer && (
-        <Card className="p-8 flex flex-col gap-6">
+        <Card className="p-4 sm:p-8 flex flex-col gap-6">
           <div>
             <h3 className="font-display font-semibold text-lg text-primary">
               {t('profile.paymentTitle')}
@@ -1341,7 +1341,7 @@ const ProfileDashboardPage = () => {
 
       {/* TAB CONTENT 6: SECURITY & PASSWORD CHANGE */}
       {activeTab === 'security' && (
-        <Card className="p-8 flex flex-col gap-6">
+        <Card className="p-4 sm:p-8 flex flex-col gap-6">
           <div>
             <h3 className="font-display font-semibold text-lg text-primary">
               {t('profile.changePasswordTitle')}

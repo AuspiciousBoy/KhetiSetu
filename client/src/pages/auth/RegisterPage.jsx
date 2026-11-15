@@ -115,8 +115,8 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4 sm:p-6 bg-background">
-      <Card className="w-full max-w-xl p-8 sm:p-10 border border-surface-variant bg-surface soil-shadow my-8">
+    <div className="min-h-[90vh] flex items-center justify-center p-3 sm:p-6 bg-background">
+      <Card className="w-full max-w-xl p-4 sm:p-8 md:p-10 border border-surface-variant bg-surface soil-shadow my-4 sm:my-8">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-2">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
@@ -135,39 +135,39 @@ const RegisterPage = () => {
         </div>
 
         {/* Role Selector Card Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8">
           <button
             type="button"
             onClick={() => setRole('FARMER')}
-            className={`p-3.5 rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
+            className={`p-2 sm:p-3.5 rounded-[14px] sm:rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
               role === 'FARMER'
                 ? 'bg-primary text-on-primary border-primary shadow-sm'
                 : 'bg-surface-container border-surface-variant text-on-surface hover:bg-surface-variant'
             }`}
           >
-            <Tractor className="w-6 h-6 mb-1.5" />
-            <span className="text-xs font-bold block">{t('auth.farmer')}</span>
-            <span className="text-[10px] opacity-80 block">{t('auth.sellAndAssess')}</span>
+            <Tractor className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-1.5" />
+            <span className="text-[11px] sm:text-xs font-bold block leading-tight">{t('auth.farmer')}</span>
+            <span className="text-[9px] sm:text-[10px] opacity-80 block truncate max-w-full">{t('auth.sellAndAssess')}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setRole('CONSUMER')}
-            className={`p-3.5 rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
+            className={`p-2 sm:p-3.5 rounded-[14px] sm:rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
               role === 'CONSUMER'
                 ? 'bg-primary text-on-primary border-primary shadow-sm'
                 : 'bg-surface-container border-surface-variant text-on-surface hover:bg-surface-variant'
             }`}
           >
-            <ShoppingBag className="w-6 h-6 mb-1.5" />
-            <span className="text-xs font-bold block">{t('auth.consumer')}</span>
-            <span className="text-[10px] opacity-80 block">{t('auth.freshHarvest')}</span>
+            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-1.5" />
+            <span className="text-[11px] sm:text-xs font-bold block leading-tight">{t('auth.consumer')}</span>
+            <span className="text-[9px] sm:text-[10px] opacity-80 block truncate max-w-full">{t('auth.freshHarvest')}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setRole('BUSINESS')}
-            className={`p-3.5 rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
+            className={`p-2 sm:p-3.5 rounded-[14px] sm:rounded-[16px] text-center border transition-all flex flex-col items-center justify-center ${
               role === 'BUSINESS'
                 ? 'bg-primary text-on-primary border-primary shadow-sm'
                 : 'bg-surface-container border-surface-variant text-on-surface hover:bg-surface-variant'
@@ -230,7 +230,7 @@ const RegisterPage = () => {
                 value={farmName}
                 onChange={(e) => setFarmName(e.target.value)}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label={t('auth.districtLabel')}
                   placeholder="Pune"

@@ -124,7 +124,7 @@ const ConsumerDashboardPage = () => {
       ) : (
         <div className="flex flex-col gap-6">
           {orders.map((order) => (
-            <Card key={order._id} className="p-6 flex flex-col gap-4">
+            <Card key={order._id} className="p-4 sm:p-6 flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-surface-variant/60 pb-4">
                 <div>
                   <span className="font-mono text-xs font-bold text-primary">
@@ -246,12 +246,12 @@ const ConsumerDashboardPage = () => {
 
       {/* Cancel Order & Request Refund Modal */}
       {cancellingOrder && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-surface rounded-2xl max-w-md w-full p-6 border border-surface-variant shadow-2xl flex flex-col gap-4 relative">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-surface rounded-2xl max-w-md w-full p-4 sm:p-6 border border-surface-variant shadow-2xl flex flex-col gap-4 relative my-auto">
             <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
-              <div className="flex items-center gap-2 text-primary font-display font-bold text-base sm:text-lg">
-                <AlertTriangle className="w-5 h-5 text-error" />
-                <span>Cancel Order & Request Refund</span>
+              <div className="flex items-center gap-2 text-primary font-display font-bold text-sm sm:text-lg">
+                <AlertTriangle className="w-5 h-5 text-error shrink-0" />
+                <span>Cancel Order & Refund</span>
               </div>
               <button
                 type="button"

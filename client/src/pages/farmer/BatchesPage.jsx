@@ -251,7 +251,7 @@ const BatchesPage = () => {
         subtitle={t('batchesPage.registerBatchModalSubtitle')}
       >
         <form onSubmit={handleCreateBatch} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="flex flex-col gap-1.5 text-left">
               <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md">
                 {t('batchesPage.crop')}
@@ -282,7 +282,7 @@ const BatchesPage = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="flex flex-col gap-1.5 text-left">
               <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-md">
                 {t('batchesPage.unit')}

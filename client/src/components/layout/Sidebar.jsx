@@ -18,12 +18,13 @@ import {
   ShoppingCart,
   QrCode,
   LogOut,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, onClose }) => {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const role = user?.role || 'FARMER';
@@ -83,23 +84,35 @@ const Sidebar = () => {
     }
   };
 
-  return (
-    <aside className="w-64 bg-[#08241a] text-[#fdf9f0] min-h-screen flex flex-col justify-between p-6 shrink-0 border-r border-[#154633] relative z-20">
+  const sidebarContent = (
+    <div className="flex flex-col justify-between h-full min-h-full">
       <div>
         {/* Brand Header */}
-        <Link to="/" className="flex items-center gap-3 mb-8 px-2 group">
-          <div className="w-10 h-10 rounded-[12px] bg-[#0d3829] flex items-center justify-center text-emerald-300 border border-[#1b5c42]">
-            <Sprout className="w-5 h-5 text-emerald-300" />
-          </div>
-          <div>
-            <h1 className="font-display font-bold text-lg tracking-tight text-white">
-              {t('common.appName')}
-            </h1>
-            <p className="text-[10px] text-emerald-300/80 tracking-wider uppercase font-semibold font-mono">
-              {getPortalTitle()}
-            </p>
-          </div>
-        </Link>
+        <div className="flex items-center justify-between mb-8 px-2">
+          <Link to="/" onClick={onClose} className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-[12px] bg-[#0d3829] flex items-center justify-center text-emerald-300 border border-[#1b5c42]">
+              <Sprout className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div>
+              <h1 className="font-display font-bold text-lg tracking-tight text-white">
+                {t('common.appName')}
+              </h1>
+              <p className="text-[10px] text-emerald-300/80 tracking-wider uppercase font-semibold font-mono">
+                {getPortalTitle()}
+              </p>
+            </div>
+          </Link>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="lg:hidden w-8 h-8 rounded-full bg-[#0d3829] flex items-center justify-center text-emerald-300 hover:text-white"
+              aria-label="Close Navigation Menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
         {/* Navigation Links */}
         <nav className="flex flex-col gap-1.5">
@@ -109,6 +122,7 @@ const Sidebar = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={onClose}
                 end={item.path.endsWith('/dashboard')}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-xs sm:text-sm font-medium transition-all duration-200 ${
@@ -136,6 +150,7 @@ const Sidebar = () => {
 
         <Link
           to="/profile"
+          onClick={onClose}
           className="flex items-center gap-3 px-2 py-1.5 rounded-[12px] hover:bg-white/10 transition-colors group cursor-pointer"
           title={t('nav.profile') || 'View Profile'}
         >
@@ -153,14 +168,39 @@ const Sidebar = () => {
         </Link>
 
         <button
-          onClick={logout}
+          onClick={() => {
+            onClose?.();
+            logout();
+          }}
           className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-300 hover:bg-rose-950/40 rounded-[8px] transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>{t('nav.signOut')}</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden lg:flex w-64 bg-[#08241a] text-[#fdf9f0] min-h-screen flex-col justify-between p-6 shrink-0 border-r border-[#154633] sticky top-0 h-screen overflow-y-auto">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Slide-over Drawer with Backdrop */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex animate-fade-in">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          <aside className="relative w-72 max-w-[85vw] bg-[#08241a] text-[#fdf9f0] h-full p-6 z-10 shadow-2xl overflow-y-auto">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 };
 

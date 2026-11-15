@@ -147,7 +147,7 @@ const BusinessDashboardPage = () => {
       </div>
 
       {/* Bulk Purchase Consignments */}
-      <Card className="p-8">
+      <Card className="p-4 sm:p-8">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
           <h3 className="font-display font-semibold text-xl text-primary">
             {t('businessDashboard.recentBulkConsignments')}

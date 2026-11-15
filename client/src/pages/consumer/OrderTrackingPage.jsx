@@ -72,8 +72,8 @@ const OrderTrackingPage = () => {
         <Link to={ordersBackLink} className="text-xs text-secondary font-semibold hover:underline mb-2 inline-block">
           {t('orderTracking.backToOrders')}
         </Link>
-        <div className="flex items-center justify-between">
-          <h1 className="font-display font-bold text-2xl text-primary">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="font-display font-bold text-xl sm:text-2xl text-primary">
             {t('orderTracking.deliveryTracking', { orderId: order.orderId })}
           </h1>
           <Badge variant="success">{order.status.replace(/_/g, ' ')}</Badge>
@@ -88,7 +88,7 @@ const OrderTrackingPage = () => {
       </div>
 
       {/* Chronological Timeline Card */}
-      <Card className="p-8">
+      <Card className="p-4 sm:p-8">
         <h3 className="font-display font-semibold text-lg text-primary mb-6 pb-3 border-b border-surface-variant/60">
           {t('orderTracking.progressionTitle')}
         </h3>

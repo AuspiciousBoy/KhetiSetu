@@ -252,7 +252,7 @@ const ListingsPage = () => {
             onChange={(e) => setDescription(e.target.value)}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label={t('listingsPage.pricePerUnit')}
               type="number"
@@ -272,7 +272,7 @@ const ListingsPage = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Input
               label={t('listingsPage.moq')}
               type="number"
@@ -281,7 +281,7 @@ const ListingsPage = () => {
               value={minOrderQuantity}
               onChange={(e) => setMinOrderQuantity(e.target.value)}
             />
-            <div className="flex items-center gap-4 pt-6">
+            <div className="flex items-center gap-4 pt-1 sm:pt-6">
               <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
                 <input
                   type="checkbox"

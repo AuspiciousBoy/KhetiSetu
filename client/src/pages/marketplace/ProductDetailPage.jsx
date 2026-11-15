@@ -494,12 +494,12 @@ const ProductDetailPage = () => {
 
       {/* Production-Ready 40% Advance Payment & Location Checkout Modal */}
       {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-surface w-full max-w-2xl max-h-[90vh] my-auto rounded-[24px] shadow-2xl border border-surface-variant flex flex-col relative overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-surface w-full max-w-2xl max-h-[92dvh] sm:max-h-[90vh] my-auto rounded-2xl sm:rounded-[24px] shadow-2xl border border-surface-variant flex flex-col relative overflow-hidden">
             {/* Modal Header (Fixed at top) */}
-            <div className="p-4 sm:p-6 pb-3 border-b border-surface-variant/60 flex items-center justify-between shrink-0 bg-surface">
-              <div>
-                <h3 className="font-display font-bold text-base sm:text-xl text-primary flex items-center gap-2">
+            <div className="p-3.5 sm:p-6 pb-3 border-b border-surface-variant/60 flex items-center justify-between shrink-0 bg-surface">
+              <div className="pr-2">
+                <h3 className="font-display font-bold text-base sm:text-xl text-primary flex flex-wrap items-center gap-1.5">
                   <span>Farm Order & Advance Settlement</span>
                   <Badge variant="warning">40% ADVANCE</Badge>
                 </h3>

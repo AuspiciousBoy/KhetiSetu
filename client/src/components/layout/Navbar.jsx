@@ -24,6 +24,7 @@ const Navbar = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e) => {
@@ -137,40 +138,49 @@ const Navbar = () => {
                 {user.role}
               </Badge>
 
-              <div className="relative group">
+              <div className="relative">
                 <button
                   type="button"
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  onBlur={() => setTimeout(() => setProfileDropdownOpen(false), 200)}
                   className="w-9 h-9 rounded-full bg-surface-variant overflow-hidden border border-outline-variant/30 flex items-center justify-center text-primary font-bold text-xs"
                 >
                   {user.fullName ? user.fullName[0].toUpperCase() : <User className="w-4 h-4" />}
                 </button>
-                <div className="absolute right-0 top-11 w-52 bg-surface rounded-[16px] border border-surface-variant p-2 soil-shadow hidden group-hover:block z-50">
-                  <div className="px-3 py-2 border-b border-surface-variant/60">
-                    <p className="text-xs font-semibold text-primary truncate">{user.fullName}</p>
-                    <p className="text-[10px] text-on-surface-variant truncate">{user.email}</p>
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 top-11 w-52 bg-surface rounded-[16px] border border-surface-variant p-2 soil-shadow z-50">
+                    <div className="px-3 py-2 border-b border-surface-variant/60">
+                      <p className="text-xs font-semibold text-primary truncate">{user.fullName}</p>
+                      <p className="text-[10px] text-on-surface-variant truncate">{user.email}</p>
+                    </div>
+                    <Link
+                      to={getDashboardPath()}
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-on-surface hover:bg-surface-container rounded-[8px]"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5 text-secondary" />
+                      {t('nav.dashboard')}
+                    </Link>
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-on-surface hover:bg-surface-container rounded-[8px]"
+                    >
+                      <User className="w-3.5 h-3.5 text-secondary" />
+                      {t('nav.profile')}
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center gap-2 text-left px-3 py-2 text-xs text-error hover:bg-error-container/30 rounded-[8px]"
+                    >
+                      <LogOut className="w-3.5 h-3.5 text-error" />
+                      {t('nav.signOut')}
+                    </button>
                   </div>
-                  <Link
-                    to={getDashboardPath()}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-on-surface hover:bg-surface-container rounded-[8px]"
-                  >
-                    <LayoutDashboard className="w-3.5 h-3.5 text-secondary" />
-                    {t('nav.dashboard')}
-                  </Link>
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-on-surface hover:bg-surface-container rounded-[8px]"
-                  >
-                    <User className="w-3.5 h-3.5 text-secondary" />
-                    {t('nav.profile')}
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="w-full flex items-center gap-2 text-left px-3 py-2 text-xs text-error hover:bg-error-container/30 rounded-[8px]"
-                  >
-                    <LogOut className="w-3.5 h-3.5 text-error" />
-                    {t('nav.signOut')}
-                  </button>
-                </div>
+                )}
               </div>
             </div>
           ) : (
@@ -201,11 +211,29 @@ const Navbar = () => {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-surface-container-low px-6 py-4 border-t border-surface-variant flex flex-col gap-3">
+        <div className="lg:hidden bg-surface-container-low px-4 sm:px-6 py-4 border-t border-surface-variant flex flex-col gap-2 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Mobile Search Input */}
+          <form
+            onSubmit={(e) => {
+              handleSearch(e);
+              setMobileMenuOpen(false);
+            }}
+            className="flex md:hidden items-center bg-surface-container rounded-full px-3 py-2 border border-surface-variant mb-1"
+          >
+            <Search className="w-4 h-4 text-on-surface-variant mr-2 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('nav.searchPlaceholder')}
+              className="bg-transparent border-none p-0 focus:ring-0 text-xs text-on-surface placeholder:text-on-surface-variant/70 w-full outline-none"
+            />
+          </form>
+
           <Link
             to="/marketplace"
             onClick={() => setMobileMenuOpen(false)}
-            className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
+            className="py-2 px-2 text-sm font-medium text-on-surface hover:bg-surface-container rounded-lg flex items-center gap-2"
           >
             <Store className="w-4 h-4 text-secondary" />
             {t('nav.marketplace')}
@@ -213,7 +241,7 @@ const Navbar = () => {
           <Link
             to="/market-prices"
             onClick={() => setMobileMenuOpen(false)}
-            className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
+            className="py-2 px-2 text-sm font-medium text-on-surface hover:bg-surface-container rounded-lg flex items-center gap-2"
           >
             <TrendingUp className="w-4 h-4 text-secondary" />
             {t('nav.mandiAnalytics')}
@@ -221,7 +249,7 @@ const Navbar = () => {
           <Link
             to="/weather"
             onClick={() => setMobileMenuOpen(false)}
-            className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
+            className="py-2 px-2 text-sm font-medium text-on-surface hover:bg-surface-container rounded-lg flex items-center gap-2"
           >
             <CloudSun className="w-4 h-4 text-secondary" />
             {t('nav.weatherAdvisories')}
@@ -229,11 +257,46 @@ const Navbar = () => {
           <Link
             to="/ai-assistant"
             onClick={() => setMobileMenuOpen(false)}
-            className="py-2 text-sm font-medium text-on-surface flex items-center gap-2"
+            className="py-2 px-2 text-sm font-medium text-on-surface hover:bg-surface-container rounded-lg flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-secondary" />
             {t('nav.khetiAi')}
           </Link>
+
+          {isAuthenticated && (
+            <div className="pt-2.5 mt-1 border-t border-surface-variant/70 flex flex-col gap-1">
+              <div className="px-2 py-1 text-xs font-semibold text-primary flex items-center justify-between">
+                <span>{user.fullName}</span>
+                <Badge variant="warning">{user.role}</Badge>
+              </div>
+              <Link
+                to={getDashboardPath()}
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 px-2 text-sm font-medium text-on-surface hover:bg-surface-container rounded-lg flex items-center gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4 text-primary" />
+                {t('nav.dashboard')}
+              </Link>
+              <Link
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2 px-2 text-sm font-medium text-on-surface hover:bg-surface-container rounded-lg flex items-center gap-2"
+              >
+                <User className="w-4 h-4 text-secondary" />
+                {t('nav.profile')}
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full text-left py-2 px-2 text-sm font-medium text-error hover:bg-error/10 rounded-lg flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4 text-error" />
+                {t('nav.signOut')}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </nav>

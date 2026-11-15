@@ -233,7 +233,7 @@ const FarmerDashboardPage = () => {
       </div>
 
       {/* Recent Fulfillment Orders Table */}
-      <Card className="p-8">
+      <Card className="p-4 sm:p-8">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
           <div>
             <h3 className="font-display font-semibold text-xl text-primary">
@@ -337,7 +337,7 @@ const FarmerDashboardPage = () => {
       </Card>
 
       {/* Recent Batches Table */}
-      <Card className="p-8">
+      <Card className="p-4 sm:p-8">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-variant/60">
           <div>
             <h3 className="font-display font-semibold text-xl text-primary">

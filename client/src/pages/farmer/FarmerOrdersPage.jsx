@@ -397,7 +397,7 @@ const FarmerOrdersPage = () => {
               order.farmerSubtotal !== undefined ? order.farmerSubtotal : order.total;
 
             return (
-              <Card key={order._id} className="p-6 flex flex-col gap-6 soil-shadow">
+              <Card key={order._id} className="p-3.5 sm:p-6 flex flex-col gap-5 sm:gap-6 soil-shadow">
                 {/* Order Top Bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-surface-variant/60 pb-4">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -540,25 +540,25 @@ const FarmerOrdersPage = () => {
                 {/* Order Footer & Action Controls */}
                 <div className="flex flex-col gap-3 pt-4 border-t border-surface-variant/60">
                   <div className="flex flex-wrap items-center justify-between gap-3 bg-surface-container/40 p-3 rounded-xl border border-surface-variant/60">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1.5 w-full">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="text-xs text-on-surface-variant font-medium">Produce Subtotal:</span>
                         <span className="font-mono font-bold text-xs text-primary">₹{order.subtotal?.toLocaleString('en-IN') || orderTotal?.toLocaleString('en-IN')}</span>
-                        <span className="text-on-surface-variant/40">•</span>
+                        <span className="text-on-surface-variant/40 hidden xs:inline">•</span>
                         <span className="text-xs text-on-surface-variant font-medium">Delivery ({order.distanceKm || 15} km):</span>
                         <span className="font-mono font-bold text-xs text-primary">₹{order.deliveryFee || 0}</span>
-                        <span className="text-on-surface-variant/40">•</span>
+                        <span className="text-on-surface-variant/40 hidden xs:inline">•</span>
                         <span className="text-xs text-on-surface-variant font-medium">GST (5%):</span>
                         <span className="font-mono font-bold text-xs text-primary">₹{order.tax || 0}</span>
                       </div>
-                      <div className="flex items-center gap-2 pt-0.5">
-                        <span className="font-display font-bold text-base text-primary font-mono">
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 pt-1">
+                        <span className="font-display font-bold text-sm sm:text-base text-primary font-mono">
                           Total: ₹{order.total?.toLocaleString('en-IN') || orderTotal?.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-300 font-mono">
+                        <span className="text-[10px] sm:text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-300 font-mono">
                           40% Advance Paid: ₹{(order.advanceAmount || Math.round((order.total || orderTotal) * 0.40)).toLocaleString('en-IN')}
                         </span>
-                        <span className="text-[11px] text-amber-800 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-300 font-mono">
+                        <span className="text-[10px] sm:text-[11px] text-amber-800 dark:text-amber-300 font-medium bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-300 font-mono">
                           60% Due: ₹{(order.pendingAmount || ((order.total || orderTotal) - Math.round((order.total || orderTotal) * 0.40))).toLocaleString('en-IN')}
                         </span>
                       </div>
