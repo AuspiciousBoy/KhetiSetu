@@ -7,6 +7,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { getMediaUrl } from '../../utils/media';
 
 const MarketplacePage = () => {
   const { t } = useTranslation();
@@ -151,9 +152,7 @@ const MarketplacePage = () => {
                 <div className="h-52 -mx-6 -mt-6 mb-4 overflow-hidden relative">
                   <img
                     src={
-                      item.imageUrl ||
-                      item.images?.[0] ||
-                      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800'
+                      getMediaUrl(item.imageUrl || item.images?.[0], 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800')
                     }
                     alt={item.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"

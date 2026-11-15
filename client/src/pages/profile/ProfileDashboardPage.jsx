@@ -31,6 +31,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
 import LocationPicker from '../../components/location/LocationPicker';
+import { getMediaUrl } from '../../utils/media';
 
 const ProfileDashboardPage = () => {
   const { user: authUser, updateUser } = useAuth();
@@ -1279,7 +1280,7 @@ const ProfileDashboardPage = () => {
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-48 h-48 rounded-[16px] overflow-hidden bg-white p-2 border-2 border-primary/20 shadow-md">
                     <img
-                      src={paymentSettings.upiQrCodeUrl}
+                      src={getMediaUrl(paymentSettings.upiQrCodeUrl)}
                       alt="Farmer UPI QR Code"
                       className="w-full h-full object-contain"
                     />

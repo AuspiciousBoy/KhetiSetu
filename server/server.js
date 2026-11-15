@@ -55,8 +55,21 @@ app.use(mongoSanitizer);
 // 7. Global API Rate Limiter
 app.use(globalLimiter);
 
-// 8. Static Uploads (Serving produce photos)
-app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '1d', etag: true }));
+// Ensure upload directory exists
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+// 8. Static Uploads (Serving produce photos, farmer QR codes, and payment proofs)
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(UPLOAD_DIR, { maxAge: '1d', etag: true })
+);
 
 // 9. Health & Readiness Probes (Kubernetes / Docker compatible)
 app.get('/health', (req, res) => {

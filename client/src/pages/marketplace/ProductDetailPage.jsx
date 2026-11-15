@@ -32,6 +32,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
 import LocationPicker from '../../components/location/LocationPicker';
 import InvoiceModal from '../../components/orders/InvoiceModal';
+import { getMediaUrl } from '../../utils/media';
 
 const ProductDetailPage = () => {
   const { t } = useTranslation();
@@ -382,7 +383,7 @@ const ProductDetailPage = () => {
           <div className="aspect-[4/3] w-full bg-surface-container flex items-center justify-center overflow-hidden">
             {product.imageUrl || product.images?.[0] ? (
               <img
-                src={product.imageUrl || product.images[0]}
+                src={getMediaUrl(product.imageUrl || product.images[0])}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -722,7 +723,7 @@ const ProductDetailPage = () => {
                   {farmerQrUrl ? (
                     <div className="w-28 sm:w-32 h-28 sm:h-32 bg-white p-2 rounded-xl border border-surface-variant shrink-0 flex items-center justify-center shadow-sm">
                       <img
-                        src={farmerQrUrl}
+                        src={getMediaUrl(farmerQrUrl)}
                         alt={`${farmerDisplayName} UPI QR Code`}
                         className="w-full h-full object-contain"
                       />
@@ -790,7 +791,7 @@ const ProductDetailPage = () => {
                             <span className="font-medium text-[11px]">Payment proof uploaded successfully</span>
                           </div>
                           <a
-                            href={paymentProofUrl}
+                            href={getMediaUrl(paymentProofUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[10px] underline font-semibold flex items-center gap-0.5"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Printer, X, CheckCircle2, Sprout, MapPin, Phone, Mail, FileText, ExternalLink } from 'lucide-react';
 import Button from '../ui/Button';
+import { getMediaUrl } from '../../utils/media';
 
 /**
  * Printable A4 Tax Invoice Modal for KhetiSetu
@@ -307,7 +308,7 @@ const InvoiceModal = ({ order, isOpen, onClose }) => {
                 <div className="pt-2 border-t border-surface-variant/40 flex items-center justify-between">
                   <span className="text-on-surface-variant">Payment Screenshot:</span>
                   <a
-                    href={order.paymentProofUrl}
+                    href={getMediaUrl(order.paymentProofUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-secondary hover:underline inline-flex items-center gap-1 font-semibold"

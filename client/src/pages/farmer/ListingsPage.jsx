@@ -8,6 +8,7 @@ import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
 import { Skeleton, EmptyState } from '../../components/ui/Skeleton';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { getMediaUrl } from '../../utils/media';
 
 const ListingsPage = () => {
   const { t } = useTranslation();
@@ -164,7 +165,7 @@ const ListingsPage = () => {
               <div>
                 <div className="h-44 -mx-6 -mt-6 mb-4 overflow-hidden relative">
                   <img
-                    src={item.imageUrl || item.images?.[0] || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600'}
+                    src={getMediaUrl(item.imageUrl || item.images?.[0], 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600')}
                     alt={item.title}
                     className="w-full h-full object-cover"
                   />
@@ -311,7 +312,7 @@ const ListingsPage = () => {
 
             {imageUrl ? (
               <div className="relative rounded-xl overflow-hidden border border-surface-variant bg-surface-container h-36 flex items-center justify-center">
-                <img src={imageUrl} alt="Uploaded produce" className="w-full h-full object-cover" />
+                <img src={getMediaUrl(imageUrl)} alt="Uploaded produce" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => setImageUrl('')}

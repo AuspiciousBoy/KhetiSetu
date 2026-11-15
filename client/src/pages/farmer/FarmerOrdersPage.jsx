@@ -29,6 +29,7 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { Skeleton, EmptyState, ErrorState } from '../../components/ui/Skeleton';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { getMediaUrl } from '../../utils/media';
 
 const FarmerOrdersPage = () => {
   const { t } = useTranslation();
@@ -567,7 +568,7 @@ const FarmerOrdersPage = () => {
                     {order.paymentProofUrl ? (
                       <div className="flex items-center gap-2 bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 px-2.5 rounded-xl border border-emerald-500/30">
                         <img
-                          src={order.paymentProofUrl}
+                          src={getMediaUrl(order.paymentProofUrl)}
                           alt="Proof Thumbnail"
                           onClick={() => {
                             setProofPreviewUrl(order.paymentProofUrl);
@@ -811,7 +812,7 @@ const FarmerOrdersPage = () => {
 
             <div className="rounded-xl overflow-hidden bg-black/90 flex items-center justify-center max-h-[70vh]">
               <img
-                src={proofPreviewUrl}
+                src={getMediaUrl(proofPreviewUrl)}
                 alt="Payment Proof Full"
                 className="w-full h-auto max-h-[70vh] object-contain"
               />
@@ -819,7 +820,7 @@ const FarmerOrdersPage = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs pt-1 border-t border-surface-variant/60">
               <a
-                href={proofPreviewUrl}
+                href={getMediaUrl(proofPreviewUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-secondary hover:underline inline-flex items-center gap-1 font-semibold"
