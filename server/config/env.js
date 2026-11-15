@@ -6,7 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const PORT = parseInt(process.env.PORT || '5000', 10);
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/khetisetu';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/khetisetu';
 
 const crypto = require('crypto');
 

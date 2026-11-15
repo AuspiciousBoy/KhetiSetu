@@ -16,6 +16,9 @@ const { mongoSanitizer } = require('./security/mongoSanitizer');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 const Media = require('./models/Media');
+const Product = require('./models/Product');
+const ProduceBatch = require('./models/ProduceBatch');
+const QualityAssessment = require('./models/QualityAssessment');
 const v1Router = require('./routes/v1');
 
 const app = express();
@@ -221,14 +224,47 @@ const syncLocalUploadsToDatabase = async () => {
   }
 };
 
+// Heal legacy product listings where imageUrl was defaulted to generic placeholder
+const healProductListingImages = async () => {
+  try {
+    const productsWithPlaceholder = await Product.find({
+      $or: [
+        { imageUrl: { $regex: 'unsplash.com', $options: 'i' } },
+        { imageUrl: { $exists: false } },
+        { imageUrl: '' },
+      ],
+    }).populate({
+      path: 'batchId',
+      populate: { path: 'qualityAssessmentId' },
+    });
+
+    for (const prod of productsWithPlaceholder) {
+      const batchImg = prod.batchId?.qualityAssessmentId?.imageUrl;
+      if (batchImg && !batchImg.includes('unsplash.com')) {
+        await Product.updateOne(
+          { _id: prod._id },
+          { imageUrl: batchImg, images: [batchImg] }
+        );
+        logger.info(`Healed product '${prod.title}' image to farmer's uploaded batch photo: ${batchImg}`);
+      }
+    }
+  } catch (err) {
+    logger.warn('Non-blocking notice during product image healing:', { error: err.message });
+  }
+};
+
 // Start Server and Database
 const startServer = async () => {
   if (isProd) {
     await connectDB();
     await syncLocalUploadsToDatabase();
+    await healProductListingImages();
   } else {
     connectDB()
-      .then(() => syncLocalUploadsToDatabase())
+      .then(async () => {
+        await syncLocalUploadsToDatabase();
+        await healProductListingImages();
+      })
       .catch((err) => {
         logger.warn('Initial MongoDB connection deferred in dev mode', { error: err.message });
       });

@@ -32,6 +32,22 @@ const ListingsPage = () => {
   const [imageError, setImageError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const handleOpenCreateModal = () => {
+    if (batches.length > 0) {
+      const activeBatch = batches.find((b) => b._id === selectedBatchId) || batches[0];
+      setSelectedBatchId(activeBatch._id);
+      if (activeBatch.availableQuantity && !availableQuantity) {
+        setAvailableQuantity(activeBatch.availableQuantity);
+      }
+      const batchImg = activeBatch.qualityAssessmentId?.imageUrl;
+      if (batchImg && (!imageUrl || imageUrl.includes('unsplash.com'))) {
+        setImageUrl(batchImg);
+        setLocalPreviewUrl('');
+      }
+    }
+    setIsModalOpen(true);
+  };
+
   const fetchListingsAndBatches = async () => {
     try {
       setLoading(true);
@@ -138,7 +154,7 @@ const ListingsPage = () => {
         <Button
           variant="primary"
           size="md"
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenCreateModal}
           disabled={batches.length === 0}
           className="flex items-center gap-1.5"
         >
@@ -157,7 +173,7 @@ const ListingsPage = () => {
           title={t('listingsPage.noListingsTitle')}
           description={t('listingsPage.noListingsDesc')}
           action={
-            <Button variant="primary" size="md" onClick={() => setIsModalOpen(true)}>
+            <Button variant="primary" size="md" onClick={handleOpenCreateModal}>
               {t('listingsPage.publishFirstListing')}
             </Button>
           }
@@ -169,9 +185,19 @@ const ListingsPage = () => {
               <div>
                 <div className="h-44 -mx-6 -mt-6 mb-4 overflow-hidden relative">
                   <img
-                    src={getMediaUrl(item.imageUrl || item.images?.[0], 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600')}
+                    src={getMediaUrl(item.imageUrl || item.images?.[0])}
                     alt={item.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                      const target = item.imageUrl || item.images?.[0];
+                      if (raw && target && !e.currentTarget.src.startsWith(raw)) {
+                        e.currentTarget.src = `${raw}${target.startsWith('/') ? '' : '/'}${target}`;
+                      } else {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=600';
+                      }
+                    }}
                   />
                   <div className="absolute top-3 right-3 flex gap-1.5">
                     {item.isB2C && <Badge variant="primary">B2C</Badge>}
@@ -230,7 +256,19 @@ const ListingsPage = () => {
             </label>
             <select
               value={selectedBatchId}
-              onChange={(e) => setSelectedBatchId(e.target.value)}
+              onChange={(e) => {
+                const bId = e.target.value;
+                setSelectedBatchId(bId);
+                const b = batches.find((item) => item._id === bId);
+                if (b) {
+                  if (b.availableQuantity) setAvailableQuantity(b.availableQuantity);
+                  const bImg = b.qualityAssessmentId?.imageUrl;
+                  if (bImg && (!imageUrl || imageUrl.includes('unsplash.com'))) {
+                    setImageUrl(bImg);
+                    setLocalPreviewUrl('');
+                  }
+                }
+              }}
               className="w-full bg-surface-container text-on-surface rounded-[12px] py-3 px-4 text-sm border-none focus:ring-1 focus:ring-primary"
             >
               {batches.map((b) => (
@@ -321,8 +359,13 @@ const ListingsPage = () => {
                   alt="Uploaded produce"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                    const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                    if (raw && imageUrl && !e.currentTarget.src.startsWith(raw)) {
+                      e.currentTarget.src = `${raw}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+                    } else {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                    }
                   }}
                 />
                 <button

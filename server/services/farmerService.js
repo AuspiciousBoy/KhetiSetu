@@ -315,6 +315,21 @@ const createListing = async (farmerId, listingData, req) => {
   const farmerProfile = await getProfile(farmerId);
   const crop = await Crop.findOne({ name: new RegExp(`^${batch.cropName}$`, 'i') });
 
+  // Prioritize farmer's uploaded image (from listing modal or from batch quality assessment)
+  let resolvedImageUrl = listingData.imageUrl || (listingData.images && listingData.images[0]) || '';
+  if (!resolvedImageUrl && batch.qualityAssessmentId) {
+    const qa = await QualityAssessment.findById(batch.qualityAssessmentId);
+    if (qa && qa.imageUrl) {
+      resolvedImageUrl = qa.imageUrl;
+    }
+  }
+  if (!resolvedImageUrl && crop && crop.imageUrl) {
+    resolvedImageUrl = crop.imageUrl;
+  }
+  if (!resolvedImageUrl) {
+    resolvedImageUrl = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+  }
+
   const product = await Product.create({
     batchId: batch._id,
     farmerId,
@@ -326,16 +341,8 @@ const createListing = async (farmerId, listingData, req) => {
     minOrderQuantity: listingData.minOrderQuantity || 1,
     maxOrderQuantity: listingData.maxOrderQuantity || listingData.availableQuantity,
     availableQuantity: listingData.availableQuantity,
-    imageUrl: listingData.imageUrl
-      ? listingData.imageUrl
-      : listingData.images && listingData.images.length
-      ? listingData.images[0]
-      : 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800',
-    images: listingData.imageUrl
-      ? [listingData.imageUrl]
-      : listingData.images && listingData.images.length
-      ? listingData.images
-      : ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800'],
+    imageUrl: resolvedImageUrl,
+    images: [resolvedImageUrl],
     qualityGrade: batch.qualityGrade !== 'PENDING_ASSESSMENT' ? batch.qualityGrade : 'UNRATED',
     isB2C: listingData.isB2C !== undefined ? listingData.isB2C : true,
     isB2B: listingData.isB2B !== undefined ? listingData.isB2B : false,

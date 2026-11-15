@@ -390,8 +390,14 @@ const ProductDetailPage = () => {
                 alt={product.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                  const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                  const target = product.imageUrl || product.images?.[0];
+                  if (raw && target && !e.currentTarget.src.startsWith(raw)) {
+                    e.currentTarget.src = `${raw}${target.startsWith('/') ? '' : '/'}${target}`;
+                  } else {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                  }
                 }}
               />
             ) : (

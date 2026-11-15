@@ -151,14 +151,18 @@ const MarketplacePage = () => {
                 {/* Image Banner with Badges */}
                 <div className="h-52 -mx-6 -mt-6 mb-4 overflow-hidden relative">
                   <img
-                    src={
-                      getMediaUrl(item.imageUrl || item.images?.[0], 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800')
-                    }
+                    src={getMediaUrl(item.imageUrl || item.images?.[0])}
                     alt={item.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                      const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                      const target = item.imageUrl || item.images?.[0];
+                      if (raw && target && !e.currentTarget.src.startsWith(raw)) {
+                        e.currentTarget.src = `${raw}${target.startsWith('/') ? '' : '/'}${target}`;
+                      } else {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=800';
+                      }
                     }}
                   />
                   <div className="absolute top-3 right-3 flex gap-1.5">

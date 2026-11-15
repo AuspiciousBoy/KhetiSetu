@@ -15,6 +15,17 @@ const formatProductDTO = (product, farmerProfile = null, batch = null, quality =
   const upiQrCodeUrl = farmerProfile?.paymentSettings?.upiQrCodeUrl || '';
   const isPaymentConfigured = Boolean(farmerProfile?.paymentSettings?.isConfigured && upiId);
 
+  // Prioritize real farmer-uploaded produce images over fallback Unsplash URLs
+  const batchUploadedImage = quality?.imageUrl || batch?.qualityAssessmentId?.imageUrl;
+  let resolvedImageUrl = product.imageUrl || product.images?.[0] || '';
+  if (
+    (!resolvedImageUrl || resolvedImageUrl.includes('images.unsplash.com')) &&
+    batchUploadedImage &&
+    !batchUploadedImage.includes('images.unsplash.com')
+  ) {
+    resolvedImageUrl = batchUploadedImage;
+  }
+
   return {
     id: product._id,
     title: product.title,
@@ -25,8 +36,8 @@ const formatProductDTO = (product, farmerProfile = null, batch = null, quality =
     minOrderQuantity: product.minOrderQuantity,
     maxOrderQuantity: product.maxOrderQuantity,
     availableQuantity: product.availableQuantity,
-    images: product.images || [],
-    imageUrl: product.images?.[0] || product.imageUrl || '',
+    images: resolvedImageUrl ? [resolvedImageUrl] : (product.images || []),
+    imageUrl: resolvedImageUrl,
     qualityGrade: product.qualityGrade,
     isB2C: product.isB2C,
     isB2B: product.isB2B,
@@ -144,7 +155,14 @@ const listProducts = async ({
   const [products, total] = await Promise.all([
     Product.find(query)
       .populate('farmerId', 'fullName email phone')
-      .populate('batchId', 'batchId cropName harvestDate shelfLifeDays storageInformation')
+      .populate({
+        path: 'batchId',
+        select: 'batchId cropName harvestDate shelfLifeDays storageInformation qualityAssessmentId',
+        populate: {
+          path: 'qualityAssessmentId',
+          select: 'imageUrl classification',
+        },
+      })
       .sort(sortOption)
       .skip(skip)
       .limit(parsedLimit),
@@ -158,7 +176,7 @@ const listProducts = async ({
   const items = products.map((prod) => {
     const fId = (prod.farmerId?._id || prod.farmerId)?.toString();
     const fProfile = profileMap.get(fId);
-    return formatProductDTO(prod, fProfile, prod.batchId, null, prod.farmerId);
+    return formatProductDTO(prod, fProfile, prod.batchId, prod.batchId?.qualityAssessmentId, prod.farmerId);
   });
 
   return { items, total, page: parsedPage, limit: parsedLimit };
@@ -180,12 +198,12 @@ const getProductById = async (productId) => {
   const [farmerUser, farmerProfile, batch, reviews] = await Promise.all([
     User.findById(product.farmerId).select('fullName phone email'),
     FarmerProfile.findOne({ userId: product.farmerId }),
-    ProduceBatch.findById(product.batchId),
+    ProduceBatch.findById(product.batchId).populate('qualityAssessmentId'),
     Review.find({ productId: product._id }).sort({ createdAt: -1 }).limit(10),
   ]);
 
-  let quality = null;
-  if (batch && batch.qualityAssessmentId) {
+  let quality = batch?.qualityAssessmentId || null;
+  if (batch && batch.qualityAssessmentId && !quality?.imageUrl) {
     quality = await QualityAssessment.findById(batch.qualityAssessmentId);
   }
 
