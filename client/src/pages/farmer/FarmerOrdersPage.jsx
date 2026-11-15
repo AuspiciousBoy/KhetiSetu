@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Calendar,
   Image as ImageIcon,
+  Receipt,
   X,
   XCircle,
   AlertTriangle,
@@ -48,6 +49,8 @@ const FarmerOrdersPage = () => {
   const [dispatchNote, setDispatchNote] = useState('');
   const [proofPreviewUrl, setProofPreviewUrl] = useState(null);
   const [previewingOrder, setPreviewingOrder] = useState(null);
+  const [failedProofs, setFailedProofs] = useState({});
+  const [modalImageError, setModalImageError] = useState(false);
 
   // Decline Order Modal State
   const [declineModalOrder, setDeclineModalOrder] = useState(null);
@@ -597,24 +600,42 @@ const FarmerOrdersPage = () => {
                     {/* Payment Screenshot Proof Preview Status */}
                     {order.paymentProofUrl ? (
                       <div className="flex items-center gap-2 bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 px-2.5 rounded-xl border border-emerald-500/30">
-                        <img
-                          src={getMediaUrl(order.paymentProofUrl)}
-                          alt="Proof Thumbnail"
-                          onClick={() => {
-                            setProofPreviewUrl(order.paymentProofUrl);
-                            setPreviewingOrder(order);
-                          }}
-                          onError={(e) => {
-                            const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
-                            if (raw && !e.currentTarget.src.startsWith(raw)) {
-                              e.currentTarget.src = `${raw}${order.paymentProofUrl.startsWith('/') ? '' : '/'}${order.paymentProofUrl}`;
-                            }
-                          }}
-                          className="w-9 h-9 object-cover rounded-lg cursor-pointer border border-emerald-500/40 hover:opacity-80 transition-opacity shrink-0"
-                        />
+                        {failedProofs[order._id] ? (
+                          <div
+                            onClick={() => {
+                              setModalImageError(false);
+                              setProofPreviewUrl(order.paymentProofUrl);
+                              setPreviewingOrder(order);
+                            }}
+                            className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center cursor-pointer border border-emerald-400 hover:opacity-80 transition-opacity shrink-0"
+                            title="40% Advance Payment Proof"
+                          >
+                            <Receipt className="w-4 h-4 text-emerald-700 dark:text-emerald-300" />
+                          </div>
+                        ) : (
+                          <img
+                            src={getMediaUrl(order.paymentProofUrl)}
+                            alt="Payment Proof"
+                            onClick={() => {
+                              setModalImageError(false);
+                              setProofPreviewUrl(order.paymentProofUrl);
+                              setPreviewingOrder(order);
+                            }}
+                            onError={(e) => {
+                              const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                              if (raw && !e.currentTarget.src.startsWith(raw)) {
+                                e.currentTarget.src = `${raw}${order.paymentProofUrl.startsWith('/') ? '' : '/'}${order.paymentProofUrl}`;
+                              } else {
+                                setFailedProofs((prev) => ({ ...prev, [order._id]: true }));
+                              }
+                            }}
+                            className="w-9 h-9 object-cover rounded-lg cursor-pointer border border-emerald-500/40 hover:opacity-80 transition-opacity shrink-0"
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={() => {
+                            setModalImageError(false);
                             setProofPreviewUrl(order.paymentProofUrl);
                             setPreviewingOrder(order);
                           }}
@@ -646,6 +667,7 @@ const FarmerOrdersPage = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => {
+                          setModalImageError(false);
                           setProofPreviewUrl(order.paymentProofUrl);
                           setPreviewingOrder(order);
                         }}
@@ -855,29 +877,77 @@ const FarmerOrdersPage = () => {
             <div className="flex items-center justify-between border-b border-surface-variant/60 pb-3">
               <span className="font-display font-bold text-sm text-primary flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-secondary" />
-                <span>Buyer 40% Advance Payment Proof Screenshot</span>
+                <span>Buyer 40% Advance Payment Proof</span>
               </span>
               <button
                 type="button"
-                onClick={() => setProofPreviewUrl(null)}
+                onClick={() => {
+                  setProofPreviewUrl(null);
+                  setModalImageError(false);
+                }}
                 className="w-7 h-7 rounded-full hover:bg-surface-variant flex items-center justify-center text-on-surface-variant"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="rounded-xl overflow-hidden bg-black/90 flex items-center justify-center max-h-[70vh]">
-              <img
-                src={getMediaUrl(proofPreviewUrl)}
-                alt="Payment Proof Full"
-                className="w-full h-auto max-h-[70vh] object-contain"
-                onError={(e) => {
-                  const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
-                  if (raw && !e.currentTarget.src.startsWith(raw) && proofPreviewUrl) {
-                    e.currentTarget.src = `${raw}${proofPreviewUrl.startsWith('/') ? '' : '/'}${proofPreviewUrl}`;
-                  }
-                }}
-              />
+            <div className="rounded-xl overflow-hidden bg-black/90 flex items-center justify-center min-h-[200px] max-h-[70vh]">
+              {!modalImageError ? (
+                <img
+                  src={getMediaUrl(proofPreviewUrl)}
+                  alt="Payment Proof Full"
+                  className="w-full h-auto max-h-[70vh] object-contain"
+                  onError={(e) => {
+                    const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/api(\/v\d+)?\/?$/i, '').replace(/\/+$/, '');
+                    if (raw && !e.currentTarget.src.startsWith(raw) && proofPreviewUrl) {
+                      e.currentTarget.src = `${raw}${proofPreviewUrl.startsWith('/') ? '' : '/'}${proofPreviewUrl}`;
+                    } else {
+                      setModalImageError(true);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="bg-surface-container p-6 rounded-xl text-center w-full flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-400 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-on-surface">40% Advance Payment Verified</h4>
+                    <p className="text-xs text-on-surface-variant mt-1">
+                      Buyer attached payment proof when placing this order.
+                    </p>
+                  </div>
+                  {previewingOrder && (
+                    <div className="w-full bg-surface-container-low rounded-lg p-3 text-left text-xs border border-surface-variant/60 flex flex-col gap-1.5">
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant">Order ID:</span>
+                        <span className="font-mono font-semibold">{previewingOrder._id}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant">40% Advance Paid:</span>
+                        <span className="font-bold text-emerald-600">₹{Math.round((previewingOrder.total || 0) * 0.40).toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant">60% Due on Delivery:</span>
+                        <span className="font-bold text-amber-600">₹{(previewingOrder.pendingAmount || Math.round((previewingOrder.total || 0) * 0.60)).toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant">Payment Status:</span>
+                        <span className="font-semibold text-emerald-600">{previewingOrder.paymentStatus || 'ADVANCE_PAID'}</span>
+                      </div>
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setModalImageError(false)}
+                    className="text-xs mt-1"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                    <span>Retry Loading Screenshot</span>
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs pt-1 border-t border-surface-variant/60">
@@ -901,6 +971,7 @@ const FarmerOrdersPage = () => {
                         const targetId = previewingOrder._id;
                         setProofPreviewUrl(null);
                         setPreviewingOrder(null);
+                        setModalImageError(false);
                         handleUpdateStatus(targetId, 'CONFIRMED');
                       }}
                       className="flex items-center gap-1 text-xs"
@@ -915,6 +986,7 @@ const FarmerOrdersPage = () => {
                         const target = previewingOrder;
                         setProofPreviewUrl(null);
                         setPreviewingOrder(null);
+                        setModalImageError(false);
                         setDeclineModalOrder(target);
                       }}
                       className="flex items-center gap-1 text-xs text-error border-error/40 hover:bg-error/10"
@@ -930,6 +1002,7 @@ const FarmerOrdersPage = () => {
                   onClick={() => {
                     setProofPreviewUrl(null);
                     setPreviewingOrder(null);
+                    setModalImageError(false);
                   }}
                 >
                   Close Preview

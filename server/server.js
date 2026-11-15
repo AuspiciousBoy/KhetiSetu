@@ -15,6 +15,7 @@ const requestIdMiddleware = require('./middleware/requestId');
 const { mongoSanitizer } = require('./security/mongoSanitizer');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
+const Media = require('./models/Media');
 const v1Router = require('./routes/v1');
 
 const app = express();
@@ -60,7 +61,47 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// 8. Static Uploads (Serving produce photos, farmer QR codes, and payment proofs)
+// 8. Static & Database-Backed Uploads (Serving produce photos, farmer QR codes, and payment proofs)
+const serveMediaFile = async (req, res, next) => {
+  try {
+    const rawFilename = req.params.filename || (req.url.replace(/^\/+/, '').split('?')[0]);
+    if (!rawFilename) return next();
+
+    const filename = path.basename(rawFilename);
+    const localFilePath = path.join(UPLOAD_DIR, filename);
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+    // 1. Fast Path: File exists on local container disk cache
+    if (fs.existsSync(localFilePath)) {
+      return res.sendFile(localFilePath);
+    }
+
+    // 2. Persistent Path: Retrieve binary buffer directly from MongoDB Atlas
+    const media = await Media.findOne({ filename });
+    if (media && media.data) {
+      // Re-hydrate local container disk cache asynchronously
+      fs.promises.writeFile(localFilePath, media.data).catch(() => {});
+
+      res.setHeader('Content-Type', media.mimeType || 'image/jpeg');
+      res.setHeader('Content-Length', media.data.length);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(media.data);
+    }
+
+    return next();
+  } catch (err) {
+    logger.error('Error serving media from database:', { error: err.message });
+    return next();
+  }
+};
+
+app.get(
+  ['/uploads/:filename', '/api/v1/uploads/:filename', '/api/uploads/:filename'],
+  serveMediaFile
+);
+
 app.use(
   ['/uploads', '/api/v1/uploads', '/api/uploads'],
   (req, res, next) => {
@@ -145,14 +186,52 @@ app.use((req, res) => {
 // 12. Centralized Error Handler (Shields internals & stack traces)
 app.use(errorHandler);
 
+// Sync existing disk uploads into MongoDB Atlas (protects files across container teardowns)
+const syncLocalUploadsToDatabase = async () => {
+  try {
+    if (!fs.existsSync(UPLOAD_DIR)) return;
+    const files = await fs.promises.readdir(UPLOAD_DIR);
+    for (const file of files) {
+      const filePath = path.join(UPLOAD_DIR, file);
+      const stat = await fs.promises.stat(filePath);
+      if (stat.isFile() && stat.size > 0) {
+        const existing = await Media.findOne({ filename: file }).select('_id');
+        if (!existing) {
+          const buffer = await fs.promises.readFile(filePath);
+          const ext = path.extname(file).toLowerCase();
+          const mimeType =
+            ext === '.png'
+              ? 'image/png'
+              : ext === '.webp'
+              ? 'image/webp'
+              : 'image/jpeg';
+          await Media.create({
+            filename: file,
+            originalName: file,
+            mimeType,
+            size: buffer.length,
+            data: buffer,
+          });
+          logger.info(`Persisted existing disk upload into MongoDB Atlas: ${file}`);
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn('Non-blocking notice during uploads sync to MongoDB:', { error: err.message });
+  }
+};
+
 // Start Server and Database
 const startServer = async () => {
   if (isProd) {
     await connectDB();
+    await syncLocalUploadsToDatabase();
   } else {
-    connectDB().catch((err) => {
-      logger.warn('Initial MongoDB connection deferred in dev mode', { error: err.message });
-    });
+    connectDB()
+      .then(() => syncLocalUploadsToDatabase())
+      .catch((err) => {
+        logger.warn('Initial MongoDB connection deferred in dev mode', { error: err.message });
+      });
   }
 
   const server = app.listen(PORT, '0.0.0.0', () => {

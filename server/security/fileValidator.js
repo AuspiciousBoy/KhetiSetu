@@ -4,6 +4,8 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { UPLOAD_DIR } = require('../config/env');
 const { error } = require('../utils/response');
+const Media = require('../models/Media');
+const logger = require('../utils/logger');
 
 // Ensure upload directory exists securely
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -119,6 +121,26 @@ const verifyAndSaveFile = async (req, res, next) => {
       const targetPath = path.join(UPLOAD_DIR, serverFilename);
 
       await fs.promises.writeFile(targetPath, file.buffer);
+
+      // Persist binary directly in MongoDB Atlas to survive Render's container restarts & redeploys
+      try {
+        await Media.findOneAndUpdate(
+          { filename: serverFilename },
+          {
+            filename: serverFilename,
+            originalName: path.basename(file.originalname),
+            mimeType: file.mimetype || (detectedExt === 'png' ? 'image/png' : detectedExt === 'webp' ? 'image/webp' : 'image/jpeg'),
+            size: file.size || file.buffer.length,
+            data: file.buffer,
+          },
+          { upsert: true, new: true }
+        );
+      } catch (dbErr) {
+        logger.error('Failed to persist uploaded media to MongoDB Atlas:', {
+          error: dbErr.message,
+          filename: serverFilename,
+        });
+      }
 
       savedFiles.push({
         filename: serverFilename,
