@@ -177,8 +177,16 @@ test('Nodemailer SMTP Configuration — Host and Port initialized for testing', 
 });
 
 test('Nodemailer SMTP Transporter — Instantiates Nodemailer transporter cleanly', () => {
-  const { getTransporter } = require('../server/integrations/emailService');
+  const { getTransporter, verifySmtpConnection } = require('../server/integrations/emailService');
   const transporter = getTransporter();
   assert.ok(transporter);
   assert.equal(typeof transporter.sendMail, 'function');
+  assert.equal(typeof verifySmtpConnection, 'function');
+});
+
+test('Nodemailer SMTP Configuration — Strips whitespace from Google App Passwords and has cloud timeouts', () => {
+  const { getTransporter } = require('../server/integrations/emailService');
+  const transporter = getTransporter();
+  assert.ok(transporter.options.connectionTimeout >= 10000, 'Must have >= 10s connection timeout for cloud stability');
+  assert.ok(transporter.options.socketTimeout >= 15000, 'Must have >= 15s socket timeout for cloud stability');
 });

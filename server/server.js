@@ -19,6 +19,7 @@ const Media = require('./models/Media');
 const Product = require('./models/Product');
 const ProduceBatch = require('./models/ProduceBatch');
 const QualityAssessment = require('./models/QualityAssessment');
+const { verifySmtpConnection } = require('./integrations/emailService');
 const v1Router = require('./routes/v1');
 
 const app = express();
@@ -277,6 +278,11 @@ const startServer = async () => {
     logger.info(`  Environment:  ${NODE_ENV}`);
     logger.info(`  Health Probe: http://127.0.0.1:${PORT}/health`);
     logger.info(`========================================================`);
+
+    // Diagnostic SMTP connection test (non-blocking)
+    verifySmtpConnection().catch((err) => {
+      logger.warn('Non-blocking notice during SMTP startup check:', { error: err.message });
+    });
   });
 
   process.on('unhandledRejection', (reason) => {

@@ -1,5 +1,7 @@
 const adminService = require('../services/adminService');
 const { success, paginated } = require('../utils/response');
+const { verifySmtpConnection, sendEmail } = require('../integrations/emailService');
+const emailConfig = require('../config/emailConfig');
 
 const getOverview = async (req, res, next) => {
   try {
@@ -77,10 +79,79 @@ const getAuditLogs = async (req, res, next) => {
   }
 };
 
+const getSmtpStatus = async (req, res, next) => {
+  try {
+    const verification = await verifySmtpConnection();
+    const maskedUser = emailConfig.user
+      ? `${emailConfig.user.substring(0, 3)}***@${emailConfig.user.split('@')[1] || ''}`
+      : 'Not configured';
+
+    return success(
+      res,
+      {
+        enabled: emailConfig.enabled,
+        host: emailConfig.host,
+        port: emailConfig.port,
+        configuredUser: maskedUser,
+        from: emailConfig.from,
+        connected: verification.success,
+        details: verification,
+      },
+      'SMTP diagnostic check completed'
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+const sendTestEmail = async (req, res, next) => {
+  try {
+    const to = req.body?.to || req.user?.email || emailConfig.adminEmail;
+    if (!to) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'RECIPIENT_REQUIRED', message: 'Target email recipient is required.' },
+      });
+    }
+
+    const result = await sendEmail({
+      to,
+      template: 'admin-alert',
+      subject: '🌾 KhetiSetu SMTP Test Dispatch',
+      context: {
+        alertTitle: 'SMTP Configuration Verified',
+        severity: 'INFO',
+        message: `This is a test notification confirming that KhetiSetu email dispatch is fully operational on ${new Date().toLocaleString('en-IN')}.`,
+        details: {
+          host: emailConfig.host,
+          port: emailConfig.port,
+          sender: emailConfig.from,
+        },
+      },
+    });
+
+    if (result && result.success) {
+      return success(res, { messageId: result.messageId, to }, `Test email delivered successfully to ${to}`);
+    } else {
+      return res.status(502).json({
+        success: false,
+        error: {
+          code: 'EMAIL_DISPATCH_FAILED',
+          message: result?.error || 'Failed to dispatch email via configured SMTP server.',
+        },
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getOverview,
   listUsers,
   updateUserStatus,
   moderateProduct,
   getAuditLogs,
+  getSmtpStatus,
+  sendTestEmail,
 };

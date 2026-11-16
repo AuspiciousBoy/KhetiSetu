@@ -13,5 +13,7 @@ router.get('/users', adminController.listUsers);
 router.patch('/users/:id', adminController.updateUserStatus);
 router.patch('/products/:id/moderate', adminController.moderateProduct);
 router.get('/audit-logs', adminController.getAuditLogs);
+router.get('/smtp-status', adminController.getSmtpStatus);
+router.post('/smtp-test', adminController.sendTestEmail);
 
 module.exports = router;
