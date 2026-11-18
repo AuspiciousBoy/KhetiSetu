@@ -9,7 +9,13 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    if (CORS_ORIGINS.includes(origin)) {
+    if (
+      CORS_ORIGINS.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.includes('kheti-setu') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
       return callback(null, true);
     }
 

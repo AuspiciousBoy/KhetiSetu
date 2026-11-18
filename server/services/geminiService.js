@@ -197,7 +197,7 @@ Do NOT include markdown formatting, backticks, or other text outside the JSON ob
 Disclaimer: This is visual image analysis only, not certified laboratory food safety testing.`;
 
   const runGemini = async () => {
-    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b'];
+    const candidateModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
     let lastErr = null;
 
     for (const modelName of candidateModels) {
@@ -497,50 +497,72 @@ ${farmContext.cropsGrown ? `Farmer crops: ${farmContext.cropsGrown.join(', ')}` 
 ${farmContext.location ? `Farmer location: ${farmContext.location.district}, ${farmContext.location.state}` : ''}
 ${farmContext.soilType ? `Soil type: ${farmContext.soilType}` : ''}`;
 
+  const apiKey = getActiveApiKey(customApiKey);
+
   const runChat = async () => {
-    const candidateModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b'];
+    const candidateModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
     let lastErr = null;
 
-    // Filter and sanitize conversation history: must start with 'user' and alternate strictly
-    const formattedHistory = [];
-    let expectedRole = 'user';
-    for (const msg of conversationHistory.slice(-8)) {
-      const role = msg.role === 'user' ? 'user' : 'model';
-      if (role === expectedRole && msg.content) {
-        formattedHistory.push({
-          role,
-          parts: [{ text: msg.content.substring(0, 1000) }],
-        });
-        expectedRole = expectedRole === 'user' ? 'model' : 'user';
-      }
-    }
-    // If last message was user, remove it from history because userMessage is sent via sendMessage
-    if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === 'user') {
-      formattedHistory.pop();
-    }
-
     for (const modelName of candidateModels) {
+      // 1. Direct Google REST API (fastest and most reliable across cloud platforms)
+      if (apiKey) {
+        try {
+          const restUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const restRes = await fetch(restUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${systemInstruction}\n\nFarmer Query: ${userMessage}` }],
+                },
+              ],
+              generationConfig: {
+                maxOutputTokens: 1000,
+                temperature: 0.4,
+              },
+            }),
+          });
+
+          if (restRes.ok) {
+            const restData = await restRes.json();
+            const replyText = restData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (replyText && replyText.trim()) {
+              return {
+                reply: replyText.trim(),
+                tokensUsed: 400,
+                source: `gemini (${modelName})`,
+              };
+            }
+          } else {
+            const errData = await restRes.json().catch(() => ({}));
+            logger.warn(`Gemini REST query with ${modelName} returned status ${restRes.status}`, {
+              error: errData.error?.message,
+            });
+          }
+        } catch (restErr) {
+          logger.warn(`Gemini REST request error for ${modelName}`, { error: restErr.message });
+        }
+      }
+
+      // 2. Fall back to SDK generateContent
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
           systemInstruction,
         });
 
-        const chat = model.startChat({
-          history: formattedHistory,
-          generationConfig: {
-            maxOutputTokens: 1000,
-            temperature: 0.4,
-          },
-        });
-
-        const result = await chat.sendMessage(userMessage.substring(0, 2000));
+        const result = await model.generateContent(userMessage.substring(0, 2000));
         const response = await result.response;
-        return {
-          reply: response.text().trim(),
-          tokensUsed: 400,
-          source: modelName,
-        };
+        const text = response.text();
+        if (text && text.trim()) {
+          return {
+            reply: text.trim(),
+            tokensUsed: 400,
+            source: `gemini (${modelName})`,
+          };
+        }
       } catch (err) {
         lastErr = err;
         logger.warn(`Kheti AI query with model ${modelName} failed: ${err.message}. Trying next model...`);

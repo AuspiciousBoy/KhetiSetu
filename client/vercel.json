@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://khetisetu.onrender.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://khetisetu.onrender.com/uploads/:path*"
+    },
+    {
       "source": "/((?!api|uploads).*)",
       "destination": "/index.html"
     }
