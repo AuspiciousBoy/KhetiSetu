@@ -8,10 +8,13 @@ const logger = require('../utils/logger');
 
 /**
  * Resolves the active Gemini API key.
- * Checks process.env first, and re-reads server/.env if needed
+ * Checks customApiKey first, then process.env, and re-reads server/.env if needed
  * so runtime key additions are immediately detected without restarting.
  */
-const getActiveApiKey = () => {
+const getActiveApiKey = (customKey) => {
+  if (customKey && typeof customKey === 'string' && customKey.trim().length > 10 && !customKey.includes('your_gemini')) {
+    return customKey.trim();
+  }
   let key = process.env.GEMINI_API_KEY || GEMINI_API_KEY;
   if (!key || key.trim() === '' || key.includes('your_gemini')) {
     try {
@@ -31,8 +34,8 @@ const getActiveApiKey = () => {
 };
 
 // Dynamic client initialization so keys provided at runtime/env are detected
-const getGenAI = () => {
-  const key = getActiveApiKey();
+const getGenAI = (customKey) => {
+  const key = getActiveApiKey(customKey);
   if (key) {
     try {
       return new GoogleGenerativeAI(key);
@@ -46,18 +49,18 @@ const getGenAI = () => {
 /**
  * Returns current status of Gemini AI configuration
  */
-const getAIStatus = () => {
-  const key = getActiveApiKey();
+const getAIStatus = (customKey) => {
+  const key = getActiveApiKey(customKey);
   return {
     isGeminiConfigured: !!key,
     engine: key ? 'Google Gemini AI' : 'KhetiSetu Agronomy Knowledge Engine',
-    model: key ? 'gemini-2.0-flash' : 'local-knowledge-engine',
+    model: key ? 'gemini-1.5-flash' : 'local-knowledge-engine',
     provider: key ? 'Google AI Cloud' : 'Built-in Agronomy Engine',
     status: key ? 'ONLINE' : 'FALLBACK_READY',
     message: key
       ? 'Connected to Google Gemini AI. Real-time multi-modal agronomic intelligence active.'
       : 'GEMINI_API_KEY not configured in server/.env. Using comprehensive Indian Agronomy Knowledge Engine.',
-    supportedModels: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+    supportedModels: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
   };
 };
 
@@ -467,8 +470,8 @@ const inferAgronomyResponse = (query, farmContext = {}) => {
  * 2. Kheti AI - Conversational Agricultural Assistant
  * Answers farming queries in English, Hindi, or Hinglish with safety guardrails
  */
-const consultKhetiAI = async ({ userMessage, conversationHistory = [], farmContext = {} }) => {
-  const genAI = getGenAI();
+const consultKhetiAI = async ({ userMessage, conversationHistory = [], farmContext = {}, customApiKey }) => {
+  const genAI = getGenAI(customApiKey);
 
   if (!genAI) {
     logger.info('Gemini API key not configured. Using KhetiSetu Agronomy Knowledge Engine.');

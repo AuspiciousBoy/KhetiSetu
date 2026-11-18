@@ -9,17 +9,27 @@ import {
   Leaf,
   Bug,
   FlaskConical,
-  CloudRain,
   TrendingUp,
   User,
   X,
   ShieldCheck,
   Loader2,
+  Key,
+  CheckCircle2,
+  AlertTriangle,
+  ExternalLink,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
+import {
+  getStoredGeminiKey,
+  setStoredGeminiKey,
+  testGeminiKey,
+  askKhetiAI,
+} from '../../services/aiClient';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Modal from '../../components/ui/Modal';
 import { useTranslation } from '../../i18n/LanguageContext';
 
 const KhetiAIPage = () => {
@@ -72,21 +82,51 @@ const KhetiAIPage = () => {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
 
+  // Gemini API Key Modal state
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [keyInput, setKeyInput] = useState('');
+  const [testingKey, setTestingKey] = useState(false);
+  const [keyError, setKeyError] = useState(null);
+  const [keySuccess, setKeySuccess] = useState(null);
+
   // Check AI engine status on mount
   useEffect(() => {
+    const localKey = getStoredGeminiKey();
+    if (localKey) {
+      setKeyInput(localKey);
+      setAiStatus({
+        isGeminiConfigured: true,
+        engine: 'Google Gemini AI',
+        model: 'gemini-1.5-flash',
+        status: 'ONLINE',
+      });
+    }
+
     const fetchStatus = async () => {
       try {
-        const res = await apiClient.get('/ai/status');
+        const headers = localKey ? { 'x-gemini-api-key': localKey } : {};
+        const res = await apiClient.get('/ai/status', { headers });
         if (res.data?.data) {
-          setAiStatus(res.data.data);
+          if (localKey) {
+            setAiStatus({
+              ...res.data.data,
+              isGeminiConfigured: true,
+              engine: 'Google Gemini AI',
+              model: 'gemini-1.5-flash',
+            });
+          } else {
+            setAiStatus(res.data.data);
+          }
         }
       } catch {
-        setAiStatus({
-          isGeminiConfigured: false,
-          engine: 'KhetiSetu Agronomy Engine',
-          model: 'local-knowledge-engine',
-          status: 'FALLBACK_READY',
-        });
+        if (!localKey) {
+          setAiStatus({
+            isGeminiConfigured: false,
+            engine: 'KhetiSetu Agronomy Engine',
+            model: 'local-knowledge-engine',
+            status: 'FALLBACK_READY',
+          });
+        }
       }
     };
     fetchStatus();
@@ -115,23 +155,21 @@ const KhetiAIPage = () => {
     setLoading(true);
 
     try {
-      const payload = {
-        message: userText,
-        ...(conversationId ? { conversationId } : {}),
-      };
+      const data = await askKhetiAI({
+        userMessage: userText,
+        conversationHistory: messages,
+      });
 
-      const res = await apiClient.post('/ai/chat', payload);
-
-      if (res.data?.data?.conversationId) {
-        setConversationId(res.data.data.conversationId);
+      if (data?.conversationId) {
+        setConversationId(data.conversationId);
       }
 
       setMessages((prev) => [
         ...prev,
         {
           role: 'model',
-          content: res.data.data.reply,
-          source: res.data.data.source || 'gemini',
+          content: data.reply,
+          source: data.source || (aiStatus.isGeminiConfigured ? 'gemini' : 'local-knowledge-engine'),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -140,13 +178,53 @@ const KhetiAIPage = () => {
         ...prev,
         {
           role: 'model',
-          content: err.response?.data?.error?.message || t('khetiAiPage.contactError'),
+          content: err.response?.data?.error?.message || err.message || t('khetiAiPage.contactError'),
           source: 'error',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveKey = async (e) => {
+    e.preventDefault();
+    const cleanKey = keyInput.trim();
+    setKeyError(null);
+    setKeySuccess(null);
+
+    if (!cleanKey) {
+      setStoredGeminiKey('');
+      setAiStatus({
+        isGeminiConfigured: false,
+        engine: 'KhetiSetu Agronomy Engine',
+        model: 'local-knowledge-engine',
+        status: 'FALLBACK_READY',
+      });
+      setKeySuccess('Gemini API key cleared. Using local agronomy engine.');
+      return;
+    }
+
+    try {
+      setTestingKey(true);
+      await testGeminiKey(cleanKey);
+      setStoredGeminiKey(cleanKey);
+      setAiStatus({
+        isGeminiConfigured: true,
+        engine: 'Google Gemini AI',
+        model: 'gemini-1.5-flash',
+        status: 'ONLINE',
+      });
+      setKeySuccess('Gemini API key verified and saved successfully! Gemini AI is now live.');
+      setTimeout(() => {
+        setIsKeyModalOpen(false);
+        setKeySuccess(null);
+      }, 1500);
+    } catch (err) {
+      setKeyError(`Verification failed: ${err.message}`);
+    } finally {
+      setTestingKey(false);
     }
   };
 
@@ -168,6 +246,8 @@ const KhetiAIPage = () => {
     setConversationId(null);
   };
 
+  const hasGeminiActive = aiStatus.isGeminiConfigured || !!getStoredGeminiKey();
+
   return (
     <div className="flex flex-col gap-4 max-w-5xl mx-auto min-h-[85vh] py-2">
       {/* Agritech Telemetry Header */}
@@ -181,7 +261,7 @@ const KhetiAIPage = () => {
               <h1 className="font-display font-bold text-lg md:text-xl text-primary">
                 {t('khetiAiPage.centerTitle')}
               </h1>
-              {aiStatus.isGeminiConfigured ? (
+              {hasGeminiActive ? (
                 <Badge variant="success" className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
                   {t('khetiAiPage.geminiLiveBadge')}
@@ -199,15 +279,34 @@ const KhetiAIPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end text-right">
+        <div className="flex items-center gap-2.5">
+          <div className="hidden sm:flex flex-col items-end text-right mr-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">
               {t('khetiAiPage.activeEngine')}
             </span>
             <span className="text-xs font-semibold text-primary font-mono">
-              {aiStatus.isGeminiConfigured ? t('khetiAiPage.geminiModel') : t('khetiAiPage.precisionModel')}
+              {hasGeminiActive ? t('khetiAiPage.geminiModel') : t('khetiAiPage.precisionModel')}
             </span>
           </div>
+
+          {/* Gemini API Key Configuration Button */}
+          <button
+            onClick={() => {
+              setKeyInput(getStoredGeminiKey());
+              setKeyError(null);
+              setKeySuccess(null);
+              setIsKeyModalOpen(true);
+            }}
+            className={`px-3 py-1.5 rounded-[10px] text-xs font-semibold border flex items-center gap-1.5 transition-colors ${
+              hasGeminiActive
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+            }`}
+            title="Configure Gemini API Key"
+          >
+            <Key className="w-3.5 h-3.5 text-secondary" />
+            <span>{hasGeminiActive ? 'Gemini Key Configured' : 'Setup Gemini Key'}</span>
+          </button>
 
           <button
             onClick={handleResetSession}
@@ -244,28 +343,24 @@ const KhetiAIPage = () => {
         })}
       </div>
 
-      {/* Main Conversation Stream */}
-      <Card className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 bg-surface-container-low soil-shadow min-h-[460px] max-h-[56vh]">
+      {/* Chat Display Canvas */}
+      <Card className="flex-1 min-h-[500px] max-h-[60vh] overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 rounded-[24px]">
         {messages.map((msg, index) => {
           const isUser = msg.role === 'user';
           return (
             <div
               key={index}
-              className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+              className={`flex gap-3 items-start ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
             >
               {/* Avatar Icon */}
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
                   isUser
                     ? 'bg-secondary text-on-secondary'
-                    : 'bg-primary text-on-primary shadow-sm'
+                    : 'bg-primary text-on-primary soil-shadow'
                 }`}
               >
-                {isUser ? (
-                  <User className="w-4 h-4 text-white" />
-                ) : (
-                  <Bot className="w-4 h-4 text-emerald-300" />
-                )}
+                {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4 text-emerald-300" />}
               </div>
 
               {/* Message Content Bubble */}
@@ -290,7 +385,7 @@ const KhetiAIPage = () => {
                     {!isUser && (
                       <span className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                        {msg.source?.includes('gemini')
+                        {msg.source?.toLowerCase().includes('gemini')
                           ? `Google ${msg.source}`
                           : 'KhetiSetu Agronomy Engine'}
                       </span>
@@ -376,6 +471,86 @@ const KhetiAIPage = () => {
           </span>
         </p>
       </div>
+
+      {/* Gemini API Key Configuration Modal */}
+      <Modal
+        isOpen={isKeyModalOpen}
+        onClose={() => setIsKeyModalOpen(false)}
+        title="Google Gemini API Key Setup"
+        subtitle="Activate Google Gemini 1.5 Flash for real-time agricultural intelligence"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSaveKey} className="p-4 sm:p-6 flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-primary">
+              Gemini API Key (Google AI Studio)
+            </label>
+            <input
+              type="text"
+              value={keyInput}
+              onChange={(e) => setKeyInput(e.target.value)}
+              placeholder="AIzaSy..."
+              className="bg-surface text-on-surface rounded-[12px] p-3 text-xs border border-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono"
+            />
+            <p className="text-[11px] text-on-surface-variant mt-1 flex items-center gap-1">
+              <span>Don't have a key?</span>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary hover:underline inline-flex items-center gap-0.5 font-semibold"
+              >
+                Get a free API key at Google AI Studio <ExternalLink className="w-3 h-3" />
+              </a>
+            </p>
+          </div>
+
+          {keyError && (
+            <div className="bg-error-container/20 border border-error/30 rounded-[12px] p-3 flex items-start gap-2 text-xs text-error">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{keyError}</span>
+            </div>
+          )}
+
+          {keySuccess && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[12px] p-3 flex items-start gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{keySuccess}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-3 pt-2 border-t border-surface-variant/50">
+            <button
+              type="button"
+              onClick={() => {
+                setKeyInput('');
+                setStoredGeminiKey('');
+                setKeySuccess('API key cleared.');
+              }}
+              className="text-xs text-error hover:underline font-semibold"
+            >
+              Clear Key
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsKeyModalOpen(false)}
+                className="px-4 py-2 rounded-[12px] bg-surface-container text-xs font-semibold text-on-surface hover:bg-surface-variant transition-colors"
+              >
+                Cancel
+              </button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={testingKey}
+                className="rounded-[12px] px-4 py-2 text-xs font-semibold"
+              >
+                Test & Save Key
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

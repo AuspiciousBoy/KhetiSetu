@@ -6,7 +6,8 @@ const mongoose = require('mongoose');
 
 const getStatus = async (req, res, next) => {
   try {
-    const status = getEngineStatus();
+    const customKey = req.headers['x-gemini-api-key'];
+    const status = getEngineStatus(customKey);
     return success(res, status);
   } catch (err) {
     next(err);
@@ -16,6 +17,7 @@ const getStatus = async (req, res, next) => {
 const chat = async (req, res, next) => {
   try {
     const { message, conversationId } = req.body;
+    const customKey = req.headers['x-gemini-api-key'];
     const userId = req.user?.id;
 
     let farmerProfile = null;
@@ -54,6 +56,7 @@ const chat = async (req, res, next) => {
             soilType: farmerProfile.soilType,
           }
         : {},
+      customApiKey: customKey,
     });
 
     // Save interaction if authenticated conversation exists
