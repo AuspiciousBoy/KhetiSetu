@@ -489,7 +489,7 @@ const KhetiAIPage = () => {
               type="text"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
-              placeholder="AIzaSy..."
+              placeholder="Enter your Gemini API key..."
               className="bg-surface text-on-surface rounded-[12px] p-3 text-xs border border-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono"
             />
             <p className="text-[11px] text-on-surface-variant mt-1 flex items-center gap-1">
