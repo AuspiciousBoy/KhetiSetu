@@ -8,26 +8,26 @@ const logger = require('../utils/logger');
 
 // Coordinate mapping for major agricultural districts in India
 const DISTRICT_COORDINATES = {
-  pune: { lat: 18.5204, lon: 73.8567, state: 'Maharashtra' },
-  nashik: { lat: 19.9975, lon: 73.7898, state: 'Maharashtra' },
-  nagpur: { lat: 21.1458, lon: 79.0882, state: 'Maharashtra' },
-  solapur: { lat: 17.6599, lon: 75.9064, state: 'Maharashtra' },
-  kolhapur: { lat: 16.7050, lon: 74.2433, state: 'Maharashtra' },
-  aurangabad: { lat: 19.8762, lon: 75.3433, state: 'Maharashtra' },
-  indore: { lat: 22.7196, lon: 75.8577, state: 'Madhya Pradesh' },
-  bhopal: { lat: 23.2599, lon: 77.4126, state: 'Madhya Pradesh' },
-  ahmedabad: { lat: 23.0225, lon: 72.5714, state: 'Gujarat' },
-  surat: { lat: 21.1702, lon: 72.8311, state: 'Gujarat' },
-  karnal: { lat: 29.6857, lon: 76.9905, state: 'Haryana' },
-  ludhiana: { lat: 30.9010, lon: 75.8573, state: 'Punjab' },
-  jaipur: { lat: 26.9124, lon: 75.7873, state: 'Rajasthan' },
-  lucknow: { lat: 26.8467, lon: 80.9462, state: 'Uttar Pradesh' },
-  varanasi: { lat: 25.3176, lon: 82.9739, state: 'Uttar Pradesh' },
-  bengaluru: { lat: 12.9716, lon: 77.5946, state: 'Karnataka' },
-  kolar: { lat: 13.1367, lon: 78.1342, state: 'Karnataka' },
+  pune: { lat: 18.5204, lon: 73.8567, state: 'Maharashtra', name: 'Pune' },
+  nashik: { lat: 19.9975, lon: 73.7898, state: 'Maharashtra', name: 'Nashik' },
+  nagpur: { lat: 21.1458, lon: 79.0882, state: 'Maharashtra', name: 'Nagpur' },
+  solapur: { lat: 17.6599, lon: 75.9064, state: 'Maharashtra', name: 'Solapur' },
+  kolhapur: { lat: 16.7050, lon: 74.2433, state: 'Maharashtra', name: 'Kolhapur' },
+  aurangabad: { lat: 19.8762, lon: 75.3433, state: 'Maharashtra', name: 'Chhatrapati Sambhajinagar' },
+  indore: { lat: 22.7196, lon: 75.8577, state: 'Madhya Pradesh', name: 'Indore' },
+  bhopal: { lat: 23.2599, lon: 77.4126, state: 'Madhya Pradesh', name: 'Bhopal' },
+  ahmedabad: { lat: 23.0225, lon: 72.5714, state: 'Gujarat', name: 'Ahmedabad' },
+  surat: { lat: 21.1702, lon: 72.8311, state: 'Gujarat', name: 'Surat' },
+  karnal: { lat: 29.6857, lon: 76.9905, state: 'Haryana', name: 'Karnal' },
+  ludhiana: { lat: 30.9010, lon: 75.8573, state: 'Punjab', name: 'Ludhiana' },
+  jaipur: { lat: 26.9124, lon: 75.7873, state: 'Rajasthan', name: 'Jaipur' },
+  lucknow: { lat: 26.8467, lon: 80.9462, state: 'Uttar Pradesh', name: 'Lucknow' },
+  varanasi: { lat: 25.3176, lon: 82.9739, state: 'Uttar Pradesh', name: 'Varanasi' },
+  bengaluru: { lat: 12.9716, lon: 77.5946, state: 'Karnataka', name: 'Bengaluru' },
+  kolar: { lat: 13.1367, lon: 78.1342, state: 'Karnataka', name: 'Kolar' },
 };
 
-// In-memory cache fallback (used when MongoDB is offline in dev mode)
+// In-memory cache fallback (used when MongoDB is offline or in dev mode)
 const memoryCache = new Map();
 
 /**
@@ -36,18 +36,15 @@ const memoryCache = new Map();
  * so runtime key additions are immediately detected without restarting.
  */
 const getActiveWeatherApiKey = () => {
-  let key = process.env.WEATHER_API_KEY || WEATHER_API_KEY;
+  let key = process.env.WEATHER_API_KEY || WEATHER_API_KEY || process.env.OPENWEATHER_API_KEY;
   if (!key || key.trim() === '' || key.includes('your_weather')) {
     try {
       const envPath = path.resolve(__dirname, '../.env');
       if (fs.existsSync(envPath)) {
         const parsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
-        if (
-          parsed.WEATHER_API_KEY &&
-          !parsed.WEATHER_API_KEY.includes('your_weather') &&
-          parsed.WEATHER_API_KEY.trim().length > 5
-        ) {
-          key = parsed.WEATHER_API_KEY.trim();
+        const found = parsed.WEATHER_API_KEY || parsed.OPENWEATHER_API_KEY;
+        if (found && !found.includes('your_weather') && found.trim().length > 5) {
+          key = found.trim();
           process.env.WEATHER_API_KEY = key;
         }
       }
@@ -56,6 +53,29 @@ const getActiveWeatherApiKey = () => {
     }
   }
   return key && key.trim().length > 5 && !key.includes('your_weather') ? key.trim() : null;
+};
+
+/**
+ * Convert wind degrees (0-360) to 8-point compass direction
+ */
+const degToCompass = (deg) => {
+  if (deg === null || deg === undefined || isNaN(deg)) return 'NW';
+  const val = Math.floor((deg / 45) + 0.5);
+  const arr = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return arr[val % 8];
+};
+
+/**
+ * Map text condition to standard icon identifier
+ */
+const mapConditionToIcon = (cond = '') => {
+  const text = (cond || '').toLowerCase();
+  if (text.includes('thunder') || text.includes('lightning')) return 'thunderstorm';
+  if (text.includes('rain') || text.includes('drizzle') || text.includes('shower')) return 'rainy';
+  if (text.includes('snow') || text.includes('sleet') || text.includes('ice') || text.includes('frost')) return 'snowy';
+  if (text.includes('fog') || text.includes('mist') || text.includes('haze')) return 'foggy';
+  if (text.includes('cloud') || text.includes('overcast')) return 'partly_cloudy';
+  return 'sunny';
 };
 
 /**
@@ -72,6 +92,67 @@ const mapWmoCodeToCondition = (code) => {
   if (code >= 80 && code <= 82) return 'Heavy Showers';
   if (code >= 95) return 'Thunderstorm Alert';
   return 'Clear';
+};
+
+const mapWmoCodeToIcon = (code) => {
+  if (code === 0) return 'sunny';
+  if (code === 1 || code === 2) return 'partly_cloudy';
+  if (code === 3) return 'cloudy';
+  if (code >= 45 && code <= 48) return 'foggy';
+  if (code >= 51 && code <= 65) return 'rainy';
+  if (code >= 71 && code <= 77) return 'snowy';
+  if (code >= 80 && code <= 82) return 'rainy';
+  if (code >= 95) return 'thunderstorm';
+  return 'sunny';
+};
+
+/**
+ * Reverse geocoding helper to determine city and state from coordinates
+ */
+const reverseGeocode = async (lat, lon) => {
+  try {
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const city = data.locality || data.city || data.principalSubdivision || '';
+      const state = data.principalSubdivision || '';
+      if (city || state) {
+        return { city, state };
+      }
+    }
+  } catch (err) {
+    logger.debug('BigDataCloud reverse geocode lookup skipped', { error: err.message });
+  }
+
+  // Backup reverse geocoder
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12`,
+      {
+        headers: { 'User-Agent': 'KhetiSetu-AgriWeather/1.0' },
+        signal: AbortSignal.timeout(4000),
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const city =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.village ||
+        data.address?.county ||
+        data.address?.suburb ||
+        '';
+      const state = data.address?.state || '';
+      return { city, state };
+    }
+  } catch (err) {
+    logger.debug('Nominatim reverse geocode lookup skipped', { error: err.message });
+  }
+
+  return { city: null, state: null };
 };
 
 /**
@@ -152,20 +233,32 @@ const generateFarmingAdvisories = (current, forecast = []) => {
 /**
  * Fetch live weather from WeatherAPI.com
  */
-const fetchFromWeatherAPI = async (apiKey, district) => {
-  const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${encodeURIComponent(district)},India&days=6&aqi=no`;
+const fetchFromWeatherAPI = async (apiKey, target) => {
+  const query =
+    target.lat !== undefined && target.lon !== undefined
+      ? `${target.lat},${target.lon}`
+      : `${encodeURIComponent(target.district || 'Pune')},India`;
+
+  const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${query}&days=6&aqi=no`;
   const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
   if (!res.ok) throw new Error(`WeatherAPI responded with status ${res.status}`);
   const data = await res.json();
 
   const current = {
     temperatureC: Math.round(data.current.temp_c),
+    feelsLikeC: Math.round(data.current.feelslike_c !== undefined ? data.current.feelslike_c : data.current.temp_c),
     humidityPercent: data.current.humidity,
     rainfallMm: data.current.precip_mm || 0,
     windSpeedKmh: Math.round(data.current.wind_kph),
+    windDirection: data.current.wind_dir || 'NW',
     condition: data.current.condition?.text || 'Clear',
     uvIndex: Math.round(data.current.uv || 5),
-    icon: 'sunny',
+    icon: mapConditionToIcon(data.current.condition?.text),
+    iconUrl: data.current.condition?.icon
+      ? data.current.condition.icon.startsWith('//')
+        ? `https:${data.current.condition.icon}`
+        : data.current.condition.icon
+      : '',
   };
 
   const forecast = (data.forecast?.forecastday || []).slice(1, 6).map((item) => ({
@@ -175,9 +268,22 @@ const fetchFromWeatherAPI = async (apiKey, district) => {
     precipitationProbabilityPercent: item.day.daily_chance_of_rain || 0,
     rainfallMm: item.day.totalprecip_mm || 0,
     condition: item.day.condition?.text || 'Partly Cloudy',
+    iconUrl: item.day.condition?.icon
+      ? item.day.condition.icon.startsWith('//')
+        ? `https:${item.day.condition.icon}`
+        : item.day.condition.icon
+      : '',
   }));
 
-  return { current, forecast, source: 'WeatherAPI Live' };
+  const locationInfo = {
+    city: data.location?.name || '',
+    district: data.location?.name || '',
+    state: data.location?.region || '',
+    latitude: data.location?.lat,
+    longitude: data.location?.lon,
+  };
+
+  return { current, forecast, locationInfo, source: 'WeatherAPI Live' };
 };
 
 /**
@@ -198,12 +304,15 @@ const fetchFromOpenWeatherMap = async (apiKey, coords) => {
 
   const current = {
     temperatureC: Math.round(wData.main.temp),
+    feelsLikeC: Math.round(wData.main.feels_like !== undefined ? wData.main.feels_like : wData.main.temp),
     humidityPercent: wData.main.humidity,
     rainfallMm: wData.rain?.['1h'] || 0,
     windSpeedKmh: Math.round((wData.wind?.speed || 0) * 3.6),
+    windDirection: degToCompass(wData.wind?.deg),
     condition: wData.weather?.[0]?.main || 'Clear',
     uvIndex: 6,
-    icon: 'sunny',
+    icon: mapConditionToIcon(wData.weather?.[0]?.main),
+    iconUrl: wData.weather?.[0]?.icon ? `https://openweathermap.org/img/wn/${wData.weather[0].icon}@2x.png` : '',
   };
 
   // Group 3-hour forecasts by day
@@ -236,26 +345,37 @@ const fetchFromOpenWeatherMap = async (apiKey, coords) => {
       rainfallMm: Math.round(f.rainfallMm * 10) / 10,
     }));
 
-  return { current, forecast, source: 'OpenWeatherMap Live' };
+  const locationInfo = {
+    city: wData.name || '',
+    district: wData.name || '',
+    state: '',
+    latitude: coords.lat,
+    longitude: coords.lon,
+  };
+
+  return { current, forecast, locationInfo, source: 'OpenWeatherMap Live' };
 };
 
 /**
  * Fetch live weather from Open-Meteo (Free Open-Access Agro-Meteorological API)
  */
 const fetchFromOpenMeteo = async (coords) => {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,weather_code&timezone=auto`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,weather_code&timezone=auto`;
   const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
   if (!res.ok) throw new Error(`Open-Meteo responded with status ${res.status}`);
   const data = await res.json();
 
   const current = {
     temperatureC: Math.round(data.current?.temperature_2m ?? 28),
+    feelsLikeC: Math.round(data.current?.apparent_temperature ?? data.current?.temperature_2m ?? 28),
     humidityPercent: Math.round(data.current?.relative_humidity_2m ?? 55),
     rainfallMm: data.current?.precipitation || 0,
     windSpeedKmh: Math.round(data.current?.wind_speed_10m ?? 10),
+    windDirection: degToCompass(data.current?.wind_direction_10m),
     condition: mapWmoCodeToCondition(data.current?.weather_code),
     uvIndex: 6,
-    icon: 'sunny',
+    icon: mapWmoCodeToIcon(data.current?.weather_code),
+    iconUrl: '',
   };
 
   const daily = data.daily || {};
@@ -277,17 +397,20 @@ const fetchFromOpenMeteo = async (coords) => {
 };
 
 /**
- * Calibrated fallback dataset when network is offline
+ * Calibrated fallback dataset when network is completely offline
  */
 const getCalibratedFallback = (today) => {
   const current = {
     temperatureC: 28,
+    feelsLikeC: 29,
     humidityPercent: 54,
     rainfallMm: 0,
     windSpeedKmh: 12,
+    windDirection: 'NW',
     condition: 'Sunny & Clear',
     uvIndex: 7,
     icon: 'sunny',
+    iconUrl: '',
   };
 
   const forecast = [
@@ -337,28 +460,63 @@ const getCalibratedFallback = (today) => {
 };
 
 /**
- * Get current conditions, forecast, and agricultural advisories for district
+ * Get current conditions, forecast, and agricultural advisories.
+ * Supports coordinates ({ lat, lon }) from user's live browser location
+ * or district name.
  */
-const getWeather = async ({ district = 'Pune', state = 'Maharashtra' }) => {
-  const normDistrict = (district || 'Pune').toLowerCase().trim();
-  const coords = DISTRICT_COORDINATES[normDistrict] || DISTRICT_COORDINATES.pune;
-  const cacheKey = `${normDistrict}_${(state || 'Maharashtra').toLowerCase().trim()}`;
+const getWeather = async ({ district, state, lat, lon } = {}) => {
+  const hasCoords =
+    lat !== null &&
+    lon !== null &&
+    lat !== undefined &&
+    lon !== undefined &&
+    !isNaN(lat) &&
+    !isNaN(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180;
 
-  // 1. Check in-memory cache first (valid for 30 minutes)
+  let coords;
+  let cacheKey;
+  let isLiveGps = false;
+
+  if (hasCoords) {
+    isLiveGps = true;
+    coords = { lat: Number(lat), lon: Number(lon) };
+    cacheKey = `coords_${coords.lat.toFixed(2)}_${coords.lon.toFixed(2)}`;
+  } else {
+    const normDistrict = (district || 'Pune').toLowerCase().trim();
+    const matchedDistrict = DISTRICT_COORDINATES[normDistrict] || DISTRICT_COORDINATES.pune;
+    coords = { lat: matchedDistrict.lat, lon: matchedDistrict.lon, state: matchedDistrict.state };
+    cacheKey = `${normDistrict}_${(state || matchedDistrict.state || 'Maharashtra').toLowerCase().trim()}`;
+  }
+
+  // 1. Check in-memory cache first (valid for 20 minutes)
   const cachedMem = memoryCache.get(cacheKey);
-  if (cachedMem && Date.now() - cachedMem.timestamp < 30 * 60 * 1000) {
+  if (cachedMem && Date.now() - cachedMem.timestamp < 20 * 60 * 1000) {
     return cachedMem.data;
   }
 
-  // 2. Check MongoDB cache (valid for 30 minutes)
+  // 2. Check MongoDB cache (valid for 20 minutes)
   const isDbConnected = mongoose.connection.readyState === 1;
   if (isDbConnected) {
     try {
-      const cached = await WeatherRecord.findOne({
-        'location.district': new RegExp(`^${district}$`, 'i'),
-        fetchedAt: { $gt: new Date(Date.now() - 30 * 60 * 1000) },
-      }).sort({ fetchedAt: -1 });
+      let query;
+      if (hasCoords) {
+        query = {
+          'location.latitude': { $gte: coords.lat - 0.05, $lte: coords.lat + 0.05 },
+          'location.longitude': { $gte: coords.lon - 0.05, $lte: coords.lon + 0.05 },
+          fetchedAt: { $gt: new Date(Date.now() - 20 * 60 * 1000) },
+        };
+      } else {
+        query = {
+          'location.district': new RegExp(`^${district || 'Pune'}$`, 'i'),
+          fetchedAt: { $gt: new Date(Date.now() - 20 * 60 * 1000) },
+        };
+      }
 
+      const cached = await WeatherRecord.findOne(query).sort({ fetchedAt: -1 });
       if (cached) {
         memoryCache.set(cacheKey, { timestamp: Date.now(), data: cached });
         return cached;
@@ -368,15 +526,15 @@ const getWeather = async ({ district = 'Pune', state = 'Maharashtra' }) => {
     }
   }
 
-  // 3. Fetch Live Weather Data
+  // 3. Fetch Live Weather Data from Weather API
   const apiKey = getActiveWeatherApiKey();
   let weatherData = null;
 
   if (apiKey) {
     try {
-      logger.info(`Fetching live weather with configured WEATHER_API_KEY for ${district}...`);
+      logger.info(`Fetching live weather with configured WEATHER_API_KEY for ${hasCoords ? `${coords.lat},${coords.lon}` : district}...`);
       // Try WeatherAPI first
-      weatherData = await fetchFromWeatherAPI(apiKey, district);
+      weatherData = await fetchFromWeatherAPI(apiKey, hasCoords ? { lat: coords.lat, lon: coords.lon } : { district });
     } catch (err1) {
       try {
         // Fall back to OpenWeatherMap with the key
@@ -387,29 +545,49 @@ const getWeather = async ({ district = 'Pune', state = 'Maharashtra' }) => {
     }
   }
 
-  // If no API key or API call failed, try Open-Meteo (open access)
+  // If no API key or API call failed, fetch from Open-Meteo (open access worldwide)
   if (!weatherData) {
     try {
       weatherData = await fetchFromOpenMeteo(coords);
     } catch (err) {
-      logger.warn(`Open-Meteo live request failed: ${err.message}. Using calibrated agricultural fallback.`);
+      logger.warn(`Open-Meteo live request failed: ${err.message}. Using calibrated fallback.`);
       weatherData = getCalibratedFallback(new Date());
     }
   }
 
-  const { current, forecast } = weatherData;
+  const { current, forecast, locationInfo, source } = weatherData;
   const advisories = generateFarmingAdvisories(current, forecast);
+
+  // Determine city & state names
+  let resolvedCity = locationInfo?.city || null;
+  let resolvedDistrict = locationInfo?.district || district || null;
+  let resolvedState = locationInfo?.state || state || coords.state || null;
+
+  // If live GPS coordinates and city name was not provided by weather API, reverse-geocode
+  if (hasCoords && (!resolvedCity || resolvedCity.trim() === '')) {
+    const geo = await reverseGeocode(coords.lat, coords.lon);
+    if (geo.city) resolvedCity = geo.city;
+    if (geo.state) resolvedState = geo.state;
+    if (!resolvedDistrict && geo.city) resolvedDistrict = geo.city;
+  }
+
+  if (!resolvedDistrict) resolvedDistrict = resolvedCity || district || 'Local Area';
+  if (!resolvedCity) resolvedCity = resolvedDistrict;
+  if (!resolvedState) resolvedState = state || 'India';
 
   const payload = {
     location: {
-      district: district || 'Pune',
-      state: state || coords.state || 'Maharashtra',
-      latitude: coords.lat,
-      longitude: coords.lon,
+      city: resolvedCity,
+      district: resolvedDistrict,
+      state: resolvedState,
+      latitude: Number(coords.lat.toFixed(4)),
+      longitude: Number(coords.lon.toFixed(4)),
+      isLiveGps,
     },
     current,
     forecast,
     advisories,
+    source: source || 'Real-Time Meteorological API',
     fetchedAt: new Date(),
   };
 
@@ -432,4 +610,6 @@ module.exports = {
   getWeather,
   generateFarmingAdvisories,
   getActiveWeatherApiKey,
+  reverseGeocode,
+  degToCompass,
 };

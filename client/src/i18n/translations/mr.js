@@ -488,6 +488,17 @@ export default {
     forecast5DayTitle: '५-दिवसीय प्रादेशिक हवामान अंदाज',
     probabilisticNotice: 'सूचना: हवामान अंदाज संभाव्यतेवर आधारित आहेत. फवारणी किंवा काढणीपूर्वी शेतातील प्रत्यक्ष ओलावा व स्थानिक परिस्थितीची खात्री करा.',
     rainProb: '💧 {{percent}}% पाऊस',
+    currentLocation: 'सध्याचे स्थान',
+    useCurrentLocation: 'सध्याच्या स्थानाचा वापर करा',
+    detectingLocation: 'आपले थेट जीपीएस स्थान शोधले जात आहे...',
+    liveLocation: 'थेट जीपीएस स्थान',
+    locationPermissionDenied: 'ब्राउझरमध्ये स्थान (Location) परवानगी बंद आहे',
+    locationPermissionNotice: 'आपल्या शेताचे अचूक थेट हवामान पाहण्यासाठी कृपया ब्राउझरमध्ये लोकेशनची परवानगी द्या, किंवा खालील यादीतून जिल्हा निवडा.',
+    retryLocation: 'स्थान पुन्हा शोधा',
+    feelsLike: 'जाणवणारे तापमान',
+    windDirection: 'वाऱ्याची दिशा',
+    manualDistrict: 'मॅन्युअली जिल्हा निवडा',
+    refreshWeather: 'हवामान ताजे करा',
   },
 
   khetiAiPage: {

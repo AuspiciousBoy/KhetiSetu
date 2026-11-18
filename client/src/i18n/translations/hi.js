@@ -488,6 +488,17 @@ export default {
     forecast5DayTitle: '5-दिवसीय क्षेत्रीय मौसम पूर्वानुमान',
     probabilisticNotice: 'सूचना: पूर्वानुमान मॉडल संभाविता पर आधारित हैं। कीटनाशक छिड़काव या कटाई से पहले खेत में वास्तविक नमी व स्थानीय मौसम अवश्य देखें।',
     rainProb: '💧 {{percent}}% वर्षा',
+    currentLocation: 'वर्तमान स्थान',
+    useCurrentLocation: 'वर्तमान स्थान का उपयोग करें',
+    detectingLocation: 'आपका लाइव जीपीएस स्थान खोजा जा रहा है...',
+    liveLocation: 'लाइव जीपीएस स्थान',
+    locationPermissionDenied: 'ब्राउज़र में लोकेशन एक्सेस बंद है',
+    locationPermissionNotice: 'अपने खेत के सटीक लाइव मौसम की जानकारी के लिए कृपया ब्राउज़र में लोकेशन की अनुमति दें, या नीचे से जिला चुनें।',
+    retryLocation: 'लोकेशन पुनः जांचें',
+    feelsLike: 'महसूस हो रहा है',
+    windDirection: 'हवा की दिशा',
+    manualDistrict: 'मैन्युअल रूप से जिला चुनें',
+    refreshWeather: 'मौसम ताज़ा करें',
   },
 
   khetiAiPage: {

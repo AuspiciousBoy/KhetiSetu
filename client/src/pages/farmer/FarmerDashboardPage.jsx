@@ -28,16 +28,42 @@ const FarmerDashboardPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const fetchWeatherWithGeo = async () => {
+          if (navigator.geolocation) {
+            return new Promise((resolve) => {
+              navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                  try {
+                    const res = await apiClient.get(
+                      `/weather?lat=${pos.coords.latitude.toFixed(4)}&lon=${pos.coords.longitude.toFixed(4)}`
+                    );
+                    resolve(res);
+                  } catch {
+                    const res = await apiClient.get('/weather?district=Pune');
+                    resolve(res);
+                  }
+                },
+                async () => {
+                  const res = await apiClient.get('/weather?district=Pune');
+                  resolve(res);
+                },
+                { timeout: 4000, maximumAge: 60000 }
+              );
+            });
+          }
+          return apiClient.get('/weather?district=Pune');
+        };
+
         const [analyticsRes, batchesRes, weatherRes, ordersRes] = await Promise.all([
           apiClient.get('/farmer/analytics'),
           apiClient.get('/farmer/batches?limit=5'),
-          apiClient.get('/weather?district=Pune'),
+          fetchWeatherWithGeo(),
           apiClient.get('/orders/farmer-orders?limit=5'),
         ]);
 
         setAnalytics(analyticsRes.data.data);
         setBatches(batchesRes.data.data);
-        setWeather(weatherRes.data.data);
+        setWeather(weatherRes?.data?.data);
         setOrders(ordersRes.data.data || []);
       } catch (err) {
         console.error('Failed to load farmer dashboard metrics', err);
@@ -178,14 +204,15 @@ const FarmerDashboardPage = () => {
                 <Sun className="w-6 h-6 text-amber-300" />
               </div>
               <span className="bg-surface-tint/40 px-3 py-1 rounded-[6px] text-xs font-bold text-on-primary font-mono">
-                {t('farmerDashboard.districtLabel', { district: weather?.location?.district || 'Pune' })}
+                {weather?.location?.city || weather?.location?.district || 'Pune'}
+                {weather?.location?.isLiveGps ? ' (GPS)' : ''}
               </span>
             </div>
             <span className="font-display font-bold text-5xl text-secondary-fixed block mb-1 font-mono">
-              {weather?.current?.temperatureC || 28}°C
+              {weather?.current?.temperatureC !== undefined ? `${weather.current.temperatureC}°C` : '28°C'}
             </span>
             <p className="text-sm text-on-primary/80 font-medium">
-              {weather?.current?.condition || 'Clear & Sunny'} • {t('farmerDashboard.humidityLabel')} {weather?.current?.humidityPercent || 50}%
+              {weather?.current?.condition || 'Clear & Sunny'} • Feels {weather?.current?.feelsLikeC ?? weather?.current?.temperatureC ?? 28}°C • {t('farmerDashboard.humidityLabel')} {weather?.current?.humidityPercent || 50}%
             </p>
           </div>
 

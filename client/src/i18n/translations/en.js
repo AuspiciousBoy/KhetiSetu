@@ -488,6 +488,17 @@ export default {
     forecast5DayTitle: '5-Day Regional Meteorological Forecast',
     probabilisticNotice: 'Notice: Forecast models are probabilistic guidance. Always observe in-situ field moisture and local micro-climate conditions before major pesticide or harvesting actions.',
     rainProb: '💧 {{percent}}% Rain',
+    currentLocation: 'Current Location',
+    useCurrentLocation: 'Use Current Location',
+    detectingLocation: 'Detecting your live GPS location...',
+    liveLocation: 'Live GPS Location',
+    locationPermissionDenied: 'Location access is disabled in browser',
+    locationPermissionNotice: 'Please allow location permission in your browser to view real-time weather for your exact farm location, or choose a district manually below.',
+    retryLocation: 'Detect Location Again',
+    feelsLike: 'Feels like',
+    windDirection: 'Wind Direction',
+    manualDistrict: 'Select District Manually',
+    refreshWeather: 'Refresh Weather',
   },
 
   khetiAiPage: {

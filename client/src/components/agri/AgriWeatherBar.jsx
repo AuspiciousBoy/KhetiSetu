@@ -1,10 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Tractor, Thermometer, Droplets, Wind, CloudRain, ArrowRight } from 'lucide-react';
+import { Tractor, Thermometer, Droplets, Wind, CloudRain, ArrowRight, MapPin } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
+import apiClient from '../../services/apiClient';
 
-const AgriWeatherBar = () => {
+const AgriWeatherBar = ({ weather: propWeather }) => {
   const { t } = useTranslation();
+  const [internalWeather, setInternalWeather] = useState(null);
+
+  useEffect(() => {
+    if (propWeather) return;
+
+    let isMounted = true;
+    const fetchBarWeather = async (coords) => {
+      try {
+        const query = coords ? `lat=${coords.lat}&lon=${coords.lon}` : 'district=Pune';
+        const res = await apiClient.get(`/weather?${query}`);
+        if (isMounted && res.data?.data) {
+          setInternalWeather(res.data.data);
+        }
+      } catch (err) {
+        // Silent catch for telemetry ticker
+      }
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetchBarWeather({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        },
+        () => {
+          fetchBarWeather(null);
+        },
+        { timeout: 5000, maximumAge: 120000 }
+      );
+    } else {
+      fetchBarWeather(null);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [propWeather]);
+
+  const activeWeather = propWeather || internalWeather;
+  const current = activeWeather?.current;
+  const sprayingAdvisory =
+    activeWeather?.advisories?.find((a) => a.category === 'SPRAYING') ||
+    activeWeather?.advisories?.[0];
+
+  const isFavorable = sprayingAdvisory?.severity === 'INFO';
 
   return (
     <div className="bg-surface rounded-[20px] border border-surface-variant p-4 sm:p-5 soil-shadow">
@@ -19,18 +64,38 @@ const AgriWeatherBar = () => {
               <span className="text-[11px] font-bold uppercase tracking-wider text-secondary font-mono">
                 {t('agriWeatherBar.advisoryBadge')}
               </span>
-              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                {t('agriWeatherBar.sprayingFavorable')}
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  isFavorable
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isFavorable ? 'bg-emerald-600 animate-pulse' : 'bg-amber-600'
+                  }`}
+                ></span>
+                {isFavorable
+                  ? t('agriWeatherBar.sprayingFavorable')
+                  : sprayingAdvisory?.severity === 'WARNING'
+                  ? 'Caution Advised'
+                  : 'Farming Advisory'}
               </span>
+              {activeWeather?.location && (
+                <span className="text-[10px] text-on-surface-variant font-medium hidden sm:inline-flex items-center gap-0.5">
+                  <MapPin className="w-3 h-3 text-secondary" />
+                  {activeWeather.location.city || activeWeather.location.district}
+                </span>
+              )}
             </div>
-            <p className="text-xs text-on-surface font-medium mt-0.5">
-              {t('agriWeatherBar.sprayingDesc')}
+            <p className="text-xs text-on-surface font-medium mt-0.5 line-clamp-1 max-w-xl">
+              {sprayingAdvisory?.message || t('agriWeatherBar.sprayingDesc')}
             </p>
           </div>
         </div>
 
-        {/* Right: Microclimate Telemetry Grid */}
+        {/* Right: Real-time Microclimate Telemetry Grid */}
         <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-1 lg:pb-0 scrollbar-none font-mono text-xs">
           <div className="flex items-center gap-2 shrink-0">
             <Thermometer className="w-4 h-4 text-amber-600" />
@@ -38,7 +103,9 @@ const AgriWeatherBar = () => {
               <span className="text-[10px] text-on-surface-variant block uppercase font-sans">
                 {t('agriWeatherBar.soilTemp')}
               </span>
-              <span className="font-bold text-on-surface">24.2°C</span>
+              <span className="font-bold text-on-surface">
+                {current?.temperatureC !== undefined ? `${current.temperatureC}°C` : '28°C'}
+              </span>
             </div>
           </div>
 
@@ -48,7 +115,9 @@ const AgriWeatherBar = () => {
               <span className="text-[10px] text-on-surface-variant block uppercase font-sans">
                 {t('agriWeatherBar.relHumidity')}
               </span>
-              <span className="font-bold text-on-surface">54%</span>
+              <span className="font-bold text-on-surface">
+                {current?.humidityPercent !== undefined ? `${current.humidityPercent}%` : '54%'}
+              </span>
             </div>
           </div>
 
@@ -58,7 +127,10 @@ const AgriWeatherBar = () => {
               <span className="text-[10px] text-on-surface-variant block uppercase font-sans">
                 {t('agriWeatherBar.windSpeed')}
               </span>
-              <span className="font-bold text-on-surface">6 km/h NW</span>
+              <span className="font-bold text-on-surface">
+                {current?.windSpeedKmh !== undefined ? `${current.windSpeedKmh} km/h` : '10 km/h'}
+                {current?.windDirection ? ` ${current.windDirection}` : ''}
+              </span>
             </div>
           </div>
 
@@ -68,7 +140,9 @@ const AgriWeatherBar = () => {
               <span className="text-[10px] text-on-surface-variant block uppercase font-sans">
                 {t('agriWeatherBar.rainForecast')}
               </span>
-              <span className="font-bold text-emerald-700">0.0 mm</span>
+              <span className="font-bold text-emerald-700">
+                {current?.rainfallMm !== undefined ? `${current.rainfallMm} mm` : '0.0 mm'}
+              </span>
             </div>
           </div>
 

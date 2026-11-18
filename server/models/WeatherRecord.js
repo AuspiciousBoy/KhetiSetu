@@ -7,15 +7,19 @@ const WeatherRecordSchema = new mongoose.Schema(
       state: { type: String, required: true, index: true },
       latitude: { type: Number, required: true },
       longitude: { type: Number, required: true },
+      city: { type: String },
     },
     current: {
       temperatureC: { type: Number, required: true },
+      feelsLikeC: { type: Number },
       humidityPercent: { type: Number, required: true },
       rainfallMm: { type: Number, default: 0 },
       windSpeedKmh: { type: Number, default: 0 },
+      windDirection: { type: String, default: '' },
       condition: { type: String, default: 'Clear' },
       uvIndex: { type: Number, default: 5 },
       icon: { type: String, default: 'sunny' },
+      iconUrl: { type: String, default: '' },
     },
     forecast: [
       {
