@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
+import getLiveWeather from '../../services/weatherClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -55,37 +56,36 @@ const WeatherIntelligencePage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  // Core weather fetcher using reusable /api/v1/weather endpoint
+  // Core weather fetcher using universal weatherClient
   const fetchWeather = useCallback(async (params = {}, isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
       setApiError(null);
 
-      const queryParams = new URLSearchParams();
-      if (params.lat !== undefined && params.lon !== undefined) {
-        queryParams.append('lat', params.lat);
-        queryParams.append('lon', params.lon);
-      } else if (params.district) {
-        queryParams.append('district', params.district);
-      } else if (district) {
-        queryParams.append('district', district);
-      }
+      const targetLat = params.lat !== undefined ? params.lat : coords?.lat;
+      const targetLon = params.lon !== undefined ? params.lon : coords?.lon;
+      const targetDistrict = params.district || district;
 
-      const res = await apiClient.get(`/weather?${queryParams.toString()}`);
-      if (res.data?.success && res.data?.data) {
-        setWeatherData(res.data.data);
+      const data = await getLiveWeather({
+        lat: targetLat,
+        lon: targetLon,
+        district: targetDistrict,
+      });
+
+      if (data && data.current) {
+        setWeatherData(data);
       } else {
-        throw new Error(res.data?.message || 'Failed to fetch weather data');
+        throw new Error('Could not retrieve meteorological data');
       }
     } catch (err) {
       console.error('Failed to load weather records', err);
-      setApiError(err.response?.data?.message || err.message || 'Unable to connect to weather telemetry service');
+      setApiError(err.message || 'Unable to connect to weather telemetry service');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [district]);
+  }, [coords, district]);
 
   // Request browser geolocation
   const requestLocation = useCallback(() => {

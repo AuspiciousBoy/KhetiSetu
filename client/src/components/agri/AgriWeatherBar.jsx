@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Tractor, Thermometer, Droplets, Wind, CloudRain, ArrowRight, MapPin } from 'lucide-react';
 import { useTranslation } from '../../i18n/LanguageContext';
-import apiClient from '../../services/apiClient';
+import getLiveWeather from '../../services/weatherClient';
 
 const AgriWeatherBar = ({ weather: propWeather }) => {
   const { t } = useTranslation();
@@ -14,10 +14,9 @@ const AgriWeatherBar = ({ weather: propWeather }) => {
     let isMounted = true;
     const fetchBarWeather = async (coords) => {
       try {
-        const query = coords ? `lat=${coords.lat}&lon=${coords.lon}` : 'district=Pune';
-        const res = await apiClient.get(`/weather?${query}`);
-        if (isMounted && res.data?.data) {
-          setInternalWeather(res.data.data);
+        const data = await getLiveWeather(coords || { district: 'Pune' });
+        if (isMounted && data && data.current) {
+          setInternalWeather(data);
         }
       } catch (err) {
         // Silent catch for telemetry ticker

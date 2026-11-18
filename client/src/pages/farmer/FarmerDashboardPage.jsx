@@ -11,6 +11,7 @@ import {
   Camera,
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
+import getLiveWeather from '../../services/weatherClient';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
@@ -34,27 +35,28 @@ const FarmerDashboardPage = () => {
               navigator.geolocation.getCurrentPosition(
                 async (pos) => {
                   try {
-                    const res = await apiClient.get(
-                      `/weather?lat=${pos.coords.latitude.toFixed(4)}&lon=${pos.coords.longitude.toFixed(4)}`
-                    );
-                    resolve(res);
+                    const data = await getLiveWeather({
+                      lat: pos.coords.latitude,
+                      lon: pos.coords.longitude,
+                    });
+                    resolve(data);
                   } catch {
-                    const res = await apiClient.get('/weather?district=Pune');
-                    resolve(res);
+                    const data = await getLiveWeather({ district: 'Pune' });
+                    resolve(data);
                   }
                 },
                 async () => {
-                  const res = await apiClient.get('/weather?district=Pune');
-                  resolve(res);
+                  const data = await getLiveWeather({ district: 'Pune' });
+                  resolve(data);
                 },
                 { timeout: 4000, maximumAge: 60000 }
               );
             });
           }
-          return apiClient.get('/weather?district=Pune');
+          return getLiveWeather({ district: 'Pune' });
         };
 
-        const [analyticsRes, batchesRes, weatherRes, ordersRes] = await Promise.all([
+        const [analyticsRes, batchesRes, weatherData, ordersRes] = await Promise.all([
           apiClient.get('/farmer/analytics'),
           apiClient.get('/farmer/batches?limit=5'),
           fetchWeatherWithGeo(),
@@ -63,7 +65,7 @@ const FarmerDashboardPage = () => {
 
         setAnalytics(analyticsRes.data.data);
         setBatches(batchesRes.data.data);
-        setWeather(weatherRes?.data?.data);
+        setWeather(weatherData);
         setOrders(ordersRes.data.data || []);
       } catch (err) {
         console.error('Failed to load farmer dashboard metrics', err);

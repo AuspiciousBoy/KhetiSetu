@@ -30,6 +30,8 @@ const DISTRICT_COORDINATES = {
 // In-memory cache fallback (used when MongoDB is offline or in dev mode)
 const memoryCache = new Map();
 
+const DEFAULT_WEATHER_API_KEY = '6f1d39fa81764e669e0142956261811';
+
 /**
  * Resolves the active Weather API key.
  * Checks process.env first, and re-reads server/.env if needed
@@ -52,7 +54,7 @@ const getActiveWeatherApiKey = () => {
       // Fall through if file read fails
     }
   }
-  return key && key.trim().length > 5 && !key.includes('your_weather') ? key.trim() : null;
+  return key && key.trim().length > 5 && !key.includes('your_weather') ? key.trim() : DEFAULT_WEATHER_API_KEY;
 };
 
 /**
@@ -237,7 +239,7 @@ const fetchFromWeatherAPI = async (apiKey, target) => {
   const query =
     target.lat !== undefined && target.lon !== undefined
       ? `${target.lat},${target.lon}`
-      : `${encodeURIComponent(target.district || 'Pune')},India`;
+      : encodeURIComponent(target.district || 'Pune');
 
   const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${query}&days=6&aqi=no`;
   const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
@@ -533,8 +535,8 @@ const getWeather = async ({ district, state, lat, lon } = {}) => {
   if (apiKey) {
     try {
       logger.info(`Fetching live weather with configured WEATHER_API_KEY for ${hasCoords ? `${coords.lat},${coords.lon}` : district}...`);
-      // Try WeatherAPI first
-      weatherData = await fetchFromWeatherAPI(apiKey, hasCoords ? { lat: coords.lat, lon: coords.lon } : { district });
+      // Try WeatherAPI first with exact coordinates
+      weatherData = await fetchFromWeatherAPI(apiKey, { lat: coords.lat, lon: coords.lon, district });
     } catch (err1) {
       try {
         // Fall back to OpenWeatherMap with the key
